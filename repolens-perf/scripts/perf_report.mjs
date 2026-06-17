@@ -1,0 +1,287 @@
+#!/usr/bin/env node
+import fs from "node:fs/promises";
+import path from "node:path";
+
+const RULE_ORDER = {
+  P1: 1,
+  P2: 2,
+  P3: 3,
+};
+
+function parseArgs(argv) {
+  const args = [...argv];
+  const root = path.resolve(args[0] && !args[0].startsWith("--") ? args.shift() : ".");
+  const target = args[0] && !args[0].startsWith("--") ? args.shift() : "";
+  const options = { root, target, hops: 4, out: null };
+
+  for (let i = 0; i < args.length; i += 1) {
+    if (args[i] === "--hops") {
+      options.hops = Number(args[i + 1] || 2);
+      i += 1;
+    } else if (args[i] === "--out") {
+      options.out = args[i + 1];
+      i += 1;
+    }
+  }
+
+  if (!options.target) {
+    throw new Error("Usage: node perf_report.mjs <repo-root> <route|file|component|api|keyword> [--out report.md]");
+  }
+
+  return options;
+}
+
+function includesTarget(value, target) {
+  return String(value || "").toLowerCase().includes(target.toLowerCase());
+}
+
+function findStartNodes(graph, target) {
+  return graph.nodes.filter((node) => {
+    return (
+      includesTarget(node.id, target) ||
+      includesTarget(node.label, target) ||
+      includesTarget(node.meta?.file, target) ||
+      includesTarget(node.meta?.path, target) ||
+      includesTarget(node.meta?.url, target)
+    );
+  });
+}
+
+function buildAdjacency(edges) {
+  const adjacency = new Map();
+  function add(source, edge) {
+    if (!adjacency.has(source)) adjacency.set(source, []);
+    adjacency.get(source).push(edge);
+  }
+  for (const edge of edges) {
+    add(edge.source, { ...edge, next: edge.target });
+    add(edge.target, { ...edge, next: edge.source });
+  }
+  return adjacency;
+}
+
+function traceGraph(graph, starts, hops) {
+  const adjacency = buildAdjacency(graph.edges);
+  const visited = new Set(starts.map((node) => node.id));
+  const queue = starts.map((node) => ({ id: node.id, depth: 0 }));
+
+  for (let index = 0; index < queue.length; index += 1) {
+    const item = queue[index];
+    if (item.depth >= hops) continue;
+    for (const edge of adjacency.get(item.id) || []) {
+      if (!visited.has(edge.next)) {
+        visited.add(edge.next);
+        queue.push({ id: edge.next, depth: item.depth + 1 });
+      }
+    }
+  }
+
+  return {
+    nodeIds: visited,
+    nodes: graph.nodes.filter((node) => visited.has(node.id)),
+    edges: graph.edges.filter((edge) => visited.has(edge.source) && visited.has(edge.target)),
+  };
+}
+
+function collectModuleFacts(trace, starts) {
+  const nodeById = new Map(trace.nodes.map((node) => [node.id, node]));
+  const routeStarts = starts.filter((node) => node.type === "Route");
+
+  if (routeStarts.length > 0) {
+    const routeIds = new Set(routeStarts.map((node) => node.id));
+    const componentIds = new Set();
+    const queue = [...routeIds];
+
+    for (let index = 0; index < queue.length; index += 1) {
+      const current = queue[index];
+      for (const edge of trace.edges) {
+        if (edge.source !== current || edge.type !== "renders") continue;
+        const target = nodeById.get(edge.target);
+        if (target?.type === "ReactComponent" && !componentIds.has(target.id)) {
+          componentIds.add(target.id);
+          queue.push(target.id);
+        }
+      }
+    }
+
+    const filePaths = new Set();
+    for (const route of routeStarts) {
+      if (route.meta?.file) filePaths.add(route.meta.file);
+    }
+    for (const componentId of componentIds) {
+      const component = nodeById.get(componentId);
+      if (component?.meta?.file) filePaths.add(component.meta.file);
+    }
+
+    for (const edge of trace.edges) {
+      if (edge.type !== "imports") continue;
+      const sourceFile = edge.source.replace(/^File:/, "");
+      const target = nodeById.get(edge.target);
+      if (filePaths.has(sourceFile) && target?.meta?.kind === "api-client") {
+        filePaths.add(target.label);
+      }
+    }
+
+    const apis = trace.nodes.filter((node) => {
+      if (node.type !== "APIEndpoint") return false;
+      return trace.edges.some((edge) => {
+        const sourceFile = edge.source.replace(/^File:/, "");
+        return edge.target === node.id && filePaths.has(sourceFile);
+      });
+    });
+    const targetTokens = routeStarts
+      .flatMap((route) => String(route.meta?.path || route.label).toLowerCase().split(/[^a-z0-9]+/))
+      .filter((token) => token.length > 2 && token !== "api");
+    const normalizedTokens = targetTokens.map(normalizeToken);
+    const focusedApis = apis.filter((api) => {
+      const normalizedLabel = normalizeToken(api.label.toLowerCase());
+      return normalizedTokens.some((token) => normalizedLabel.includes(token));
+    });
+
+    const risks = trace.nodes
+      .filter((node) => node.type === "PerformanceRisk" && filePaths.has(node.meta?.file))
+      .sort((a, b) => (RULE_ORDER[a.meta?.level] || 9) - (RULE_ORDER[b.meta?.level] || 9));
+
+    return {
+      routes: routeStarts,
+      files: trace.nodes.filter((node) => node.type === "File" && filePaths.has(node.label)),
+      components: trace.nodes.filter((node) => node.type === "ReactComponent" && componentIds.has(node.id)),
+      apis: focusedApis.length ? focusedApis : apis,
+      risks,
+    };
+  }
+
+  return {
+    routes: trace.nodes.filter((node) => node.type === "Route"),
+    files: trace.nodes.filter((node) => node.type === "File"),
+    components: trace.nodes.filter((node) => node.type === "ReactComponent"),
+    apis: trace.nodes.filter((node) => node.type === "APIEndpoint"),
+    risks: trace.nodes
+      .filter((node) => node.type === "PerformanceRisk")
+      .sort((a, b) => (RULE_ORDER[a.meta?.level] || 9) - (RULE_ORDER[b.meta?.level] || 9)),
+  };
+}
+
+function normalizeToken(value) {
+  return String(value)
+    .replace(/ies\b/g, "y")
+    .replace(/s\b/g, "");
+}
+
+function riskRow(risk) {
+  const evidence = risk.meta?.evidence
+    ? `${risk.meta.file}:${risk.meta.evidence.line} - ${risk.meta.evidence.text.replace(/\|/g, "\\|")}`
+    : risk.meta?.file || "needs manual verification";
+  return `| ${risk.meta?.level || "P?"} | ${risk.meta?.rule || risk.label} | ${evidence} | ${risk.meta?.fix || "Investigate and verify."} |`;
+}
+
+function ticketForRisk(index, risk) {
+  const file = risk.meta?.file || "related file";
+  return [
+    `### Ticket ${index}: ${risk.meta?.title || risk.label}`,
+    "",
+    `- Priority: ${risk.meta?.level || "P?"}`,
+    `- Evidence: ${risk.meta?.evidence ? `${file}:${risk.meta.evidence.line} ${risk.meta.evidence.text}` : file}`,
+    `- Change: ${risk.meta?.fix || "Investigate the hotspot and reduce repeated work."}`,
+    "- Acceptance: performance behavior is bounded, UI stays stable, and no existing route/API contract breaks.",
+    "- Verification: add or update a focused test, then run the relevant app checks and manually inspect the traced route.",
+    "",
+  ].join("\n");
+}
+
+function focusedPrompt(target, facts) {
+  const files = facts.files.map((node) => node.label).slice(0, 12).join(", ") || "the traced files";
+  const risks = facts.risks.map((node) => node.meta?.rule).filter(Boolean).join(", ") || "the reported risks";
+  return [
+    `Use the RepoLens memory for target "${target}". Focus only on this graph neighborhood unless a direct dependency forces a wider change.`,
+    `Relevant files: ${files}.`,
+    `Prioritize these risks: ${risks}.`,
+    "Make the smallest safe code changes, preserve existing UI conventions, and add verification for the changed behavior.",
+    "After editing, summarize evidence, touched files, tests run, and any runtime risks that still need measurement.",
+  ].join(" ");
+}
+
+function listOrNone(nodes, formatter) {
+  if (nodes.length === 0) return ["- none detected in traced neighborhood"];
+  return nodes.map(formatter);
+}
+
+function formatReport(target, starts, trace) {
+  const facts = collectModuleFacts(trace, starts);
+  const lines = [
+    `# Performance Report: ${target}`,
+    "",
+    "## Executive Summary",
+    `RepoLens traced ${starts.length} start node(s), ${trace.nodes.length} related node(s), and ${trace.edges.length} evidence edge(s).`,
+    facts.risks.length
+      ? `Detected ${facts.risks.length} deterministic performance signal(s), led by ${facts.risks[0].meta?.level || "P?"} ${facts.risks[0].meta?.rule || facts.risks[0].label}.`
+      : "No deterministic performance signal was detected in this graph neighborhood; continue with targeted code review and runtime measurement.",
+    "",
+    "## Related Modules",
+    "",
+    "### Routes",
+    ...listOrNone(facts.routes, (node) => `- ${node.label} (${node.meta?.file || "unknown file"})`),
+    "",
+    "### Components",
+    ...listOrNone(facts.components, (node) => `- ${node.label} (${node.meta?.file || "unknown file"})`),
+    "",
+    "### APIs",
+    ...listOrNone(facts.apis, (node) => `- ${node.label} (${node.meta?.file || "unknown file"})`),
+    "",
+    "### Files",
+    ...listOrNone(facts.files, (node) => `- ${node.label}`),
+    "",
+    "## Risk Table",
+    "",
+    "| Priority | Rule | Evidence | Recommended Fix |",
+    "|---|---|---|---|",
+    ...(facts.risks.length ? facts.risks.map(riskRow) : ["| - | - | No deterministic rule hit | Review runtime metrics |"]),
+    "",
+    "## Fix Tickets",
+    "",
+    ...(facts.risks.length ? facts.risks.map((risk, index) => ticketForRisk(index + 1, risk)) : ["- No automatic ticket generated."]),
+    "",
+    "## Focused Coding Prompt",
+    "",
+    "```text",
+    focusedPrompt(target, facts),
+    "```",
+    "",
+    "## Notes",
+    "- Scanner findings are static signals. Confirm high-impact changes with profiling, network traces, or route-level measurements.",
+    "- Keep unrelated refactors out of the first pass so the performance delta remains attributable.",
+    "",
+  ];
+
+  return lines.flat().join("\n");
+}
+
+function safeTarget(target) {
+  return target.replace(/[^a-z0-9_-]+/gi, "-").replace(/^-+|-+$/g, "").slice(0, 80) || "target";
+}
+
+async function main() {
+  const options = parseArgs(process.argv.slice(2));
+  const graphPath = path.join(options.root, ".project-memory", "graph", "code_graph.json");
+  const graph = JSON.parse(await fs.readFile(graphPath, "utf8"));
+  const starts = findStartNodes(graph, options.target);
+
+  if (starts.length === 0) {
+    throw new Error(`No graph nodes matched "${options.target}". Run index_project.mjs first or use a more specific target.`);
+  }
+
+  const trace = traceGraph(graph, starts, options.hops);
+  const markdown = formatReport(options.target, starts, trace);
+  const outPath = options.out
+    ? path.resolve(options.root, options.out)
+    : path.join(options.root, ".project-memory", "reports", `${safeTarget(options.target)}-perf-report.md`);
+
+  await fs.mkdir(path.dirname(outPath), { recursive: true });
+  await fs.writeFile(outPath, `${markdown}\n`, "utf8");
+  console.log(`Performance report written to ${outPath}`);
+}
+
+main().catch((error) => {
+  console.error(error.message);
+  process.exit(1);
+});

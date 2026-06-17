@@ -1,0 +1,10 @@
+.DS_Store
+node_modules/
+dist/
+build/
+coverage/
+*.zip
+
+README.submission.local.md
+SUBMISSION.md
+DEMO_SCRIPT.md
