@@ -470,6 +470,105 @@ async function writeJson(filePath, value) {
   await fs.writeFile(filePath, `${JSON.stringify(value, null, 2)}\n`, "utf8");
 }
 
+function countBy(items, keyFn) {
+  return items.reduce((acc, item) => {
+    const key = keyFn(item) || "unknown";
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
+}
+
+function buildUndirectedAdjacency(edges) {
+  const adjacency = new Map();
+  function add(source, edge) {
+    if (!adjacency.has(source)) adjacency.set(source, []);
+    adjacency.get(source).push(edge);
+  }
+
+  for (const edge of edges) {
+    add(edge.source, { ...edge, next: edge.target });
+    add(edge.target, { ...edge, next: edge.source });
+  }
+
+  return adjacency;
+}
+
+function graphMetrics(nodes, edges) {
+  const nodeById = new Map(nodes.map((node) => [node.id, node]));
+  const fanOut = new Map();
+  const riskAdjacent = new Map();
+
+  for (const edge of edges) {
+    fanOut.set(edge.source, (fanOut.get(edge.source) || 0) + 1);
+    if (edge.type === "mayCause" && nodeById.get(edge.target)?.type === "PerformanceRisk") {
+      riskAdjacent.set(edge.source, (riskAdjacent.get(edge.source) || 0) + 1);
+    }
+  }
+
+  const topFanOutNodes = [...fanOut.entries()]
+    .map(([id, outDegree]) => ({
+      id,
+      label: nodeById.get(id)?.label || id,
+      type: nodeById.get(id)?.type || "unknown",
+      out_degree: outDegree,
+    }))
+    .sort((a, b) => b.out_degree - a.out_degree || a.id.localeCompare(b.id))
+    .slice(0, 10);
+
+  const topRiskAdjacentNodes = [...riskAdjacent.entries()]
+    .map(([id, riskCount]) => ({
+      id,
+      label: nodeById.get(id)?.label || id,
+      type: nodeById.get(id)?.type || "unknown",
+      risk_count: riskCount,
+    }))
+    .sort((a, b) => b.risk_count - a.risk_count || a.id.localeCompare(b.id))
+    .slice(0, 10);
+
+  const adjacency = buildUndirectedAdjacency(edges);
+  const routeRiskDensity = nodes
+    .filter((node) => node.type === "Route")
+    .map((route) => {
+      const visited = new Map([[route.id, 0]]);
+      const queue = [{ id: route.id, depth: 0 }];
+      for (let index = 0; index < queue.length; index += 1) {
+        const item = queue[index];
+        if (item.depth >= 4) continue;
+        for (const edge of adjacency.get(item.id) || []) {
+          if (!visited.has(edge.next)) {
+            visited.set(edge.next, item.depth + 1);
+            queue.push({ id: edge.next, depth: item.depth + 1 });
+          }
+        }
+      }
+
+      const riskNodes = [...visited.keys()]
+        .map((id) => nodeById.get(id))
+        .filter((node) => node?.type === "PerformanceRisk");
+      const density = visited.size === 0 ? 0 : riskNodes.length / visited.size;
+      return {
+        route: route.label,
+        id: route.id,
+        risk_count: riskNodes.length,
+        neighborhood_node_count: visited.size,
+        density: Number(density.toFixed(3)),
+        risks: riskNodes.map((node) => node.label).sort(),
+      };
+    })
+    .sort((a, b) => b.density - a.density || b.risk_count - a.risk_count || a.route.localeCompare(b.route));
+
+  return {
+    generated_at: new Date().toISOString(),
+    node_count: nodes.length,
+    edge_count: edges.length,
+    node_type_counts: countBy(nodes, (node) => node.type),
+    edge_type_counts: countBy(edges, (edge) => edge.type),
+    top_fan_out_nodes: topFanOutNodes,
+    top_risk_adjacent_nodes: topRiskAdjacentNodes,
+    route_risk_density: routeRiskDensity,
+  };
+}
+
 function moduleMarkdown(component, fileSignals, componentApis) {
   const lines = [
     `# ${component.name}`,
@@ -640,12 +739,17 @@ async function main() {
   await writeJson(path.join(options.outDir, "components.json"), components);
   await writeJson(path.join(options.outDir, "apis.json"), apis);
   await writeJson(path.join(options.outDir, "performance_signals.json"), signals);
-  await writeJson(path.join(options.outDir, "graph", "code_graph.json"), {
+
+  const graphNodes = [...nodes.values()];
+  const graphEdges = [...edges.values()];
+  const graph = {
     generatedAt: new Date().toISOString(),
     root: options.root,
-    nodes: [...nodes.values()],
-    edges: [...edges.values()],
-  });
+    nodes: graphNodes,
+    edges: graphEdges,
+  };
+  await writeJson(path.join(options.outDir, "graph", "code_graph.json"), graph);
+  await writeJson(path.join(options.outDir, "graph_metrics.json"), graphMetrics(graphNodes, graphEdges));
 
   await fs.writeFile(path.join(options.outDir, "PROJECT_PROFILE.md"), `${projectProfile(files, routes, components, apis, signals)}\n`, "utf8");
 

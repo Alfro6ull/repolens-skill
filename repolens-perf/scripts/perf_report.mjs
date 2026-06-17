@@ -8,6 +8,17 @@ const RULE_ORDER = {
   P3: 3,
 };
 
+const ACCEPTANCE_CRITERIA = {
+  large_list_render: "The list render is bounded by pagination, virtualization, server-side slicing, or an explicit item cap under large fixtures.",
+  duplicated_request: "Entering the same route does not issue duplicate requests for the same entity; shared data is cached, lifted, or merged.",
+  rich_text_reparse: "The same markdown/HTML input is not reparsed during unrelated state changes.",
+  image_without_lazy: "Non-critical list images use lazy loading and stable dimensions to avoid unnecessary bandwidth and layout shift.",
+  missing_pagination: "The list endpoint requires a bounded limit, cursor, page, or offset contract and rejects unbounded list reads.",
+  n_plus_one_query: "Related records loaded inside a loop are batched, joined, prefetched, or cached at request scope.",
+  expensive_render_compute: "Sort/filter work is memoized, precomputed, or moved behind a bounded API/query contract.",
+  heavy_dependency_import: "Heavy dependencies are loaded by subpath or dynamic import when they are not required for the initial route.",
+};
+
 function parseArgs(argv) {
   const args = [...argv];
   const root = path.resolve(args[0] && !args[0].startsWith("--") ? args.shift() : ".");
@@ -175,6 +186,10 @@ function riskRow(risk) {
   return `| ${risk.meta?.level || "P?"} | ${risk.meta?.rule || risk.label} | ${evidence} | ${risk.meta?.fix || "Investigate and verify."} |`;
 }
 
+function acceptanceForRisk(risk) {
+  return ACCEPTANCE_CRITERIA[risk.meta?.rule] || "The risk is verified with a focused fixture or runtime measurement and the affected contract remains stable.";
+}
+
 function ticketForRisk(index, risk) {
   const file = risk.meta?.file || "related file";
   return [
@@ -183,7 +198,7 @@ function ticketForRisk(index, risk) {
     `- Priority: ${risk.meta?.level || "P?"}`,
     `- Evidence: ${risk.meta?.evidence ? `${file}:${risk.meta.evidence.line} ${risk.meta.evidence.text}` : file}`,
     `- Change: ${risk.meta?.fix || "Investigate the hotspot and reduce repeated work."}`,
-    "- Acceptance: performance behavior is bounded, UI stays stable, and no existing route/API contract breaks.",
+    `- Acceptance: ${acceptanceForRisk(risk)}`,
     "- Verification: add or update a focused test, then run the relevant app checks and manually inspect the traced route.",
     "",
   ].join("\n");
@@ -206,6 +221,10 @@ function listOrNone(nodes, formatter) {
   return nodes.map(formatter);
 }
 
+function contextPackRelativePath(target) {
+  return path.posix.join(".project-memory", "context-packs", `${safeTarget(target)}.md`);
+}
+
 function formatReport(target, starts, trace) {
   const facts = collectModuleFacts(trace, starts);
   const lines = [
@@ -213,6 +232,7 @@ function formatReport(target, starts, trace) {
     "",
     "## Executive Summary",
     `RepoLens traced ${starts.length} start node(s), ${trace.nodes.length} related node(s), and ${trace.edges.length} evidence edge(s).`,
+    `Context Pack: ${contextPackRelativePath(target)}`,
     facts.risks.length
       ? `Detected ${facts.risks.length} deterministic performance signal(s), led by ${facts.risks[0].meta?.level || "P?"} ${facts.risks[0].meta?.rule || facts.risks[0].label}.`
       : "No deterministic performance signal was detected in this graph neighborhood; continue with targeted code review and runtime measurement.",

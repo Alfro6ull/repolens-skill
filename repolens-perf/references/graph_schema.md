@@ -24,6 +24,14 @@ Use this schema when extending scanners or interpreting `.project-memory/graph/c
 | `defines` | `File -> APIEndpoint` | Backend code defines an API endpoint. |
 | `mayCause` | `File/ReactComponent -> PerformanceRisk` | Static rules found a possible risk. |
 
+## Generated Graph Artifacts
+
+| File | Meaning |
+|---|---|
+| `.project-memory/graph/code_graph.json` | Full node/edge graph. |
+| `.project-memory/graph_metrics.json` | Node/edge counts, fan-out nodes, risk-adjacent nodes, and route risk density. |
+| `.project-memory/context-packs/<target>.md` | Bounded K-hop evidence pack for AI analysis. |
+
 ## Interpretation
 
 - Use a 2-hop neighborhood for narrow files or leaf components.
@@ -37,4 +45,5 @@ Use this schema when extending scanners or interpreting `.project-memory/graph/c
 1. Add the detector to `scripts/index_project.mjs`.
 2. Emit a stable `rule` string and a clear `evidence` object with `line` and `text` when possible.
 3. Add the rule to the matching reference file.
-4. Ensure `perf_report.mjs` can turn the rule into a fix ticket.
+4. Keep graph metrics and context pack output compatible with existing node and edge fields.
+5. Ensure `perf_report.mjs` can turn the rule into a fix ticket with rule-specific acceptance criteria.

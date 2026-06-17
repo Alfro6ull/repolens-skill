@@ -1,15 +1,15 @@
 # Report Format
 
-Use this structure for final user-facing reports.
+Use this structure for user-facing RepoLens performance reports.
 
 ## Required Sections
 
-1. **Executive Summary**: one paragraph naming the target, traced scope, and highest priority risk.
-2. **Evidence Map**: route, files, components, APIs, and graph edges that justify the analysis.
-3. **Risk Table**: priority, rule, evidence, recommended fix.
-4. **Fix Tickets**: small executable tasks with acceptance criteria.
+1. **Executive Summary**: target, traced scope, context pack path, and highest priority risk.
+2. **Related Modules**: routes, files, components, and APIs in the graph neighborhood.
+3. **Risk Table**: priority, rule, evidence, and recommended fix.
+4. **Fix Tickets**: small executable tasks with rule-specific acceptance criteria.
 5. **Focused Coding Prompt**: a prompt another coding agent can use without re-opening the whole repository.
-6. **Verification Plan**: tests, manual checks, and runtime measurements.
+6. **Notes**: static-analysis caveats and runtime verification reminders.
 
 ## Priority Guide
 
@@ -17,14 +17,29 @@ Use this structure for final user-facing reports.
 - `P2`: likely to cause repeated work, medium bundle/render cost, or correctness risk under real content.
 - `P3`: maintainability or future scalability risk.
 
-## Contest Demo Script
+## Context Pack Relationship
 
-For a short demo, show this sequence:
+A report should point to the matching context pack path:
 
-1. Run `index_project.mjs` on the demo repository.
-2. Open `.project-memory/PROJECT_PROFILE.md`.
-3. Run `trace_module.mjs` for `/activity/:id`.
-4. Run `perf_report.mjs` for `/activity/:id`.
-5. Show one generated fix ticket and the focused coding prompt.
+```text
+.project-memory/context-packs/<safe-target>.md
+```
 
-The story: "Before asking AI to fix performance, RepoLens gives AI a project memory and a graph boundary."
+The context pack is the bounded graph evidence handoff. The report is the interpreted performance analysis and fix-ticket layer.
+
+## Public Demo Workflow
+
+For the included demo repository:
+
+```bash
+node repolens-perf/scripts/index_project.mjs demo-ai-community-mini
+node repolens-perf/scripts/build_context_pack.mjs demo-ai-community-mini "/activity/:id"
+node repolens-perf/scripts/perf_report.mjs demo-ai-community-mini "/activity/:id"
+```
+
+Open:
+
+```text
+demo-ai-community-mini/.project-memory/context-packs/activity-id.md
+demo-ai-community-mini/.project-memory/reports/activity-id-perf-report.md
+```
