@@ -1,0 +1,20 @@
+{
+  "name": "repolens-skill",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Lightweight code graph Skill for project memory, context packs, and evidence-backed performance reports.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "demo": "npm run demo:index && npm run demo:context && npm run demo:report && npm run test",
+    "demo:index": "node repolens-perf/scripts/index_project.mjs demo-ai-community-mini",
+    "demo:trace": "node repolens-perf/scripts/trace_module.mjs demo-ai-community-mini \"/activity/:id\"",
+    "demo:context": "node repolens-perf/scripts/build_context_pack.mjs demo-ai-community-mini \"/activity/:id\"",
+    "demo:report": "node repolens-perf/scripts/perf_report.mjs demo-ai-community-mini \"/activity/:id\"",
+    "test": "node repolens-perf/tests/perfgraph.test.mjs",
+    "check": "node --check repolens-perf/scripts/index_project.mjs && node --check repolens-perf/scripts/trace_module.mjs && node --check repolens-perf/scripts/build_context_pack.mjs && node --check repolens-perf/scripts/perf_report.mjs && node --check repolens-perf/tests/perfgraph.test.mjs"
+  }
+}

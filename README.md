@@ -13,6 +13,13 @@ Instead of asking an AI assistant to guess from the whole repository, RepoLens b
 - Generates performance reports with evidence lines, risk levels, rule-specific acceptance criteria, fix tickets, and focused coding prompts.
 - Includes frontend/backend performance rules and a public baseline evaluation.
 
+## Runtime
+
+- Node.js >= 18
+- No npm dependencies for the analysis scripts
+- No database, vector store, or external AI API required during indexing
+- Demo frontend dependencies are only needed if you want to run the sample app UI
+
 ## Repository Layout
 
 ```text
@@ -48,6 +55,12 @@ eval/
 Run the included demo:
 
 ```bash
+npm run demo
+```
+
+Or run each step directly:
+
+```bash
 node repolens-perf/scripts/index_project.mjs demo-ai-community-mini
 node repolens-perf/scripts/trace_module.mjs demo-ai-community-mini "/activity/:id"
 node repolens-perf/scripts/build_context_pack.mjs demo-ai-community-mini "/activity/:id"
@@ -57,7 +70,8 @@ node repolens-perf/scripts/perf_report.mjs demo-ai-community-mini "/activity/:id
 Verify the scripts:
 
 ```bash
-node repolens-perf/tests/perfgraph.test.mjs
+npm test
+npm run check
 ```
 
 Open the generated artifacts:
@@ -116,6 +130,10 @@ The indexer writes:
 
 See `repolens-perf/references/perfgraph_algorithm.md` for details.
 
+## Why This Is Algorithmic
+
+RepoLens uses deterministic code fact extraction, API canonicalization, K-hop graph retrieval, context scoring, risk scoring, and rule-based evidence extraction. The goal is to make AI code analysis less open-ended than a normal repository prompt by giving the model a bounded, inspectable context pack.
+
 ## Skill Usage
 
 The reusable Skill lives in `repolens-perf/`. To install it for Codex discovery, copy or symlink that folder into your Codex skills directory.
@@ -136,3 +154,9 @@ Use $repolens-perf to index this repository and analyze /activity/:id performanc
 - Static signals are leads, not proof of runtime slowness.
 - Confirm high-impact findings with profiling, network traces, API latency measurements, or large fixtures.
 - The first version intentionally avoids external databases; the graph is plain JSON for portability.
+- Context packs use a narrower handoff scope for AI agents; performance reports may use a wider analysis scope to include adjacent risk evidence.
+
+## Roadmap
+
+- AlgoGraph: build block profiles from `.project-memory` and recommend algorithm routes from local algorithm cards.
+- Shared core helpers for target matching, graph traversal, and report validation.

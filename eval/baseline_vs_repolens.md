@@ -20,11 +20,13 @@ Analyze performance risks for the demo route:
 | Metric | Direct AI Prompt | RepoLens PerfGraph |
 |---|---:|---:|
 | Relevant route/component/API/file coverage | 3/6 | 6/6 |
-| Recommendations with code evidence | 2/7 | 6/6 |
+| Recommendations with code evidence | 2/7 | 9/9 |
 | Unrelated or generic suggestions | 3 | 0 |
-| Executable fix tickets | 2 | 6 |
+| Executable fix tickets | 2 | 9 |
 | Focused coding-agent prompt | No | Yes |
 | Repeatable context boundary | No | Yes |
+
+Current RepoLens statistics are based on `demo-ai-community-mini/.project-memory/reports/activity-id-perf-report.md`.
 
 ## Evidence From Demo Output
 
@@ -36,7 +38,7 @@ RepoLens generated:
 - `.project-memory/context-packs/activity-id.md`
 - `.project-memory/reports/activity-id-perf-report.md`
 
-The `/activity/:id` report identifies the route, related components, API client calls, files, evidence lines, and six deterministic performance signals.
+The `/activity/:id` report identifies the route, related components, API client calls, files, evidence lines, and nine deterministic performance signals.
 
 ## Interpretation
 
