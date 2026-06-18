@@ -34,11 +34,10 @@ This is not a generic code review. The report translates code evidence into an a
 ## Block Profile
 
 - Entities:
-  - activity
+  - item
   - keyword
   - tag
   - user
-  - work
 - Actions:
   - list
   - search
@@ -112,7 +111,7 @@ Start with weighted scoring features, then train a ranking model after exposure 
 ## Coding Agent Prompt
 
 ```text
-Use the RepoLens Algorithm Opportunity Report for /activity/:id. Implement a first-version algorithm route without adding external services. Start with a bounded rule baseline and Content-Based Recommendation. Use existing fields such as title, tags, score, activity id, and work id. Add a small telemetry contract for user_id, item_id, action_type, timestamp, exposure_id, position, and source_page. Do not implement deep recommendation models, reinforcement learning, or real-time LLM reranking in this phase. Keep the ranking explainable and add tests for deterministic ordering and missing-data fallback.
+Use the RepoLens Algorithm Opportunity Report for /activity/:id. Implement a first-version algorithm route without adding external services. Start with a bounded rule baseline and Content-Based Recommendation. Use available module evidence such as content metadata, item list, keyword query, item, keyword, tag, user, list. Add a small telemetry contract for user_id, item_id, action_type, timestamp, exposure_id, position, and source_page. Do not implement deep recommendation models, reinforcement learning, or real-time LLM reranking in this phase. Keep the ranking explainable and add tests for deterministic ordering and missing-data fallback.
 ```
 
 ## Source Artifacts

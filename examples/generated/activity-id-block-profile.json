@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-18T07:46:49.100Z",
+  "generated_at": "2026-06-18T08:19:56.808Z",
   "target": "/activity/:id",
   "source_graph": ".project-memory/graph/code_graph.json",
   "profiles": [
@@ -120,11 +120,10 @@
         ]
       },
       "entities": [
-        "activity",
+        "item",
         "keyword",
         "tag",
-        "user",
-        "work"
+        "user"
       ],
       "actions": [
         "list",

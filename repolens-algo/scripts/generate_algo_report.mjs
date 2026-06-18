@@ -64,6 +64,23 @@ function unique(values) {
   return [...new Set(values.filter(Boolean))];
 }
 
+function availableFieldSummary(profile) {
+  const evidenceText = (profile.evidence?.code_lines || []).map((item) => item.text).join("\n");
+  const fieldMatches = [
+    ...evidenceText.matchAll(/\b([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g),
+    ...evidenceText.matchAll(/\b([a-zA-Z_][a-zA-Z0-9_]*)\b(?=\s*[).])/g),
+  ]
+    .map((match) => match[1])
+    .filter((field) => !["return", "const", "let", "var", "function", "def", "if", "for", "map", "sort", "filter"].includes(field));
+  const candidates = unique([
+    ...(profile.data_shapes || []),
+    ...(profile.entities || []),
+    ...(profile.actions || []),
+    ...fieldMatches,
+  ]).slice(0, 8);
+  return candidates.length ? candidates.join(", ") : "fields already visible in the Block Profile";
+}
+
 function dataToAdd(matches) {
   const fromMatches = matches.flatMap((match) => match.missing_data || []);
   return unique([
@@ -157,7 +174,7 @@ function reportMarkdown(target, profile, matchGroup) {
     "## Coding Agent Prompt",
     "",
     "```text",
-    `Use the RepoLens Algorithm Opportunity Report for ${target}. Implement a first-version algorithm route without adding external services. Start with a bounded rule baseline and ${top.algorithm_name}. Use existing fields such as title, tags, score, activity id, and work id. Add a small telemetry contract for user_id, item_id, action_type, timestamp, exposure_id, position, and source_page. Do not implement deep recommendation models, reinforcement learning, or real-time LLM reranking in this phase. Keep the ranking explainable and add tests for deterministic ordering and missing-data fallback.`,
+    `Use the RepoLens Algorithm Opportunity Report for ${target}. Implement a first-version algorithm route without adding external services. Start with a bounded rule baseline and ${top.algorithm_name}. Use available module evidence such as ${availableFieldSummary(profile)}. Add a small telemetry contract for user_id, item_id, action_type, timestamp, exposure_id, position, and source_page. Do not implement deep recommendation models, reinforcement learning, or real-time LLM reranking in this phase. Keep the ranking explainable and add tests for deterministic ordering and missing-data fallback.`,
     "```",
     "",
     "## Source Artifacts",

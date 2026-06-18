@@ -202,7 +202,7 @@ function detectTerms(haystack, detectors) {
 }
 
 function collectEvidenceLines(sources) {
-  const interesting = [/works?/i, /activity/i, /tags?/i, /score/i, /keyword/i, /filter\(/i, /sort\(/i, /fetch\(/i, /@app\.get/i];
+  const interesting = [/items?/i, /works?/i, /records?/i, /entries?/i, /tags?/i, /score/i, /keyword/i, /filter\(/i, /sort\(/i, /fetch\(/i, /@app\.get/i];
   const lines = [];
   for (const source of sources) {
     source.text.split(/\r?\n/).forEach((text, index) => {
@@ -224,8 +224,8 @@ function inferProfile({ target, trace, starts, sources }) {
   const haystack = [target, ...routes, ...components, ...apis, ...files, ...riskSignals, sourceText].join("\n");
 
   const entities = detectTerms(haystack, [
-    { id: "activity", patterns: [/\bactivity\b/i, /activities/i] },
-    { id: "work", patterns: [/\bwork\b/i, /works/i] },
+    { id: "collection", patterns: [/\bcollection\b/i, /\bgroup\b/i, /\bcategory\b/i] },
+    { id: "item", patterns: [/\bitem\b/i, /items/i, /\bwork\b/i, /works/i, /\bcandidate\b/i, /candidates/i] },
     { id: "user", patterns: [/\buser\b/i, /author/i] },
     { id: "tag", patterns: [/\btag\b/i, /tags/i] },
     { id: "score", patterns: [/\bscore\b/i, /vote/i, /rating/i] },
@@ -233,7 +233,7 @@ function inferProfile({ target, trace, starts, sources }) {
   ]);
 
   const actions = detectTerms(haystack, [
-    { id: "list", patterns: [/\.map\(/i, /load_all/i, /works/i] },
+    { id: "list", patterns: [/\.map\(/i, /load_all/i, /items/i, /works/i, /records/i, /entries/i] },
     { id: "filter", patterns: [/\.filter\(/i, /keyword/i] },
     { id: "sort", patterns: [/\.sort\(/i, /score/i] },
     { id: "search", patterns: [/search/i, /keyword/i] },
@@ -252,11 +252,11 @@ function inferProfile({ target, trace, starts, sources }) {
   if (/works?|tags?|score|recommend|similar/i.test(haystack)) taskSignals.push("recommendation");
   if (/score|sort\(|rank|top/i.test(haystack)) taskSignals.push("ranking");
   if (/keyword|search|filter\(/i.test(haystack)) taskSignals.push("search");
-  if (/user|author|activity/i.test(haystack)) taskSignals.push("personalization");
+  if (/user|author|profile|account/i.test(haystack)) taskSignals.push("personalization");
 
   const constraints = [];
   if (/title|tags?|description/i.test(haystack)) constraints.push("cold_start");
-  if (/load_all|range\(500\)|demo|static/i.test(haystack)) constraints.push("small_data");
+  if (/load_all|range\(500\)|fixture|mock|sample|static/i.test(haystack)) constraints.push("small_data");
   if (!/exposure_id|impression|click|like|collect|favorite|view_event/i.test(haystack)) constraints.push("behavior_log_missing");
   if (/tags?|score|title|author/i.test(haystack)) constraints.push("needs_explainability");
 

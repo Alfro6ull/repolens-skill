@@ -9,10 +9,10 @@
     "node": ">=18"
   },
   "scripts": {
-    "demo": "npm run demo:index && npm run demo:context && npm run demo:report && npm run demo:algo && npm run test",
+    "demo": "npm run demo:index && npm run demo:trace && npm run demo:context && npm run demo:report && npm run demo:algo && npm run test",
     "demo:all": "npm run demo",
     "demo:index": "node repolens-perf/scripts/index_project.mjs repolens-perf/tests/fixtures/phase-one",
-    "demo:trace": "node repolens-perf/scripts/trace_module.mjs repolens-perf/tests/fixtures/phase-one \"/activity/:id\"",
+    "demo:trace": "node repolens-perf/scripts/trace_module.mjs repolens-perf/tests/fixtures/phase-one \"/activity/:id\" --out .project-memory/traces/activity-id-trace.md",
     "demo:context": "node repolens-perf/scripts/build_context_pack.mjs repolens-perf/tests/fixtures/phase-one \"/activity/:id\"",
     "demo:report": "node repolens-perf/scripts/perf_report.mjs repolens-perf/tests/fixtures/phase-one \"/activity/:id\"",
     "demo:algo": "node repolens-algo/scripts/build_block_profiles.mjs repolens-perf/tests/fixtures/phase-one \"/activity/:id\" && node repolens-algo/scripts/retrieve_algorithms.mjs repolens-perf/tests/fixtures/phase-one \"/activity/:id\" && node repolens-algo/scripts/generate_algo_report.mjs repolens-perf/tests/fixtures/phase-one \"/activity/:id\"",

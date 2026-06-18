@@ -1,143 +1,27 @@
 # RepoLens Skill
 
-RepoLens is a lightweight Codex Skill that turns a codebase into inspectable project memory, builds a code knowledge graph, and uses that graph for bounded AI context, evidence-backed performance reports, and algorithm opportunity matching.
+RepoLens is a lightweight Codex Skill that turns a repository into inspectable project memory, then uses that memory to produce bounded AI context, evidence-backed performance reports, and algorithm opportunity reports.
 
-Instead of asking an AI assistant to guess from the whole repository, RepoLens builds a JSON code graph, performs K-hop traversal around a route/file/component/API target, prunes context, and maps module evidence to either performance risks or algorithm optimization routes.
-
-## Features
-
-- Extracts files, imports, routes, React components, API references, and performance signals.
-- Builds `.project-memory/` with a project profile, module summaries, graph JSON, graph metrics, reports, and context packs.
-- Uses K-hop graph traversal to retrieve target-specific context.
-- Generates context packs that can be handed to an AI coding agent.
-- Generates performance reports with evidence lines, risk levels, rule-specific acceptance criteria, fix tickets, and focused coding prompts.
-- Generates Block Profiles and matches modules to local algorithm cards for recommendation, ranking, and search opportunities.
-- Includes frontend/backend performance rules and a public baseline evaluation.
-
-## Runtime
-
-- Node.js >= 18
-- No npm dependencies for the analysis scripts
-- No database, vector store, or external AI API required during indexing
-- Demo frontend dependencies are only needed if you want to run the sample app UI
-
-## Repository Layout
+It is designed for one repeatable path:
 
 ```text
-repolens-perf/
-  SKILL.md
-  agents/openai.yaml
-  scripts/
-    index_project.mjs
-    trace_module.mjs
-    build_context_pack.mjs
-    perf_report.mjs
-  references/
-    perfgraph_algorithm.md
-    frontend_perf_rules.md
-    backend_perf_rules.md
-    graph_schema.md
-    report_format.md
-  tests/
-    perfgraph.test.mjs
-    fixtures/
-
-repolens-algo/
-  SKILL.md
-  scripts/
-    build_block_profiles.mjs
-    retrieve_algorithms.mjs
-    generate_algo_report.mjs
-  knowledge/
-    algorithm_index.json
-    algorithm_cards/
-
-examples/generated/
-  activity-id-context-pack.md
-  activity-id-perf-report.md
-  activity-id-block-profile.json
-  activity-id-algorithm-matches.json
-  activity-id-algo-report.md
-
-repolens-perf/tests/fixtures/phase-one/
-  src/
-  backend/
-  .project-memory/     # generated after running npm run demo
-
-eval/
-  baseline_vs_repolens.md
+codebase -> .project-memory -> code graph -> target trace -> context/report -> algorithm opportunity
 ```
 
-## Quick Start
+Instead of asking an AI assistant to guess from the whole repository, RepoLens extracts deterministic code facts, traverses the graph around a route/file/component/API target, and writes artifacts that can be inspected without running any external service.
 
-Run the included demo:
+## Pipeline
 
-```bash
-npm run demo
-```
+1. **Index**: scan files, imports, routes, React components, API references, and static performance signals.
+2. **Graph**: write a plain JSON code graph under `.project-memory/graph/code_graph.json`.
+3. **Trace**: find a target such as `/activity/:id` and retrieve its K-hop graph neighborhood.
+4. **Context**: generate a compact context pack for an AI coding agent.
+5. **PerfGraph**: generate a performance report with evidence, risk scores, fix tickets, acceptance criteria, and a focused coding prompt.
+6. **AlgoGraph**: build a Block Profile from the same graph evidence, match it to local algorithm cards, and produce an algorithm roadmap with rejected options.
 
-Or run each step directly:
+## Outputs
 
-```bash
-node repolens-perf/scripts/index_project.mjs repolens-perf/tests/fixtures/phase-one
-node repolens-perf/scripts/trace_module.mjs repolens-perf/tests/fixtures/phase-one "/activity/:id"
-node repolens-perf/scripts/build_context_pack.mjs repolens-perf/tests/fixtures/phase-one "/activity/:id"
-node repolens-perf/scripts/perf_report.mjs repolens-perf/tests/fixtures/phase-one "/activity/:id"
-node repolens-algo/scripts/build_block_profiles.mjs repolens-perf/tests/fixtures/phase-one "/activity/:id"
-node repolens-algo/scripts/retrieve_algorithms.mjs repolens-perf/tests/fixtures/phase-one "/activity/:id"
-node repolens-algo/scripts/generate_algo_report.mjs repolens-perf/tests/fixtures/phase-one "/activity/:id"
-```
-
-Verify the scripts:
-
-```bash
-npm test
-npm run check
-```
-
-Pre-generated sample outputs are available in the repository:
-
-```text
-examples/generated/activity-id-context-pack.md
-examples/generated/activity-id-perf-report.md
-examples/generated/activity-id-block-profile.json
-examples/generated/activity-id-algorithm-matches.json
-examples/generated/activity-id-algo-report.md
-```
-
-After running `npm run demo`, open the regenerated artifacts:
-
-```text
-repolens-perf/tests/fixtures/phase-one/.project-memory/graph_metrics.json
-repolens-perf/tests/fixtures/phase-one/.project-memory/context-packs/activity-id.md
-repolens-perf/tests/fixtures/phase-one/.project-memory/reports/activity-id-perf-report.md
-repolens-perf/tests/fixtures/phase-one/.project-memory/algo/block_profiles.json
-repolens-perf/tests/fixtures/phase-one/.project-memory/algo/algorithm_matches.json
-repolens-perf/tests/fixtures/phase-one/.project-memory/algo/reports/activity-id-algo-report.md
-```
-
-## Use On Your Own Repository
-
-```bash
-node repolens-perf/scripts/index_project.mjs /path/to/your/repo
-node repolens-perf/scripts/build_context_pack.mjs /path/to/your/repo "<route-or-module>"
-node repolens-perf/scripts/perf_report.mjs /path/to/your/repo "<route-or-module>"
-node repolens-algo/scripts/build_block_profiles.mjs /path/to/your/repo "<route-or-module>"
-node repolens-algo/scripts/retrieve_algorithms.mjs /path/to/your/repo "<route-or-module>"
-node repolens-algo/scripts/generate_algo_report.mjs /path/to/your/repo "<route-or-module>"
-```
-
-Examples:
-
-```bash
-node repolens-perf/scripts/build_context_pack.mjs ~/work/app "/dashboard"
-node repolens-perf/scripts/perf_report.mjs ~/work/app "RichTextRenderer"
-node repolens-perf/scripts/perf_report.mjs ~/work/app "/api/posts"
-```
-
-## Generated Memory
-
-The indexer writes:
+RepoLens produces four output families:
 
 ```text
 .project-memory/
@@ -151,38 +35,109 @@ The indexer writes:
   graph_metrics.json
   MODULE_SUMMARIES/
   graph/code_graph.json
-  context-packs/
-  reports/
-  algo/
-    block_profiles.json
-    algorithm_matches.json
-    reports/
+
+.project-memory/traces/
+  <target>-trace.md
+
+.project-memory/context-packs/
+  <target>.md
+
+.project-memory/reports/
+  <target>-perf-report.md
+
+.project-memory/algo/
+  block_profiles.json
+  algorithm_matches.json
+  reports/<target>-algo-report.md
 ```
 
-## PerfGraph Workflow
+The generated `.project-memory/` directory is ignored by Git. Static, pre-generated examples are committed under `examples/generated/` so reviewers can read the result without running the scripts first.
 
-1. Extract deterministic code facts.
-2. Build a lightweight JSON code graph.
-3. Match a target route, file, component, API, or keyword.
-4. Retrieve the K-hop graph neighborhood.
-5. Rank context and adjacent risks.
-6. Generate a context pack for AI analysis.
-7. Produce an evidence-backed performance report and focused coding prompt.
+## Why Different From AI Review
 
-See `repolens-perf/references/perfgraph_algorithm.md` for details.
+RepoLens is not a large prompt. It gives the model a bounded, inspectable context boundary:
 
-## AlgoGraph Workflow
+- Code facts come from deterministic extraction, not model memory.
+- Context is selected by graph traversal around the requested target.
+- Performance findings cite files, lines, routes, components, APIs, or graph edges.
+- Risk scores are simple and explainable: priority weight + line evidence + graph proximity + adjacency + repeated signal.
+- Algorithm matches are constrained to local cards in `repolens-algo/knowledge/algorithm_index.json`.
+- Reports include rejected or not-recommended algorithms when the graph evidence is missing data or has a constraint.
 
-1. Read `.project-memory/graph/code_graph.json` from the PerfGraph index.
-2. Build a Block Profile for the target module.
-3. Extract entities, actions, data shapes, current logic, task signals, and constraints.
-4. Match the profile against local algorithm cards.
-5. Score matches using task, data, objective, and constraint evidence.
-6. Generate an Algorithm Opportunity Report with recommended phases, missing data, and algorithms to avoid now.
+## Demo
 
-## Why This Is Algorithmic
+Runtime requirements:
 
-RepoLens uses deterministic code fact extraction, API canonicalization, K-hop graph retrieval, context scoring, risk scoring, Block Profiles, and local algorithm-card matching. The goal is to make AI code analysis less open-ended than a normal repository prompt by giving the model a bounded, inspectable context pack and a constrained algorithm knowledge base.
+- Node.js >= 18
+- No npm dependencies
+- No database, vector store, or external AI API
+
+Run the complete reproducible demo:
+
+```bash
+npm run demo
+```
+
+That command indexes the included fixture repository, writes the trace/context/report/algo artifacts, and runs the test suite.
+
+Run individual checks:
+
+```bash
+npm test
+npm run check
+```
+
+Open the committed sample outputs:
+
+```text
+examples/generated/activity-id-context-pack.md
+examples/generated/activity-id-trace.md
+examples/generated/activity-id-perf-report.md
+examples/generated/activity-id-block-profile.json
+examples/generated/activity-id-algorithm-matches.json
+examples/generated/activity-id-algo-report.md
+```
+
+After `npm run demo`, open the regenerated outputs:
+
+```text
+repolens-perf/tests/fixtures/phase-one/.project-memory/traces/activity-id-trace.md
+repolens-perf/tests/fixtures/phase-one/.project-memory/context-packs/activity-id.md
+repolens-perf/tests/fixtures/phase-one/.project-memory/reports/activity-id-perf-report.md
+repolens-perf/tests/fixtures/phase-one/.project-memory/algo/block_profiles.json
+repolens-perf/tests/fixtures/phase-one/.project-memory/algo/algorithm_matches.json
+repolens-perf/tests/fixtures/phase-one/.project-memory/algo/reports/activity-id-algo-report.md
+```
+
+## Use On Another Repository
+
+```bash
+node repolens-perf/scripts/index_project.mjs /path/to/repo
+node repolens-perf/scripts/trace_module.mjs /path/to/repo "<route-or-module>" --out .project-memory/traces/target-trace.md
+node repolens-perf/scripts/build_context_pack.mjs /path/to/repo "<route-or-module>"
+node repolens-perf/scripts/perf_report.mjs /path/to/repo "<route-or-module>"
+node repolens-algo/scripts/build_block_profiles.mjs /path/to/repo "<route-or-module>"
+node repolens-algo/scripts/retrieve_algorithms.mjs /path/to/repo "<route-or-module>"
+node repolens-algo/scripts/generate_algo_report.mjs /path/to/repo "<route-or-module>"
+```
+
+Example targets:
+
+```bash
+node repolens-perf/scripts/perf_report.mjs ~/work/app "/dashboard"
+node repolens-perf/scripts/perf_report.mjs ~/work/app "RichTextRenderer"
+node repolens-perf/scripts/perf_report.mjs ~/work/app "/api/posts"
+```
+
+## Repository Layout
+
+```text
+repolens-perf/       PerfGraph Skill, scripts, rules, tests, and fixture
+repolens-algo/       AlgoGraph Skill, algorithm cards, scripts, and tests
+examples/generated/  committed sample outputs
+eval/                baseline comparison
+package.json         demo, test, and check commands
+```
 
 ## Skill Usage
 
@@ -194,21 +149,15 @@ cp -R repolens-perf ~/.codex/skills/
 cp -R repolens-algo ~/.codex/skills/
 ```
 
-Then invoke it in Codex with:
+Then invoke them in Codex:
 
 ```text
 Use $repolens-perf to index this repository and analyze /activity/:id performance.
 Use $repolens-algo to identify algorithm opportunities for /activity/:id.
 ```
 
-## Notes
+## Boundaries
 
 - Static signals are leads, not proof of runtime slowness.
 - Confirm high-impact findings with profiling, network traces, API latency measurements, or large fixtures.
 - The first version intentionally avoids external databases; the graph is plain JSON for portability.
-- Context packs use a narrower handoff scope for AI agents; performance reports may use a wider analysis scope to include adjacent risk evidence.
-
-## Roadmap
-
-- Add more algorithm cards for risk scoring, anomaly detection, time series forecasting, and edge inference.
-- Shared core helpers for target matching, graph traversal, and report validation.
