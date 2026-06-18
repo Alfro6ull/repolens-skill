@@ -19,7 +19,7 @@
     "algo:profile": "node repolens-algo/scripts/build_block_profiles.mjs",
     "algo:retrieve": "node repolens-algo/scripts/retrieve_algorithms.mjs",
     "algo:report": "node repolens-algo/scripts/generate_algo_report.mjs",
-    "test": "node repolens-perf/tests/perfgraph.test.mjs",
-    "check": "node --check repolens-perf/scripts/index_project.mjs && node --check repolens-perf/scripts/trace_module.mjs && node --check repolens-perf/scripts/build_context_pack.mjs && node --check repolens-perf/scripts/perf_report.mjs && node --check repolens-algo/scripts/build_block_profiles.mjs && node --check repolens-algo/scripts/retrieve_algorithms.mjs && node --check repolens-algo/scripts/generate_algo_report.mjs && node --check repolens-perf/tests/perfgraph.test.mjs"
+    "test": "node repolens-perf/tests/perfgraph.test.mjs && node repolens-algo/tests/algograph.test.mjs",
+    "check": "node --check repolens-perf/scripts/index_project.mjs && node --check repolens-perf/scripts/trace_module.mjs && node --check repolens-perf/scripts/build_context_pack.mjs && node --check repolens-perf/scripts/perf_report.mjs && node --check repolens-algo/scripts/build_block_profiles.mjs && node --check repolens-algo/scripts/retrieve_algorithms.mjs && node --check repolens-algo/scripts/generate_algo_report.mjs && node --check repolens-perf/tests/perfgraph.test.mjs && node --check repolens-algo/tests/algograph.test.mjs"
   }
 }

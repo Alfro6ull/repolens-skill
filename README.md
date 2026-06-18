@@ -52,6 +52,13 @@ repolens-algo/
     algorithm_index.json
     algorithm_cards/
 
+examples/generated/
+  activity-id-context-pack.md
+  activity-id-perf-report.md
+  activity-id-block-profile.json
+  activity-id-algorithm-matches.json
+  activity-id-algo-report.md
+
 repolens-perf/tests/fixtures/phase-one/
   src/
   backend/
@@ -88,7 +95,17 @@ npm test
 npm run check
 ```
 
-Open the generated artifacts:
+Pre-generated sample outputs are available in the repository:
+
+```text
+examples/generated/activity-id-context-pack.md
+examples/generated/activity-id-perf-report.md
+examples/generated/activity-id-block-profile.json
+examples/generated/activity-id-algorithm-matches.json
+examples/generated/activity-id-algo-report.md
+```
+
+After running `npm run demo`, open the regenerated artifacts:
 
 ```text
 repolens-perf/tests/fixtures/phase-one/.project-memory/graph_metrics.json

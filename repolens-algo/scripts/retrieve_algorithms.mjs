@@ -1,6 +1,10 @@
 #!/usr/bin/env node
 import fs from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const scriptDir = path.dirname(fileURLToPath(import.meta.url));
+const skillRoot = path.resolve(scriptDir, "..");
 
 function parseArgs(argv) {
   const args = [...argv];
@@ -107,7 +111,7 @@ function scoreAlgorithm(profile, algorithm) {
 async function main() {
   const options = parseArgs(process.argv.slice(2));
   const profilesPath = path.join(options.root, ".project-memory", "algo", "block_profiles.json");
-  const indexPath = path.resolve("repolens-algo", "knowledge", "algorithm_index.json");
+  const indexPath = path.join(skillRoot, "knowledge", "algorithm_index.json");
   const profiles = await readJson(profilesPath);
   const index = await readJson(indexPath);
   const matches = profiles.profiles.map((profile) => {

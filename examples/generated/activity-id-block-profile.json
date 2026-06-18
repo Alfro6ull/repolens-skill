@@ -1,0 +1,164 @@
+{
+  "generated_at": "2026-06-18T07:46:49.100Z",
+  "target": "/activity/:id",
+  "source_graph": ".project-memory/graph/code_graph.json",
+  "profiles": [
+    {
+      "block_id": "activity-id",
+      "block_type": "feature",
+      "target": "/activity/:id",
+      "confidence": 0.9,
+      "start_nodes": [
+        {
+          "id": "Route:GET:/activity/:id",
+          "type": "Route",
+          "label": "GET /activity/:id"
+        }
+      ],
+      "evidence": {
+        "routes": [
+          "GET /activity/:id"
+        ],
+        "components": [
+          "ActivityDetailPage"
+        ],
+        "apis": [
+          "GET /api/activities/:param/works"
+        ],
+        "files": [
+          "backend/main.py",
+          "src/api/activity.ts",
+          "src/App.tsx",
+          "src/pages/ActivityDetailPage.tsx"
+        ],
+        "risk_signals": [
+          "duplicated_request",
+          "image_without_lazy",
+          "large_list_render"
+        ],
+        "code_lines": [
+          {
+            "file": "backend/main.py",
+            "line": 6,
+            "text": "@app.get(\"/api/activities/{activity_id}/works\")"
+          },
+          {
+            "file": "backend/main.py",
+            "line": 7,
+            "text": "def get_activity_works(activity_id: str):"
+          },
+          {
+            "file": "backend/main.py",
+            "line": 8,
+            "text": "works = load_all_works(activity_id)"
+          },
+          {
+            "file": "backend/main.py",
+            "line": 11,
+            "text": "\"id\": work[\"id\"],"
+          },
+          {
+            "file": "backend/main.py",
+            "line": 12,
+            "text": "\"title\": work[\"title\"],"
+          },
+          {
+            "file": "backend/main.py",
+            "line": 13,
+            "text": "\"authorName\": load_author(work[\"author_id\"])[\"name\"],"
+          },
+          {
+            "file": "backend/main.py",
+            "line": 14,
+            "text": "\"coverUrl\": work[\"cover_url\"],"
+          },
+          {
+            "file": "backend/main.py",
+            "line": 15,
+            "text": "\"tags\": work[\"tags\"],"
+          },
+          {
+            "file": "backend/main.py",
+            "line": 17,
+            "text": "for work in works"
+          },
+          {
+            "file": "backend/main.py",
+            "line": 21,
+            "text": "@app.get(\"/api/search/works\")"
+          },
+          {
+            "file": "backend/main.py",
+            "line": 22,
+            "text": "def search_works(q: str):"
+          },
+          {
+            "file": "backend/main.py",
+            "line": 23,
+            "text": "return [work for work in load_global_work_index() if q in work[\"title\"]]"
+          },
+          {
+            "file": "backend/main.py",
+            "line": 26,
+            "text": "def load_all_works(activity_id: str):"
+          },
+          {
+            "file": "backend/main.py",
+            "line": 27,
+            "text": "return [{\"id\": str(index), \"title\": str(index), \"author_id\": str(index), \"cover_url\": \"/x.png\", \"tags\": []} for index in range(500)]"
+          },
+          {
+            "file": "backend/main.py",
+            "line": 34,
+            "text": "def load_global_work_index():"
+          },
+          {
+            "file": "backend/main.py",
+            "line": 35,
+            "text": "return load_all_works(\"global\")"
+          }
+        ]
+      },
+      "entities": [
+        "activity",
+        "keyword",
+        "tag",
+        "user",
+        "work"
+      ],
+      "actions": [
+        "list",
+        "search",
+        "view"
+      ],
+      "data_shapes": [
+        "content metadata",
+        "item list",
+        "keyword query"
+      ],
+      "current_logic": [
+        "api_fetch",
+        "keyword_search",
+        "list_loading"
+      ],
+      "task_signals": [
+        "personalization",
+        "recommendation",
+        "search"
+      ],
+      "constraints": [
+        "behavior_log_missing",
+        "cold_start",
+        "needs_explainability",
+        "small_data"
+      ],
+      "objectives": [
+        "improve_discovery",
+        "improve_search_relevance",
+        "personalize_candidates"
+      ],
+      "algorithm_opportunity": true,
+      "opportunity_summary": "The module exposes item metadata, list/ranking behavior, and query/filter logic, so it can be mapped to bounded recommendation, ranking, and search algorithm routes."
+    }
+  ]
+}

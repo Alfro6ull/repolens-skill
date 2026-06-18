@@ -1,0 +1,204 @@
+{
+  "generated_at": "2026-06-18T07:46:49.123Z",
+  "target": "/activity/:id",
+  "algorithm_index": "repolens-algo/knowledge/algorithm_index.json",
+  "matches": [
+    {
+      "block_id": "activity-id",
+      "target": "/activity/:id",
+      "top_algorithm": "content_based_recommendation",
+      "matches": [
+        {
+          "algorithm_id": "content_based_recommendation",
+          "algorithm_name": "Content-Based Recommendation",
+          "score": 25,
+          "fit": "strong",
+          "reasons": [
+            "matched task: recommendation",
+            "matched task: personalization",
+            "matched data: content metadata",
+            "matched objective: improve_discovery",
+            "matched objective: personalize_candidates",
+            "matched fit condition: cold_start",
+            "matched fit condition: small_data",
+            "matched fit condition: needs_explainability"
+          ],
+          "warnings": [],
+          "matched": {
+            "tasks": [
+              "recommendation",
+              "personalization"
+            ],
+            "data_shapes": [
+              "content metadata"
+            ],
+            "objectives": [
+              "improve_discovery",
+              "personalize_candidates"
+            ],
+            "constraints": [
+              "cold_start",
+              "small_data",
+              "needs_explainability"
+            ],
+            "anti_patterns": []
+          },
+          "missing_data": [],
+          "metrics": [
+            "CTR",
+            "Recall@K",
+            "NDCG@K",
+            "manual relevance review"
+          ],
+          "first_version": "Rank works by tag/title similarity plus popularity fallback.",
+          "complexity": "low",
+          "explainability": "high",
+          "card": "algorithm_cards/content_based_recommendation.md"
+        },
+        {
+          "algorithm_id": "hybrid_search_rag",
+          "algorithm_name": "Hybrid Search / Lightweight RAG",
+          "score": 24,
+          "fit": "strong",
+          "reasons": [
+            "matched task: search",
+            "matched task: recommendation",
+            "matched data: keyword query",
+            "matched data: content metadata",
+            "matched objective: improve_search_relevance",
+            "matched fit condition: small_data",
+            "matched fit condition: needs_explainability"
+          ],
+          "warnings": [],
+          "matched": {
+            "tasks": [
+              "search",
+              "recommendation"
+            ],
+            "data_shapes": [
+              "keyword query",
+              "content metadata"
+            ],
+            "objectives": [
+              "improve_search_relevance"
+            ],
+            "constraints": [
+              "small_data",
+              "needs_explainability"
+            ],
+            "anti_patterns": []
+          },
+          "missing_data": [],
+          "metrics": [
+            "Recall@K",
+            "MRR",
+            "query success rate",
+            "latency"
+          ],
+          "first_version": "Combine keyword filters with tag/title similarity and bounded retrieval.",
+          "complexity": "medium",
+          "explainability": "medium",
+          "card": "algorithm_cards/hybrid_search_rag.md"
+        },
+        {
+          "algorithm_id": "learning_to_rank",
+          "algorithm_name": "Learning to Rank",
+          "score": 4,
+          "fit": "weak",
+          "reasons": [
+            "matched task: search",
+            "matched task: personalization",
+            "matched objective: improve_discovery"
+          ],
+          "warnings": [
+            "profile has constraint: behavior_log_missing",
+            "profile has constraint: small_data",
+            "missing required data: ranked item list",
+            "missing required data: exposure logs",
+            "missing required data: click feedback"
+          ],
+          "matched": {
+            "tasks": [
+              "search",
+              "personalization"
+            ],
+            "data_shapes": [],
+            "objectives": [
+              "improve_discovery"
+            ],
+            "constraints": [],
+            "anti_patterns": [
+              "behavior_log_missing",
+              "small_data"
+            ]
+          },
+          "missing_data": [
+            "ranked item list",
+            "exposure logs",
+            "click feedback"
+          ],
+          "metrics": [
+            "NDCG@K",
+            "MRR",
+            "CTR",
+            "conversion rate"
+          ],
+          "first_version": "Start with weighted scoring features, then train a ranking model after exposure and click logs exist.",
+          "complexity": "high",
+          "explainability": "medium",
+          "card": "algorithm_cards/learning_to_rank.md"
+        },
+        {
+          "algorithm_id": "collaborative_filtering",
+          "algorithm_name": "Collaborative Filtering",
+          "score": 1,
+          "fit": "weak",
+          "reasons": [
+            "matched task: recommendation",
+            "matched task: personalization",
+            "matched objective: personalize_candidates",
+            "matched objective: improve_discovery"
+          ],
+          "warnings": [
+            "profile has constraint: cold_start",
+            "profile has constraint: behavior_log_missing",
+            "profile has constraint: small_data",
+            "missing required data: user-item interaction",
+            "missing required data: implicit feedback"
+          ],
+          "matched": {
+            "tasks": [
+              "recommendation",
+              "personalization"
+            ],
+            "data_shapes": [],
+            "objectives": [
+              "personalize_candidates",
+              "improve_discovery"
+            ],
+            "constraints": [],
+            "anti_patterns": [
+              "cold_start",
+              "behavior_log_missing",
+              "small_data"
+            ]
+          },
+          "missing_data": [
+            "user-item interaction",
+            "implicit feedback"
+          ],
+          "metrics": [
+            "Recall@K",
+            "NDCG@K",
+            "coverage",
+            "CTR"
+          ],
+          "first_version": "ItemCF over view/like/vote events with popularity fallback.",
+          "complexity": "medium",
+          "explainability": "medium",
+          "card": "algorithm_cards/collaborative_filtering.md"
+        }
+      ]
+    }
+  ]
+}

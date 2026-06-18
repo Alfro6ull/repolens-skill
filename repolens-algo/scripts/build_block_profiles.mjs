@@ -121,19 +121,63 @@ function materializeTrace(graph, nodeIds, depths) {
   };
 }
 
-function focusTrace(graph, trace, target) {
-  const targetText = String(target || "").toLowerCase();
-  const removeSearchOnly = targetText.includes("activity") && !targetText.includes("search");
-  if (!removeSearchOnly) return trace;
+function targetTokens(target) {
+  return String(target || "")
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter((token) => token.length >= 3 && token !== "api" && token !== "get");
+}
 
-  const keep = new Set(
-    [...trace.nodeIds].filter((id) => {
-      const text = id.toLowerCase();
-      if (text.includes("searchpage") || text.includes("route:get:/search") || text.includes("/api/search")) return false;
-      if (text.includes("unbounded_search")) return false;
-      return true;
-    }),
-  );
+function nodeSearchText(node) {
+  return [
+    node.id,
+    node.label,
+    node.type,
+    node.meta?.file,
+    node.meta?.path,
+    node.meta?.url,
+    node.meta?.rawUrl,
+    ...(Array.isArray(node.meta?.rawUrls) ? node.meta.rawUrls : []),
+  ]
+    .join(" ")
+    .toLowerCase();
+}
+
+function relevanceScore(node, tokens) {
+  const text = nodeSearchText(node);
+  return tokens.filter((token) => text.includes(token)).length;
+}
+
+function focusTrace(graph, trace, target) {
+  const tokens = targetTokens(target);
+  if (tokens.length === 0) return trace;
+
+  const nodeById = new Map(trace.nodes.map((node) => [node.id, node]));
+  const keep = new Set();
+
+  for (const node of trace.nodes) {
+    const depth = trace.depths.get(node.id) ?? 99;
+    if (depth <= 1 || relevanceScore(node, tokens) > 0) {
+      keep.add(node.id);
+    }
+  }
+
+  for (const node of trace.nodes) {
+    if (node.type !== "PerformanceRisk") continue;
+    const sourceKept = trace.edges.some((edge) => edge.type === "mayCause" && edge.target === node.id && keep.has(edge.source));
+    if (sourceKept) keep.add(node.id);
+  }
+
+  for (const edge of trace.edges) {
+    if (edge.type === "defines" && keep.has(edge.target)) keep.add(edge.source);
+    if (edge.type === "requests" && keep.has(edge.source)) keep.add(edge.target);
+    if (edge.type === "imports" && keep.has(edge.source)) keep.add(edge.target);
+  }
+
+  for (const id of [...keep]) {
+    if (!nodeById.has(id)) keep.delete(id);
+  }
+
   return materializeTrace(graph, keep, trace.depths);
 }
 
@@ -232,7 +276,7 @@ function inferProfile({ target, trace, starts, sources }) {
   const confidence = Math.min(0.95, 0.45 + Math.min(0.3, codeLines.length * 0.03) + Math.min(0.2, taskSignals.length * 0.05));
 
   return {
-    block_id: target.includes("activity") ? "activity-work-list" : safeSlug(target),
+    block_id: safeSlug(target),
     block_type: "feature",
     target,
     confidence: Number(confidence.toFixed(2)),
