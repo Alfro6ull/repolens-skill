@@ -1,8 +1,8 @@
-# RepoLens PerfGraph Skill
+# RepoLens Skill
 
-RepoLens PerfGraph is a lightweight Codex Skill that turns a codebase into inspectable project memory, retrieves a bounded graph neighborhood for a target module, and generates evidence-backed performance reports for AI coding workflows.
+RepoLens is a lightweight Codex Skill that turns a codebase into inspectable project memory, builds a code knowledge graph, and uses that graph for bounded AI context, evidence-backed performance reports, and algorithm opportunity matching.
 
-Instead of asking an AI assistant to guess from the whole repository, RepoLens builds a JSON code graph, performs K-hop traversal around a route/file/component/API target, prunes context, and asks the model to reason from cited evidence.
+Instead of asking an AI assistant to guess from the whole repository, RepoLens builds a JSON code graph, performs K-hop traversal around a route/file/component/API target, prunes context, and maps module evidence to either performance risks or algorithm optimization routes.
 
 ## Features
 
@@ -11,6 +11,7 @@ Instead of asking an AI assistant to guess from the whole repository, RepoLens b
 - Uses K-hop graph traversal to retrieve target-specific context.
 - Generates context packs that can be handed to an AI coding agent.
 - Generates performance reports with evidence lines, risk levels, rule-specific acceptance criteria, fix tickets, and focused coding prompts.
+- Generates Block Profiles and matches modules to local algorithm cards for recommendation, ranking, and search opportunities.
 - Includes frontend/backend performance rules and a public baseline evaluation.
 
 ## Runtime
@@ -41,10 +42,20 @@ repolens-perf/
     perfgraph.test.mjs
     fixtures/
 
-demo-ai-community-mini/
+repolens-algo/
+  SKILL.md
+  scripts/
+    build_block_profiles.mjs
+    retrieve_algorithms.mjs
+    generate_algo_report.mjs
+  knowledge/
+    algorithm_index.json
+    algorithm_cards/
+
+repolens-perf/tests/fixtures/phase-one/
   src/
   backend/
-  .project-memory/
+  .project-memory/     # generated after running npm run demo
 
 eval/
   baseline_vs_repolens.md
@@ -61,10 +72,13 @@ npm run demo
 Or run each step directly:
 
 ```bash
-node repolens-perf/scripts/index_project.mjs demo-ai-community-mini
-node repolens-perf/scripts/trace_module.mjs demo-ai-community-mini "/activity/:id"
-node repolens-perf/scripts/build_context_pack.mjs demo-ai-community-mini "/activity/:id"
-node repolens-perf/scripts/perf_report.mjs demo-ai-community-mini "/activity/:id"
+node repolens-perf/scripts/index_project.mjs repolens-perf/tests/fixtures/phase-one
+node repolens-perf/scripts/trace_module.mjs repolens-perf/tests/fixtures/phase-one "/activity/:id"
+node repolens-perf/scripts/build_context_pack.mjs repolens-perf/tests/fixtures/phase-one "/activity/:id"
+node repolens-perf/scripts/perf_report.mjs repolens-perf/tests/fixtures/phase-one "/activity/:id"
+node repolens-algo/scripts/build_block_profiles.mjs repolens-perf/tests/fixtures/phase-one "/activity/:id"
+node repolens-algo/scripts/retrieve_algorithms.mjs repolens-perf/tests/fixtures/phase-one "/activity/:id"
+node repolens-algo/scripts/generate_algo_report.mjs repolens-perf/tests/fixtures/phase-one "/activity/:id"
 ```
 
 Verify the scripts:
@@ -77,9 +91,12 @@ npm run check
 Open the generated artifacts:
 
 ```text
-demo-ai-community-mini/.project-memory/graph_metrics.json
-demo-ai-community-mini/.project-memory/context-packs/activity-id.md
-demo-ai-community-mini/.project-memory/reports/activity-id-perf-report.md
+repolens-perf/tests/fixtures/phase-one/.project-memory/graph_metrics.json
+repolens-perf/tests/fixtures/phase-one/.project-memory/context-packs/activity-id.md
+repolens-perf/tests/fixtures/phase-one/.project-memory/reports/activity-id-perf-report.md
+repolens-perf/tests/fixtures/phase-one/.project-memory/algo/block_profiles.json
+repolens-perf/tests/fixtures/phase-one/.project-memory/algo/algorithm_matches.json
+repolens-perf/tests/fixtures/phase-one/.project-memory/algo/reports/activity-id-algo-report.md
 ```
 
 ## Use On Your Own Repository
@@ -88,6 +105,9 @@ demo-ai-community-mini/.project-memory/reports/activity-id-perf-report.md
 node repolens-perf/scripts/index_project.mjs /path/to/your/repo
 node repolens-perf/scripts/build_context_pack.mjs /path/to/your/repo "<route-or-module>"
 node repolens-perf/scripts/perf_report.mjs /path/to/your/repo "<route-or-module>"
+node repolens-algo/scripts/build_block_profiles.mjs /path/to/your/repo "<route-or-module>"
+node repolens-algo/scripts/retrieve_algorithms.mjs /path/to/your/repo "<route-or-module>"
+node repolens-algo/scripts/generate_algo_report.mjs /path/to/your/repo "<route-or-module>"
 ```
 
 Examples:
@@ -116,6 +136,10 @@ The indexer writes:
   graph/code_graph.json
   context-packs/
   reports/
+  algo/
+    block_profiles.json
+    algorithm_matches.json
+    reports/
 ```
 
 ## PerfGraph Workflow
@@ -130,23 +154,34 @@ The indexer writes:
 
 See `repolens-perf/references/perfgraph_algorithm.md` for details.
 
+## AlgoGraph Workflow
+
+1. Read `.project-memory/graph/code_graph.json` from the PerfGraph index.
+2. Build a Block Profile for the target module.
+3. Extract entities, actions, data shapes, current logic, task signals, and constraints.
+4. Match the profile against local algorithm cards.
+5. Score matches using task, data, objective, and constraint evidence.
+6. Generate an Algorithm Opportunity Report with recommended phases, missing data, and algorithms to avoid now.
+
 ## Why This Is Algorithmic
 
-RepoLens uses deterministic code fact extraction, API canonicalization, K-hop graph retrieval, context scoring, risk scoring, and rule-based evidence extraction. The goal is to make AI code analysis less open-ended than a normal repository prompt by giving the model a bounded, inspectable context pack.
+RepoLens uses deterministic code fact extraction, API canonicalization, K-hop graph retrieval, context scoring, risk scoring, Block Profiles, and local algorithm-card matching. The goal is to make AI code analysis less open-ended than a normal repository prompt by giving the model a bounded, inspectable context pack and a constrained algorithm knowledge base.
 
 ## Skill Usage
 
-The reusable Skill lives in `repolens-perf/`. To install it for Codex discovery, copy or symlink that folder into your Codex skills directory.
+The reusable Skills live in `repolens-perf/` and `repolens-algo/`. To install them for Codex discovery, copy or symlink those folders into your Codex skills directory.
 
 ```bash
 mkdir -p ~/.codex/skills
 cp -R repolens-perf ~/.codex/skills/
+cp -R repolens-algo ~/.codex/skills/
 ```
 
 Then invoke it in Codex with:
 
 ```text
 Use $repolens-perf to index this repository and analyze /activity/:id performance.
+Use $repolens-algo to identify algorithm opportunities for /activity/:id.
 ```
 
 ## Notes
@@ -158,5 +193,5 @@ Use $repolens-perf to index this repository and analyze /activity/:id performanc
 
 ## Roadmap
 
-- AlgoGraph: build block profiles from `.project-memory` and recommend algorithm routes from local algorithm cards.
+- Add more algorithm cards for risk scoring, anomaly detection, time series forecasting, and edge inference.
 - Shared core helpers for target matching, graph traversal, and report validation.

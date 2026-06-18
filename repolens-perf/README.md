@@ -13,10 +13,10 @@ RepoLens PerfGraph is a lightweight code graph analysis Skill. It distills a rep
 ## Commands
 
 ```bash
-node repolens-perf/scripts/index_project.mjs demo-ai-community-mini
-node repolens-perf/scripts/trace_module.mjs demo-ai-community-mini "/activity/:id"
-node repolens-perf/scripts/build_context_pack.mjs demo-ai-community-mini "/activity/:id"
-node repolens-perf/scripts/perf_report.mjs demo-ai-community-mini "/activity/:id"
+node repolens-perf/scripts/index_project.mjs repolens-perf/tests/fixtures/phase-one
+node repolens-perf/scripts/trace_module.mjs repolens-perf/tests/fixtures/phase-one "/activity/:id"
+node repolens-perf/scripts/build_context_pack.mjs repolens-perf/tests/fixtures/phase-one "/activity/:id"
+node repolens-perf/scripts/perf_report.mjs repolens-perf/tests/fixtures/phase-one "/activity/:id"
 node repolens-perf/tests/perfgraph.test.mjs
 ```
 

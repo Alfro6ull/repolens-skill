@@ -32,14 +32,14 @@ The context pack is the bounded graph evidence handoff. The report is the interp
 For the included demo repository:
 
 ```bash
-node repolens-perf/scripts/index_project.mjs demo-ai-community-mini
-node repolens-perf/scripts/build_context_pack.mjs demo-ai-community-mini "/activity/:id"
-node repolens-perf/scripts/perf_report.mjs demo-ai-community-mini "/activity/:id"
+node repolens-perf/scripts/index_project.mjs repolens-perf/tests/fixtures/phase-one
+node repolens-perf/scripts/build_context_pack.mjs repolens-perf/tests/fixtures/phase-one "/activity/:id"
+node repolens-perf/scripts/perf_report.mjs repolens-perf/tests/fixtures/phase-one "/activity/:id"
 ```
 
 Open:
 
 ```text
-demo-ai-community-mini/.project-memory/context-packs/activity-id.md
-demo-ai-community-mini/.project-memory/reports/activity-id-perf-report.md
+repolens-perf/tests/fixtures/phase-one/.project-memory/context-packs/activity-id.md
+repolens-perf/tests/fixtures/phase-one/.project-memory/reports/activity-id-perf-report.md
 ```

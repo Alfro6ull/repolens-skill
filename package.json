@@ -2,19 +2,24 @@
   "name": "repolens-skill",
   "version": "0.1.0",
   "private": true,
-  "description": "Lightweight code graph Skill for project memory, context packs, and evidence-backed performance reports.",
+  "description": "Lightweight code graph Skill for project memory, performance reports, and algorithm opportunity matching.",
   "license": "MIT",
   "type": "module",
   "engines": {
     "node": ">=18"
   },
   "scripts": {
-    "demo": "npm run demo:index && npm run demo:context && npm run demo:report && npm run test",
-    "demo:index": "node repolens-perf/scripts/index_project.mjs demo-ai-community-mini",
-    "demo:trace": "node repolens-perf/scripts/trace_module.mjs demo-ai-community-mini \"/activity/:id\"",
-    "demo:context": "node repolens-perf/scripts/build_context_pack.mjs demo-ai-community-mini \"/activity/:id\"",
-    "demo:report": "node repolens-perf/scripts/perf_report.mjs demo-ai-community-mini \"/activity/:id\"",
+    "demo": "npm run demo:index && npm run demo:context && npm run demo:report && npm run demo:algo && npm run test",
+    "demo:all": "npm run demo",
+    "demo:index": "node repolens-perf/scripts/index_project.mjs repolens-perf/tests/fixtures/phase-one",
+    "demo:trace": "node repolens-perf/scripts/trace_module.mjs repolens-perf/tests/fixtures/phase-one \"/activity/:id\"",
+    "demo:context": "node repolens-perf/scripts/build_context_pack.mjs repolens-perf/tests/fixtures/phase-one \"/activity/:id\"",
+    "demo:report": "node repolens-perf/scripts/perf_report.mjs repolens-perf/tests/fixtures/phase-one \"/activity/:id\"",
+    "demo:algo": "node repolens-algo/scripts/build_block_profiles.mjs repolens-perf/tests/fixtures/phase-one \"/activity/:id\" && node repolens-algo/scripts/retrieve_algorithms.mjs repolens-perf/tests/fixtures/phase-one \"/activity/:id\" && node repolens-algo/scripts/generate_algo_report.mjs repolens-perf/tests/fixtures/phase-one \"/activity/:id\"",
+    "algo:profile": "node repolens-algo/scripts/build_block_profiles.mjs",
+    "algo:retrieve": "node repolens-algo/scripts/retrieve_algorithms.mjs",
+    "algo:report": "node repolens-algo/scripts/generate_algo_report.mjs",
     "test": "node repolens-perf/tests/perfgraph.test.mjs",
-    "check": "node --check repolens-perf/scripts/index_project.mjs && node --check repolens-perf/scripts/trace_module.mjs && node --check repolens-perf/scripts/build_context_pack.mjs && node --check repolens-perf/scripts/perf_report.mjs && node --check repolens-perf/tests/perfgraph.test.mjs"
+    "check": "node --check repolens-perf/scripts/index_project.mjs && node --check repolens-perf/scripts/trace_module.mjs && node --check repolens-perf/scripts/build_context_pack.mjs && node --check repolens-perf/scripts/perf_report.mjs && node --check repolens-algo/scripts/build_block_profiles.mjs && node --check repolens-algo/scripts/retrieve_algorithms.mjs && node --check repolens-algo/scripts/generate_algo_report.mjs && node --check repolens-perf/tests/perfgraph.test.mjs"
   }
 }

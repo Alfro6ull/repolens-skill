@@ -26,7 +26,7 @@ Analyze performance risks for the demo route:
 | Focused coding-agent prompt | No | Yes |
 | Repeatable context boundary | No | Yes |
 
-Current RepoLens statistics are based on `demo-ai-community-mini/.project-memory/reports/activity-id-perf-report.md`.
+Current RepoLens statistics are based on `repolens-perf/tests/fixtures/phase-one/.project-memory/reports/activity-id-perf-report.md` after running `npm run demo`.
 
 ## Evidence From Demo Output
 

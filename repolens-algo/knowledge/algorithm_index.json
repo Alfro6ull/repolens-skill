@@ -1,0 +1,61 @@
+{
+  "version": "0.1.0",
+  "algorithms": [
+    {
+      "id": "content_based_recommendation",
+      "name": "Content-Based Recommendation",
+      "card": "algorithm_cards/content_based_recommendation.md",
+      "tasks": ["recommendation", "ranking", "personalization"],
+      "data_required": ["content metadata"],
+      "good_for": ["cold_start", "small_data", "needs_explainability", "tag_similarity"],
+      "bad_for": ["no_item_metadata"],
+      "objectives": ["improve_discovery", "explainable_ranking", "personalize_candidates"],
+      "metrics": ["CTR", "Recall@K", "NDCG@K", "manual relevance review"],
+      "first_version": "Rank works by tag/title similarity plus popularity fallback.",
+      "complexity": "low",
+      "explainability": "high"
+    },
+    {
+      "id": "collaborative_filtering",
+      "name": "Collaborative Filtering",
+      "card": "algorithm_cards/collaborative_filtering.md",
+      "tasks": ["recommendation", "ranking", "personalization"],
+      "data_required": ["user-item interaction", "implicit feedback"],
+      "good_for": ["behavior_logs", "similarity", "offline_batch"],
+      "bad_for": ["cold_start", "behavior_log_missing", "small_data"],
+      "objectives": ["personalize_candidates", "improve_discovery"],
+      "metrics": ["Recall@K", "NDCG@K", "coverage", "CTR"],
+      "first_version": "ItemCF over view/like/vote events with popularity fallback.",
+      "complexity": "medium",
+      "explainability": "medium"
+    },
+    {
+      "id": "learning_to_rank",
+      "name": "Learning to Rank",
+      "card": "algorithm_cards/learning_to_rank.md",
+      "tasks": ["ranking", "search", "personalization"],
+      "data_required": ["ranked item list", "exposure logs", "click feedback"],
+      "good_for": ["multi_feature_ranking", "stable_feedback", "search_ranking"],
+      "bad_for": ["behavior_log_missing", "small_data", "no_exposure_logs"],
+      "objectives": ["optimize_ranking", "improve_discovery"],
+      "metrics": ["NDCG@K", "MRR", "CTR", "conversion rate"],
+      "first_version": "Start with weighted scoring features, then train a ranking model after exposure and click logs exist.",
+      "complexity": "high",
+      "explainability": "medium"
+    },
+    {
+      "id": "hybrid_search_rag",
+      "name": "Hybrid Search / Lightweight RAG",
+      "card": "algorithm_cards/hybrid_search_rag.md",
+      "tasks": ["search", "retrieval", "recommendation"],
+      "data_required": ["keyword query", "content metadata"],
+      "good_for": ["text_search", "small_data", "needs_explainability"],
+      "bad_for": ["no_text_fields", "latency_sensitive_without_index"],
+      "objectives": ["improve_search_relevance", "explainable_ranking"],
+      "metrics": ["Recall@K", "MRR", "query success rate", "latency"],
+      "first_version": "Combine keyword filters with tag/title similarity and bounded retrieval.",
+      "complexity": "medium",
+      "explainability": "medium"
+    }
+  ]
+}
