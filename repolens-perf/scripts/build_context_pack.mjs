@@ -36,7 +36,9 @@ function findStartNodes(graph, target) {
       includesTarget(node.label, target) ||
       includesTarget(node.meta?.file, target) ||
       includesTarget(node.meta?.path, target) ||
-      includesTarget(node.meta?.url, target)
+      includesTarget(node.meta?.url, target) ||
+      includesTarget(node.meta?.rawUrl, target) ||
+      (Array.isArray(node.meta?.rawUrls) && node.meta.rawUrls.some((url) => includesTarget(url, target)))
     );
   });
 }
@@ -82,6 +84,25 @@ function traceGraph(graph, starts, hops) {
     }
   }
 
+  const apiIds = new Set([...visited.keys()].filter((id) => id.startsWith("APIEndpoint:")));
+  for (const edge of graph.edges) {
+    if (edge.type !== "defines" || !apiIds.has(edge.target) || visited.has(edge.source)) continue;
+    visited.set(edge.source, {
+      depth: (visited.get(edge.target)?.depth ?? hops) + 1,
+      reason: `defines backend contract for ${edge.target}`,
+      via: edge,
+    });
+  }
+
+  for (const edge of graph.edges) {
+    if (edge.type !== "mayCause" || !visited.has(edge.source) || visited.has(edge.target)) continue;
+    visited.set(edge.target, {
+      depth: (visited.get(edge.source)?.depth ?? hops) + 1,
+      reason: `mayCause from ${edge.source}`,
+      via: edge,
+    });
+  }
+
   const nodeIds = new Set(visited.keys());
   return {
     nodes: graph.nodes.filter((node) => nodeIds.has(node.id)),
@@ -90,10 +111,51 @@ function traceGraph(graph, starts, hops) {
   };
 }
 
+function canonicalApiPathForMatch(value) {
+  return String(value || "")
+    .split("?")[0]
+    .replace(/^\w+\s+/, "")
+    .replace(/\$\{[^}]+\}/g, ":param")
+    .replace(/\{[^}/]+\}/g, ":param")
+    .replace(/\/\d+(?=\/|$)/g, "/:param")
+    .replace(/\/:id(?=\/|$)/g, "/:param")
+    .replace(/\/{2,}/g, "/")
+    .replace(/\/$/, "");
+}
+
+function apiMatchesRouteLiteral(api, routeLiteral) {
+  const target = canonicalApiPathForMatch(routeLiteral);
+  const candidates = [api.meta?.url, api.meta?.rawUrl, ...(api.meta?.rawUrls || []), api.label]
+    .map(canonicalApiPathForMatch)
+    .filter(Boolean);
+  return candidates.includes(target);
+}
+
+function riskMatchesSelectedApis(risk, selectedApis) {
+  if (!risk.meta?.file?.endsWith(".py") || selectedApis.length === 0) return true;
+
+  const evidenceText = String(risk.meta?.evidence?.text || "");
+  const routeLiteral = evidenceText.match(/["'`]([^"'`]*\/api\/[^"'`]+)["'`]/)?.[1];
+  if (routeLiteral) return selectedApis.some((api) => apiMatchesRouteLiteral(api, routeLiteral));
+
+  if (risk.meta?.rule === "unbounded_search") {
+    return selectedApis.some((api) => /\b(search|query|lookup|find)\b/i.test(`${api.label} ${(api.meta?.rawUrls || []).join(" ")}`));
+  }
+
+  return true;
+}
+
 function normalizeToken(value) {
   return String(value)
     .replace(/ies\b/g, "y")
     .replace(/s\b/g, "");
+}
+
+function riskMatchesFocus(node, filePaths, targetTokens, selectedApis = []) {
+  if (!filePaths.has(node.meta?.file)) return false;
+  if (!riskMatchesSelectedApis(node, selectedApis)) return false;
+  if (node.meta?.rule === "unbounded_search" && !targetTokens.includes("search")) return false;
+  return true;
 }
 
 function focusRouteTrace(starts, trace) {
@@ -154,9 +216,19 @@ function focusRouteTrace(starts, trace) {
     }
   }
 
+  for (const apiId of apiIds) {
+    for (const edge of trace.edges) {
+      if (edge.target !== apiId) continue;
+      if (edge.type !== "defines" && edge.type !== "requests") continue;
+      const sourceFile = edge.source.replace(/^File:/, "");
+      if (sourceFile !== edge.source) filePaths.add(sourceFile);
+    }
+  }
+
+  const selectedApis = [...apiIds].map((apiId) => nodeById.get(apiId)).filter(Boolean);
   const riskIds = new Set(
     trace.nodes
-      .filter((node) => node.type === "PerformanceRisk" && filePaths.has(node.meta?.file))
+      .filter((node) => node.type === "PerformanceRisk" && riskMatchesFocus(node, filePaths, targetTokens, selectedApis))
       .map((node) => node.id),
   );
 
@@ -186,15 +258,59 @@ function evidenceForEdge(edge) {
   return "-";
 }
 
-function formatNode(node, visit) {
-  return `| ${visit.depth} | ${node.type} | ${escapeCell(node.label)} | ${escapeCell(visit.reason)} |`;
+const NODE_TYPE_WEIGHT = {
+  Route: 5,
+  APIEndpoint: 4,
+  ReactComponent: 3,
+  PerformanceRisk: 3,
+  File: 2,
+};
+
+const PRIORITY_WEIGHT = {
+  P1: 8,
+  P2: 5,
+  P3: 2,
+};
+
+function degreeFor(nodeId, edges) {
+  return edges.reduce((count, edge) => count + (edge.source === nodeId || edge.target === nodeId ? 1 : 0), 0);
 }
 
-function formatRisk(node) {
+function hasRiskAdjacency(nodeId, edges, nodeById) {
+  return edges.some((edge) => {
+    if (edge.source !== nodeId && edge.target !== nodeId) return false;
+    const otherId = edge.source === nodeId ? edge.target : edge.source;
+    return nodeById.get(otherId)?.type === "PerformanceRisk";
+  });
+}
+
+function contextScore(node, visit, trace, hops, nodeById) {
+  const targetMatch = visit.depth === 0 ? 5 : 0;
+  const proximityWeight = Math.max(0, hops - visit.depth + 1);
+  const nodeTypeWeight = NODE_TYPE_WEIGHT[node.type] || 1;
+  const riskAdjacencyWeight = hasRiskAdjacency(node.id, trace.edges, nodeById) ? 2 : 0;
+  const centralityWeight = degreeFor(node.id, trace.edges) >= 3 ? 1 : 0;
+  return targetMatch + proximityWeight + nodeTypeWeight + riskAdjacencyWeight + centralityWeight;
+}
+
+function riskScore(node, visit, trace, hops, nodeById) {
+  const priorityWeight = PRIORITY_WEIGHT[node.meta?.level] || 1;
+  const evidenceWeight = node.meta?.evidence?.line ? 2 : 0;
+  const proximityWeight = Math.max(0, hops - (visit?.depth ?? hops) + 1);
+  const adjacencyWeight = degreeFor(node.id, trace.edges) >= 2 ? 1 : 0;
+  const moduleWeight = hasRiskAdjacency(node.id, trace.edges, nodeById) ? 1 : 0;
+  return priorityWeight + evidenceWeight + proximityWeight + adjacencyWeight + moduleWeight;
+}
+
+function formatNode(node, visit, score) {
+  return `| ${score} | ${visit.depth} | ${node.type} | ${escapeCell(node.label)} | ${escapeCell(visit.reason)} |`;
+}
+
+function formatRisk(node, score) {
   const evidence = node.meta?.evidence
     ? `${node.meta.file}:${node.meta.evidence.line} - ${node.meta.evidence.text}`
     : node.meta?.file || "needs manual verification";
-  return `| ${node.meta?.level || "P?"} | ${escapeCell(node.meta?.rule || node.label)} | ${escapeCell(evidence)} | ${escapeCell(node.meta?.fix || "Investigate and verify.")} |`;
+  return `| ${score} | ${node.meta?.level || "P?"} | ${escapeCell(node.meta?.rule || node.label)} | ${escapeCell(evidence)} | ${escapeCell(node.meta?.fix || "Investigate and verify.")} |`;
 }
 
 function contextFiles(nodes) {
@@ -207,9 +323,15 @@ function contextFiles(nodes) {
 
 function formatContextPack(target, starts, trace, hops) {
   const nodeById = new Map(trace.nodes.map((node) => [node.id, node]));
+  const scoredNodes = trace.nodes
+    .map((node) => ({ node, visit: trace.visits.get(node.id) }))
+    .filter((item) => item.visit)
+    .map((item) => ({ ...item, score: contextScore(item.node, item.visit, trace, hops, nodeById) }))
+    .sort((a, b) => b.score - a.score || a.visit.depth - b.visit.depth || a.node.type.localeCompare(b.node.type) || a.node.label.localeCompare(b.node.label));
   const risks = trace.nodes
     .filter((node) => node.type === "PerformanceRisk")
-    .sort((a, b) => String(a.meta?.level).localeCompare(String(b.meta?.level)) || a.label.localeCompare(b.label));
+    .map((node) => ({ node, score: riskScore(node, trace.visits.get(node.id), trace, hops, nodeById) }))
+    .sort((a, b) => b.score - a.score || String(a.node.meta?.level).localeCompare(String(b.node.meta?.level)) || a.node.label.localeCompare(b.node.label));
   const files = contextFiles(trace.nodes);
 
   const lines = [
@@ -229,12 +351,9 @@ function formatContextPack(target, starts, trace, hops) {
     "",
     "## Graph Neighborhood",
     "",
-    "| Distance | Type | Node | Why Included |",
-    "|---:|---|---|---|",
-    ...trace.nodes
-      .map((node) => ({ node, visit: trace.visits.get(node.id) }))
-      .sort((a, b) => a.visit.depth - b.visit.depth || a.node.type.localeCompare(b.node.type) || a.node.label.localeCompare(b.node.label))
-      .map(({ node, visit }) => formatNode(node, visit)),
+    "| Score | Distance | Type | Node | Why Included |",
+    "|---:|---:|---|---|---|",
+    ...scoredNodes.map(({ node, visit, score }) => formatNode(node, visit, score)),
     "",
     "## Evidence Edges",
     "",
@@ -251,9 +370,9 @@ function formatContextPack(target, starts, trace, hops) {
     "",
     "## Performance Risks",
     "",
-    "| Priority | Rule | Evidence | Recommended Fix |",
-    "|---|---|---|---|",
-    ...(risks.length ? risks.map(formatRisk) : ["| - | - | No risk node in context | Review runtime metrics |"]),
+    "| Score | Priority | Rule | Evidence | Recommended Fix |",
+    "|---:|---|---|---|---|",
+    ...(risks.length ? risks.map(({ node, score }) => formatRisk(node, score)) : ["| - | - | - | No risk node in context | Review runtime metrics |"]),
     "",
     "## Recommended Context For AI",
     "",

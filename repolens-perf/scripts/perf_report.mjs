@@ -8,6 +8,12 @@ const RULE_ORDER = {
   P3: 3,
 };
 
+const PRIORITY_SCORE = {
+  P1: 80,
+  P2: 50,
+  P3: 20,
+};
+
 const ACCEPTANCE_CRITERIA = {
   large_list_render: "The list render is bounded by pagination, virtualization, server-side slicing, or an explicit item cap under large fixtures.",
   duplicated_request: "Entering the same route does not issue duplicate requests for the same entity; shared data is cached, lifted, or merged.",
@@ -17,6 +23,9 @@ const ACCEPTANCE_CRITERIA = {
   n_plus_one_query: "Related records loaded inside a loop are batched, joined, prefetched, or cached at request scope.",
   expensive_render_compute: "Sort/filter work is memoized, precomputed, or moved behind a bounded API/query contract.",
   heavy_dependency_import: "Heavy dependencies are loaded by subpath or dynamic import when they are not required for the initial route.",
+  large_response_payload: "List responses return only fields required by the consumer, with detail-only fields moved behind detail endpoints or pagination.",
+  sync_blocking_io: "Request handlers do not perform blocking file, network, sleep, or subprocess work on the hot path.",
+  unbounded_search: "Search endpoints require a bounded limit or cursor and use indexed/ranked constraints rather than unbounded scans.",
 };
 
 function parseArgs(argv) {
@@ -53,7 +62,9 @@ function findStartNodes(graph, target) {
       includesTarget(node.label, target) ||
       includesTarget(node.meta?.file, target) ||
       includesTarget(node.meta?.path, target) ||
-      includesTarget(node.meta?.url, target)
+      includesTarget(node.meta?.url, target) ||
+      includesTarget(node.meta?.rawUrl, target) ||
+      (Array.isArray(node.meta?.rawUrls) && node.meta.rawUrls.some((url) => includesTarget(url, target)))
     );
   });
 }
@@ -74,6 +85,7 @@ function buildAdjacency(edges) {
 function traceGraph(graph, starts, hops) {
   const adjacency = buildAdjacency(graph.edges);
   const visited = new Set(starts.map((node) => node.id));
+  const depths = new Map(starts.map((node) => [node.id, 0]));
   const queue = starts.map((node) => ({ id: node.id, depth: 0 }));
 
   for (let index = 0; index < queue.length; index += 1) {
@@ -82,13 +94,28 @@ function traceGraph(graph, starts, hops) {
     for (const edge of adjacency.get(item.id) || []) {
       if (!visited.has(edge.next)) {
         visited.add(edge.next);
+        depths.set(edge.next, item.depth + 1);
         queue.push({ id: edge.next, depth: item.depth + 1 });
       }
     }
   }
 
+  const apiIds = new Set([...visited].filter((id) => id.startsWith("APIEndpoint:")));
+  for (const edge of graph.edges) {
+    if (edge.type !== "defines" || !apiIds.has(edge.target) || visited.has(edge.source)) continue;
+    visited.add(edge.source);
+    depths.set(edge.source, (depths.get(edge.target) ?? hops) + 1);
+  }
+
+  for (const edge of graph.edges) {
+    if (edge.type !== "mayCause" || !visited.has(edge.source) || visited.has(edge.target)) continue;
+    visited.add(edge.target);
+    depths.set(edge.target, (depths.get(edge.source) ?? hops) + 1);
+  }
+
   return {
     nodeIds: visited,
+    depths,
     nodes: graph.nodes.filter((node) => visited.has(node.id)),
     edges: graph.edges.filter((edge) => visited.has(edge.source) && visited.has(edge.target)),
   };
@@ -148,16 +175,26 @@ function collectModuleFacts(trace, starts) {
       const normalizedLabel = normalizeToken(api.label.toLowerCase());
       return normalizedTokens.some((token) => normalizedLabel.includes(token));
     });
+    const selectedApis = focusedApis.length ? focusedApis : apis;
 
-    const risks = trace.nodes
-      .filter((node) => node.type === "PerformanceRisk" && filePaths.has(node.meta?.file))
-      .sort((a, b) => (RULE_ORDER[a.meta?.level] || 9) - (RULE_ORDER[b.meta?.level] || 9));
+    for (const api of selectedApis) {
+      for (const edge of trace.edges) {
+        if (edge.type !== "defines" || edge.target !== api.id) continue;
+        const sourceFile = edge.source.replace(/^File:/, "");
+        if (sourceFile !== edge.source) filePaths.add(sourceFile);
+      }
+    }
+
+    const risks = sortRisks(
+      trace.nodes.filter((node) => node.type === "PerformanceRisk" && riskMatchesFocus(node, filePaths, normalizedTokens, selectedApis)),
+      trace,
+    );
 
     return {
       routes: routeStarts,
       files: trace.nodes.filter((node) => node.type === "File" && filePaths.has(node.label)),
       components: trace.nodes.filter((node) => node.type === "ReactComponent" && componentIds.has(node.id)),
-      apis: focusedApis.length ? focusedApis : apis,
+      apis: selectedApis,
       risks,
     };
   }
@@ -167,10 +204,45 @@ function collectModuleFacts(trace, starts) {
     files: trace.nodes.filter((node) => node.type === "File"),
     components: trace.nodes.filter((node) => node.type === "ReactComponent"),
     apis: trace.nodes.filter((node) => node.type === "APIEndpoint"),
-    risks: trace.nodes
-      .filter((node) => node.type === "PerformanceRisk")
-      .sort((a, b) => (RULE_ORDER[a.meta?.level] || 9) - (RULE_ORDER[b.meta?.level] || 9)),
+    risks: sortRisks(
+      trace.nodes.filter((node) => node.type === "PerformanceRisk"),
+      trace,
+    ),
   };
+}
+
+function canonicalApiPathForMatch(value) {
+  return String(value || "")
+    .split("?")[0]
+    .replace(/^\w+\s+/, "")
+    .replace(/\$\{[^}]+\}/g, ":param")
+    .replace(/\{[^}/]+\}/g, ":param")
+    .replace(/\/\d+(?=\/|$)/g, "/:param")
+    .replace(/\/:id(?=\/|$)/g, "/:param")
+    .replace(/\/{2,}/g, "/")
+    .replace(/\/$/, "");
+}
+
+function apiMatchesRouteLiteral(api, routeLiteral) {
+  const target = canonicalApiPathForMatch(routeLiteral);
+  const candidates = [api.meta?.url, api.meta?.rawUrl, ...(api.meta?.rawUrls || []), api.label]
+    .map(canonicalApiPathForMatch)
+    .filter(Boolean);
+  return candidates.includes(target);
+}
+
+function riskMatchesSelectedApis(risk, selectedApis) {
+  if (!risk.meta?.file?.endsWith(".py") || selectedApis.length === 0) return true;
+
+  const evidenceText = String(risk.meta?.evidence?.text || "");
+  const routeLiteral = evidenceText.match(/["'`]([^"'`]*\/api\/[^"'`]+)["'`]/)?.[1];
+  if (routeLiteral) return selectedApis.some((api) => apiMatchesRouteLiteral(api, routeLiteral));
+
+  if (risk.meta?.rule === "unbounded_search") {
+    return selectedApis.some((api) => /\b(search|query|lookup|find)\b/i.test(`${api.label} ${(api.meta?.rawUrls || []).join(" ")}`));
+  }
+
+  return true;
 }
 
 function normalizeToken(value) {
@@ -179,23 +251,51 @@ function normalizeToken(value) {
     .replace(/s\b/g, "");
 }
 
-function riskRow(risk) {
+function riskMatchesFocus(node, filePaths, targetTokens, selectedApis = []) {
+  if (!filePaths.has(node.meta?.file)) return false;
+  if (!riskMatchesSelectedApis(node, selectedApis)) return false;
+  if (node.meta?.rule === "unbounded_search" && !targetTokens.includes("search")) return false;
+  return true;
+}
+
+function degreeFor(nodeId, edges) {
+  return edges.reduce((count, edge) => count + (edge.source === nodeId || edge.target === nodeId ? 1 : 0), 0);
+}
+
+function riskScore(risk, trace) {
+  const priorityWeight = PRIORITY_SCORE[risk.meta?.level] || 10;
+  const evidenceWeight = risk.meta?.evidence?.line ? 10 : 0;
+  const depth = trace.depths?.get(risk.id) ?? 9;
+  const graphProximityWeight = Math.max(0, 12 - depth * 2);
+  const adjacencyWeight = Math.min(8, degreeFor(risk.id, trace.edges) * 2);
+  const repeatedSignalWeight = trace.nodes.filter((node) => node.type === "PerformanceRisk" && node.meta?.rule === risk.meta?.rule).length > 1 ? 5 : 0;
+  return priorityWeight + evidenceWeight + graphProximityWeight + adjacencyWeight + repeatedSignalWeight;
+}
+
+function sortRisks(risks, trace) {
+  return risks
+    .slice()
+    .sort((a, b) => riskScore(b, trace) - riskScore(a, trace) || (RULE_ORDER[a.meta?.level] || 9) - (RULE_ORDER[b.meta?.level] || 9) || a.label.localeCompare(b.label));
+}
+
+function riskRow(risk, trace) {
   const evidence = risk.meta?.evidence
     ? `${risk.meta.file}:${risk.meta.evidence.line} - ${risk.meta.evidence.text.replace(/\|/g, "\\|")}`
     : risk.meta?.file || "needs manual verification";
-  return `| ${risk.meta?.level || "P?"} | ${risk.meta?.rule || risk.label} | ${evidence} | ${risk.meta?.fix || "Investigate and verify."} |`;
+  return `| ${riskScore(risk, trace)} | ${risk.meta?.level || "P?"} | ${risk.meta?.rule || risk.label} | ${evidence} | ${risk.meta?.fix || "Investigate and verify."} |`;
 }
 
 function acceptanceForRisk(risk) {
   return ACCEPTANCE_CRITERIA[risk.meta?.rule] || "The risk is verified with a focused fixture or runtime measurement and the affected contract remains stable.";
 }
 
-function ticketForRisk(index, risk) {
+function ticketForRisk(index, risk, trace) {
   const file = risk.meta?.file || "related file";
   return [
     `### Ticket ${index}: ${risk.meta?.title || risk.label}`,
     "",
     `- Priority: ${risk.meta?.level || "P?"}`,
+    `- Risk Score: ${riskScore(risk, trace)}`,
     `- Evidence: ${risk.meta?.evidence ? `${file}:${risk.meta.evidence.line} ${risk.meta.evidence.text}` : file}`,
     `- Change: ${risk.meta?.fix || "Investigate the hotspot and reduce repeated work."}`,
     `- Acceptance: ${acceptanceForRisk(risk)}`,
@@ -206,7 +306,7 @@ function ticketForRisk(index, risk) {
 
 function focusedPrompt(target, facts) {
   const files = facts.files.map((node) => node.label).slice(0, 12).join(", ") || "the traced files";
-  const risks = facts.risks.map((node) => node.meta?.rule).filter(Boolean).join(", ") || "the reported risks";
+  const risks = [...new Set(facts.risks.map((node) => node.meta?.rule).filter(Boolean))].join(", ") || "the reported risks";
   return [
     `Use the RepoLens memory for target "${target}". Focus only on this graph neighborhood unless a direct dependency forces a wider change.`,
     `Relevant files: ${files}.`,
@@ -253,13 +353,13 @@ function formatReport(target, starts, trace) {
     "",
     "## Risk Table",
     "",
-    "| Priority | Rule | Evidence | Recommended Fix |",
-    "|---|---|---|---|",
-    ...(facts.risks.length ? facts.risks.map(riskRow) : ["| - | - | No deterministic rule hit | Review runtime metrics |"]),
+    "| Score | Priority | Rule | Evidence | Recommended Fix |",
+    "|---:|---|---|---|---|",
+    ...(facts.risks.length ? facts.risks.map((risk) => riskRow(risk, trace)) : ["| - | - | - | No deterministic rule hit | Review runtime metrics |"]),
     "",
     "## Fix Tickets",
     "",
-    ...(facts.risks.length ? facts.risks.map((risk, index) => ticketForRisk(index + 1, risk)) : ["- No automatic ticket generated."]),
+    ...(facts.risks.length ? facts.risks.map((risk, index) => ticketForRisk(index + 1, risk, trace)) : ["- No automatic ticket generated."]),
     "",
     "## Focused Coding Prompt",
     "",

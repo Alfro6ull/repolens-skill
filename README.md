@@ -30,6 +30,9 @@ repolens-perf/
     backend_perf_rules.md
     graph_schema.md
     report_format.md
+  tests/
+    perfgraph.test.mjs
+    fixtures/
 
 demo-ai-community-mini/
   src/
@@ -49,6 +52,12 @@ node repolens-perf/scripts/index_project.mjs demo-ai-community-mini
 node repolens-perf/scripts/trace_module.mjs demo-ai-community-mini "/activity/:id"
 node repolens-perf/scripts/build_context_pack.mjs demo-ai-community-mini "/activity/:id"
 node repolens-perf/scripts/perf_report.mjs demo-ai-community-mini "/activity/:id"
+```
+
+Verify the scripts:
+
+```bash
+node repolens-perf/tests/perfgraph.test.mjs
 ```
 
 Open the generated artifacts:

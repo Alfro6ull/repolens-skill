@@ -81,6 +81,21 @@ const RULE_META = {
     title: "Heavy dependency import risk",
     fix: "Prefer dynamic import, subpath import, or smaller libraries.",
   },
+  large_response_payload: {
+    level: "P2",
+    title: "Large response payload risk",
+    fix: "Trim list payload schemas, split detail fields, or paginate the response.",
+  },
+  sync_blocking_io: {
+    level: "P2",
+    title: "Synchronous blocking I/O risk",
+    fix: "Move blocking file, network, or process work to async APIs, background jobs, or cache.",
+  },
+  unbounded_search: {
+    level: "P1",
+    title: "Unbounded search risk",
+    fix: "Add limit, indexed constraints, timeout, and query normalization.",
+  },
 };
 
 function parseArgs(argv) {
@@ -231,6 +246,27 @@ function firstLoopRelatedCallEvidence(content) {
   };
 }
 
+function firstLargeResponsePayloadEvidence(content) {
+  const lines = content.split(/\r?\n/);
+  const listIndex = lines.findIndex((line) => /return\s+\[/.test(line));
+  if (listIndex !== -1) {
+    return {
+      line: listIndex + 1,
+      text: lines[listIndex].trim().slice(0, 220),
+    };
+  }
+  return firstLineContaining(content, ["for work in works", "for item in items", "return {"]);
+}
+
+function firstBlockingIoEvidence(content) {
+  return firstLineContaining(content, ["open(", "requests.get", "requests.post", "urllib.request", "subprocess.", "time.sleep"]);
+}
+
+function firstSearchRouteEvidence(content) {
+  const routeEvidence = firstLineContaining(content, ["/search", "search_"]);
+  return routeEvidence || firstLineContaining(content, ["return [", "filter("]);
+}
+
 function addMatch(regex, content, mapper) {
   const matches = [];
   let match;
@@ -350,41 +386,54 @@ function cleanUrl(raw) {
   return raw.replace(/^`|`$/g, "").replace(/^["']|["']$/g, "");
 }
 
+function canonicalApiPath(raw) {
+  const cleaned = cleanUrl(raw).trim();
+  if (!cleaned) return cleaned;
+
+  const [rawPath] = cleaned.split("?");
+  let canonicalPath = rawPath
+    .replace(/\$\{[^}]+\}/g, ":param")
+    .replace(/\{[^}/]+\}/g, ":param")
+    .replace(/\/\d+(?=\/|$)/g, "/:param")
+    .replace(/\/:id(?=\/|$)/g, "/:param")
+    .replace(/\/{2,}/g, "/");
+
+  if (!canonicalPath.startsWith("/")) canonicalPath = `/${canonicalPath}`;
+
+  return canonicalPath;
+}
+
+function apiFact(file, method, rawUrl, line, source) {
+  const cleaned = cleanUrl(rawUrl);
+  return {
+    file,
+    method,
+    url: canonicalApiPath(cleaned),
+    rawUrl: cleaned,
+    line,
+    source,
+  };
+}
+
 function analyzeApis(file, content) {
   const apis = [];
   apis.push(
-    ...addMatch(/fetch\(\s*(`[^`]+`|"[^"]+"|'[^']+')/g, content, (match, line) => ({
-      file,
-      method: "GET",
-      url: cleanUrl(match[1]),
-      line,
-      source: "fetch",
-    })),
+    ...addMatch(/fetch\(\s*(`[^`]+`|"[^"]+"|'[^']+')/g, content, (match, line) =>
+      apiFact(file, "GET", match[1], line, "fetch"),
+    ),
   );
   apis.push(
     ...addMatch(
       /\b(?:axios|client|http|request)\.(get|post|put|patch|delete)\(\s*(`[^`]+`|"[^"]+"|'[^']+')/g,
       content,
-      (match, line) => ({
-        file,
-        method: match[1].toUpperCase(),
-        url: cleanUrl(match[2]),
-        line,
-        source: "http-client",
-      }),
+      (match, line) => apiFact(file, match[1].toUpperCase(), match[2], line, "http-client"),
     ),
   );
   apis.push(
     ...addMatch(
       /@\w+\.(get|post|put|patch|delete)\(\s*["']([^"']+)["']/g,
       content,
-      (match, line) => ({
-        file,
-        method: match[1].toUpperCase(),
-        url: match[2],
-        line,
-        source: "fastapi",
-      }),
+      (match, line) => apiFact(file, match[1].toUpperCase(), match[2], line, "fastapi"),
     ),
   );
   return apis;
@@ -436,15 +485,34 @@ function analyzeSignals(file, kind, content) {
     push("heavy_dependency_import", ["lodash", "moment", "antd", "echarts", "monaco-editor"]);
   }
 
-  if (kind === "backend" && /@\w+\.(get|post)\(/.test(content) && !/\b(limit|page|cursor|offset)\b/.test(content)) {
+  if (kind === "backend" && /@\w+\.(get|post)\(/.test(content) && !/\b(limit|page|cursor|offset|top_k|max_results|page_size)\b/.test(content)) {
     push("missing_pagination", ["@"], {
       evidence: firstBackendListRouteEvidence(content),
     });
   }
 
-  if (kind === "backend" && /for\s+\w+\s+in[\s\S]{0,320}\b(load_[A-Za-z0-9_]+|fetch_[A-Za-z0-9_]+|get_[A-Za-z0-9_]+|query|execute)\s*\(/.test(content)) {
+  if (kind === "backend" && /\breturn\s+\[[\s\S]{0,900}(for\s+\w+\s+in|load_all_|load_global_|range\s*\()/.test(content)) {
+    push("large_response_payload", ["return [", "for work in works", "load_all_"], {
+      evidence: firstLargeResponsePayloadEvidence(content),
+    });
+  }
+
+  if (kind === "backend" && (/for\s+\w+\s+in[\s\S]{0,420}\b(load_[A-Za-z0-9_]+|fetch_[A-Za-z0-9_]+|get_[A-Za-z0-9_]+|query|execute)\s*\(/.test(content)
+    || /\b(load_[A-Za-z0-9_]+|fetch_[A-Za-z0-9_]+|get_[A-Za-z0-9_]+|query|execute)\s*\([\s\S]{0,420}for\s+\w+\s+in/.test(content))) {
     push("n_plus_one_query", ["load_author(", "load_", "fetch_", ".query(", ".execute("], {
       evidence: firstLoopRelatedCallEvidence(content),
+    });
+  }
+
+  if (kind === "backend" && /@\w+\.(get|post)\(\s*["'][^"']*(search|query|lookup|find)/i.test(content) && !/\b(limit|page|cursor|offset|top_k|max_results|page_size)\b/.test(content)) {
+    push("unbounded_search", ["/search", "search_", "load_global_work_index"], {
+      evidence: firstSearchRouteEvidence(content),
+    });
+  }
+
+  if (kind === "backend" && /\b(requests\.(get|post|put|patch|delete)|urllib\.request|open\s*\(|time\.sleep\s*\(|subprocess\.)/.test(content)) {
+    push("sync_blocking_io", ["requests.get", "open(", "time.sleep", "subprocess."], {
+      evidence: firstBlockingIoEvidence(content),
     });
   }
 
@@ -715,9 +783,11 @@ async function main() {
 
   for (const api of apis) {
     const id = `APIEndpoint:${api.method}:${api.url}`;
-    ensureNode(nodes, id, "APIEndpoint", `${api.method} ${api.url}`, api);
+    const node = ensureNode(nodes, id, "APIEndpoint", `${api.method} ${api.url}`, api);
+    node.meta.rawUrls = [...new Set([...(node.meta.rawUrls || []), node.meta.rawUrl, api.rawUrl].filter(Boolean))];
+    node.meta.sources = [...new Set([...(node.meta.sources || []), node.meta.source, api.source].filter(Boolean))];
     const edgeType = api.source === "fastapi" ? "defines" : "requests";
-    addEdge(edges, `File:${api.file}`, id, edgeType, { line: api.line, source: api.source });
+    addEdge(edges, `File:${api.file}`, id, edgeType, { line: api.line, source: api.source, rawUrl: api.rawUrl });
   }
 
   for (const signal of signals) {

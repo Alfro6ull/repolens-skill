@@ -62,7 +62,7 @@ context_score = target_match
               + centrality_weight
 ```
 
-Current implementation exposes the ingredients through distance, node type, fan-out metrics, and risk adjacency metrics. Later versions can materialize the full score without changing the graph schema.
+Current implementation materializes this score in the `Graph Neighborhood` table of each context pack, then sorts higher-scoring nodes first so route, API, component, file, and risk evidence stays close to the AI prompt.
 
 ## 6. Risk Scoring
 
@@ -76,7 +76,7 @@ risk_score = priority_weight
            + affected_module_weight
 ```
 
-`P1` risks are likely to affect route scalability, payload size, or visible latency. `P2` risks usually indicate repeated work or medium render/network cost. `P3` risks are maintainability or future scalability leads.
+`perf_report.mjs` materializes this score in the `Risk Table` and each generated fix ticket. `P1` risks are likely to affect route scalability, payload size, or visible latency. `P2` risks usually indicate repeated work or medium render/network cost. `P3` risks are maintainability or future scalability leads.
 
 ## 7. AI Evidence Constraints
 
