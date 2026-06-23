@@ -5,8 +5,8 @@
 - Query: /discover
 - Hops: 4
 - Start nodes: 6
-- Included nodes: 32
-- Included edges: 88
+- Included nodes: 31
+- Included edges: 86
 
 ## Start Nodes
 
@@ -21,12 +21,12 @@
 
 | Score | Distance | Type | Node | Why Included |
 |---:|---:|---|---|---|
-| 16 | 0 | ReactComponent | DiscoverPage | target match |
 | 15 | 0 | APIEndpoint | GET /api/discover/works | target match |
-| 15 | 0 | File | src/pages/DiscoverPage.tsx | target match |
 | 15 | 0 | Route | GET /api/discover/works | target match |
 | 15 | 0 | Route | GET /discover | target match |
+| 14 | 0 | ReactComponent | DiscoverPage | target match |
 | 13 | 0 | File | src/api/discovery.ts | target match |
+| 13 | 0 | File | src/pages/DiscoverPage.tsx | target match |
 | 9 | 1 | AlgorithmOpportunity | ranking | suggests from File:src/pages/DiscoverPage.tsx |
 | 9 | 1 | AlgorithmOpportunity | recommendation | suggests from File:src/api/discovery.ts |
 | 9 | 1 | AlgorithmOpportunity | recommendation | suggests from File:src/pages/DiscoverPage.tsx |
@@ -51,7 +51,6 @@
 | 8 | 2 | AlgorithmOpportunity | recommendation | suggests from File:backend/main.py |
 | 8 | 2 | AlgorithmOpportunity | search | suggests from File:backend/main.py |
 | 7 | 1 | File | backend/main.py | routesTo from Route:GET:/api/discover/works |
-| 7 | 1 | PerformanceRisk | P1 large_list_render | mayCause from File:src/pages/DiscoverPage.tsx |
 | 6 | 1 | File | src/App.tsx | imports to File:src/pages/DiscoverPage.tsx |
 
 ## Evidence Edges
@@ -114,14 +113,13 @@
 | src/App.tsx | imports | src/pages/DiscoverPage.tsx | line 2 |
 | src/pages/DiscoverPage.tsx | exports | DiscoverPage | line 4 |
 | src/pages/DiscoverPage.tsx | imports | src/api/discovery.ts | line 2 |
-| src/pages/DiscoverPage.tsx | mayCause | P1 large_list_render | line 16: {works.map((work) => ( |
-| src/pages/DiscoverPage.tsx | mentions | content metadata | line 18: <img src={work.coverUrl} alt="" loading="lazy" /> |
+| src/pages/DiscoverPage.tsx | mentions | content metadata | line 19: <img src={featuredWork.coverUrl} alt="" loading="lazy" /> |
 | src/pages/DiscoverPage.tsx | mentions | item | line 6: const [works, setWorks] = useState([]); |
-| src/pages/DiscoverPage.tsx | mentions | tag | line 20: <p>{work.tags.join(", ")}</p> |
+| src/pages/DiscoverPage.tsx | mentions | tag | line 21: <p>{featuredWork.tags.join(", ")}</p> |
 | src/pages/DiscoverPage.tsx | suggests | ranking | line 6: const [works, setWorks] = useState([]); |
 | src/pages/DiscoverPage.tsx | suggests | recommendation | line 6: const [works, setWorks] = useState([]); |
-| src/pages/DiscoverPage.tsx | usesSignal | explicit score | line 21: <strong>{work.score}</strong> |
-| src/pages/DiscoverPage.tsx | usesSignal | text similarity | line 19: <h2>{work.title}</h2> |
+| src/pages/DiscoverPage.tsx | usesSignal | explicit score | line 22: <strong>{featuredWork.score}</strong> |
+| src/pages/DiscoverPage.tsx | usesSignal | text similarity | line 20: <h2>{featuredWork.title}</h2> |
 | explicit score | supports | ranking | - |
 | explicit score | supports | recommendation | - |
 | explicit score | supports | search | - |
@@ -132,12 +130,11 @@
 | text similarity | supports | search | - |
 | text similarity | supports | ranking | - |
 | text similarity | supports | recommendation | - |
-| DiscoverPage | mayCause | P1 large_list_render | line 16: {works.map((work) => ( |
-| DiscoverPage | mentions | content metadata | line 18: <img src={work.coverUrl} alt="" loading="lazy" /> |
+| DiscoverPage | mentions | content metadata | line 19: <img src={featuredWork.coverUrl} alt="" loading="lazy" /> |
 | DiscoverPage | mentions | item | line 6: const [works, setWorks] = useState([]); |
-| DiscoverPage | mentions | tag | line 20: <p>{work.tags.join(", ")}</p> |
-| DiscoverPage | usesSignal | explicit score | line 21: <strong>{work.score}</strong> |
-| DiscoverPage | usesSignal | text similarity | line 19: <h2>{work.title}</h2> |
+| DiscoverPage | mentions | tag | line 21: <p>{featuredWork.tags.join(", ")}</p> |
+| DiscoverPage | usesSignal | explicit score | line 22: <strong>{featuredWork.score}</strong> |
+| DiscoverPage | usesSignal | text similarity | line 20: <h2>{featuredWork.title}</h2> |
 | GET /api/discover/works | routesTo | backend/main.py | line 6 |
 | GET /discover | renders | DiscoverPage | line 5 |
 | GET /discover | routesTo | src/App.tsx | line 5 |
@@ -151,7 +148,7 @@
 
 | Score | Priority | Rule | Evidence | Recommended Fix |
 |---:|---|---|---|---|
-| 15 | P1 | large_list_render | src/pages/DiscoverPage.tsx:16 - {works.map((work) => ( | Add pagination, virtualization, or server-side slicing. |
+| - | - | - | No risk node in context | Review runtime metrics |
 
 ## Recommended Context For AI
 

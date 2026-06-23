@@ -99,27 +99,27 @@ const RULE_META = {
 };
 
 const DATA_ENTITY_DETECTORS = [
-  { id: "item", label: "item", patterns: [/\b(items?|works?|products?|posts?|candidates?)\b/i] },
-  { id: "user", label: "user", patterns: [/\b(users?|authors?|accounts?|profiles?)\b/i] },
-  { id: "tag", label: "tag", patterns: [/\b(tags?|categories|topics)\b/i] },
-  { id: "query", label: "query", patterns: [/\b(query|keyword)\s*[:=]/i, /\bq\s*[:=]/i, /\bsearch\b/i] },
-  { id: "content", label: "content metadata", patterns: [/\b(title|description|metadata|coverUrl|body)\b/i] },
-  { id: "document", label: "document", patterns: [/\b(documents?|chunks?|passages?)\b/i] },
+  { id: "item", label: "item", confidence: 0.78, patterns: [/\b(items?|works?|products?|posts?|candidates?)\b/i] },
+  { id: "user", label: "user", confidence: 0.72, patterns: [/\b(users?|accounts?|profiles?)\b/i, /\buser[_-]?id\b/i] },
+  { id: "tag", label: "tag", confidence: 0.8, patterns: [/\b(tags?|categories|topics)\b/i] },
+  { id: "query", label: "query", confidence: 0.76, patterns: [/\b(query|keyword)\s*[:=]/i, /\bq\s*[:=]/i, /\bsearch\b/i] },
+  { id: "content", label: "content metadata", confidence: 0.74, patterns: [/\b(title|description|metadata|coverUrl|body)\b/i] },
+  { id: "document", label: "document", confidence: 0.74, patterns: [/\b(documents?|chunks?|passages?)\b/i] },
 ];
 
 const USER_ACTION_DETECTORS = [
-  { id: "search", label: "search", patterns: [/\bsearch\b/i, /\bfilter\b/i, /\b(query|q)\s*[:=]/i] },
-  { id: "exposure", label: "exposure", patterns: [/\b(exposure_id|impression|shown|position)\b/i] },
-  { id: "click", label: "click", patterns: [/\b(click|clicked|ctr)\b/i] },
-  { id: "feedback", label: "feedback", patterns: [/\b(like|favorite|collect|vote|rating)\b/i] },
+  { id: "search", label: "search", confidence: 0.76, patterns: [/\bsearch\b/i, /\bfilter\b/i, /\b(query|q)\s*[:=]/i] },
+  { id: "exposure", label: "exposure", confidence: 0.78, patterns: [/\b(exposure_id|impression|shown|position)\b/i] },
+  { id: "click", label: "click", confidence: 0.82, patterns: [/\b(click|clicked|ctr)\b/i] },
+  { id: "feedback", label: "feedback", confidence: 0.78, patterns: [/\b(like|favorite|collect|vote|rating)\b/i] },
 ];
 
 const RANKING_SIGNAL_DETECTORS = [
-  { id: "explicit_score", label: "explicit score", patterns: [/\b(score|rank|weight|top_k)\b/i, /\.sort\s*\(/i] },
-  { id: "popularity", label: "popularity", patterns: [/\b(popularity|views?|likes?|votes?|rating)\b/i] },
-  { id: "recency", label: "recency", patterns: [/\b(created_at|updated_at|timestamp|recent|published_at)\b/i] },
-  { id: "text_similarity", label: "text similarity", patterns: [/\b(tag_overlap|similarity|match|keyword|title)\b/i] },
-  { id: "semantic_similarity", label: "semantic similarity", patterns: [/\b(embedding|vector|semantic|ann|nearest)\b/i] },
+  { id: "explicit_score", label: "explicit score", confidence: 0.8, patterns: [/\b(score|rank|weight|top_k)\b/i, /\.sort\s*\(/i] },
+  { id: "popularity", label: "popularity", confidence: 0.74, patterns: [/\b(popularity|views?|likes?|votes?|rating)\b/i] },
+  { id: "recency", label: "recency", confidence: 0.74, patterns: [/\b(created_at|updated_at|timestamp|recent|published_at)\b/i] },
+  { id: "text_similarity", label: "text similarity", confidence: 0.78, patterns: [/\b(tag_overlap|similarity|match|keyword|title)\b/i] },
+  { id: "semantic_similarity", label: "semantic similarity", confidence: 0.78, patterns: [/\b(embedding|vector|semantic|ann|nearest)\b/i] },
 ];
 
 function parseArgs(argv) {
@@ -301,13 +301,15 @@ function firstPatternEvidence(content, patterns) {
   };
 }
 
-function detectAlgorithmFacts(file, content, detectors) {
+function detectAlgorithmFacts(file, content, detectors, source) {
   return detectors
     .filter((detector) => detector.patterns.some((pattern) => pattern.test(content)))
     .map((detector) => ({
       id: detector.id,
       label: detector.label,
       file,
+      source,
+      confidence: detector.confidence,
       evidence: firstPatternEvidence(content, detector.patterns),
     }));
 }
@@ -326,42 +328,44 @@ function analyzeAlgorithmFacts(file, kind, content) {
     return { dataEntities: [], userActions: [], rankingSignals: [], algorithmOpportunities: [] };
   }
 
-  const dataEntities = detectAlgorithmFacts(file, content, DATA_ENTITY_DETECTORS);
-  const userActions = detectAlgorithmFacts(file, content, USER_ACTION_DETECTORS);
-  const rankingSignals = detectAlgorithmFacts(file, content, RANKING_SIGNAL_DETECTORS);
+  const dataEntities = detectAlgorithmFacts(file, content, DATA_ENTITY_DETECTORS, "static:data_entity_detector");
+  const userActions = detectAlgorithmFacts(file, content, USER_ACTION_DETECTORS, "static:user_action_detector");
+  const rankingSignals = detectAlgorithmFacts(file, content, RANKING_SIGNAL_DETECTORS, "static:ranking_signal_detector");
   const entityIds = new Set(dataEntities.map((item) => item.id));
   const actionIds = new Set(userActions.map((item) => item.id));
   const signalIds = new Set(rankingSignals.map((item) => item.id));
   const opportunities = [];
 
-  function pushOpportunity(id, label, reason) {
+  function pushOpportunity(id, label, reason, confidence) {
     opportunities.push({
       id,
       label,
       file,
       reason,
+      source: "inference:algorithm_opportunity",
+      confidence,
       evidence: opportunityEvidence(content, { dataEntities, userActions, rankingSignals }),
     });
   }
 
   if (entityIds.has("item") && (entityIds.has("tag") || entityIds.has("content") || entityIds.has("user"))) {
-    pushOpportunity("recommendation", "recommendation", "item metadata can support candidate recommendation");
+    pushOpportunity("recommendation", "recommendation", "item metadata can support candidate recommendation", 0.8);
   }
 
   if (entityIds.has("query") || actionIds.has("search")) {
-    pushOpportunity("search", "search", "query or search behavior is visible in code");
+    pushOpportunity("search", "search", "query or search behavior is visible in code", 0.76);
   }
 
   if (signalIds.has("explicit_score") || signalIds.has("popularity") || signalIds.has("text_similarity") || /\.sort\s*\(/.test(content)) {
-    pushOpportunity("ranking", "ranking", "ranking or scoring signal is visible in code");
+    pushOpportunity("ranking", "ranking", "ranking or scoring signal is visible in code", 0.78);
   }
 
   if (entityIds.has("user") && entityIds.has("item")) {
-    pushOpportunity("personalization", "personalization", "user and item entities appear in the same module");
+    pushOpportunity("personalization", "personalization", "user and item entities appear in the same module", 0.68);
   }
 
   if (entityIds.has("document") || signalIds.has("semantic_similarity")) {
-    pushOpportunity("retrieval", "retrieval", "document or semantic retrieval signals are visible in code");
+    pushOpportunity("retrieval", "retrieval", "document or semantic retrieval signals are visible in code", 0.72);
   }
 
   return {

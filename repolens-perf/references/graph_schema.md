@@ -43,13 +43,31 @@ Use this schema when extending scanners or interpreting `.project-memory/graph/c
 | `.project-memory/graph_metrics.json` | Node/edge counts, fan-out nodes, risk-adjacent nodes, and route risk density. |
 | `.project-memory/context-packs/<target>.md` | Bounded K-hop evidence pack for AI analysis. |
 
+## Algorithm Fact Metadata
+
+Algorithm fact nodes keep the older stable fields so existing consumers can continue to read them:
+
+| Field | Meaning |
+|---|---|
+| `id` | Stable fact key such as `item`, `query`, `explicit_score`, or `recommendation`. |
+| `label` | Reader-facing label. |
+| `file` | Source file where the fact was detected or inferred. |
+| `evidence` | Best available `{ line, text }` snippet for the fact. |
+
+Newer facts may also include:
+
+| Field | Meaning |
+|---|---|
+| `source` | Detector or inference source, for example `static:data_entity_detector` or `inference:algorithm_opportunity`. |
+| `confidence` | Static evidence confidence from `0` to `1`; this is not a runtime metric or model probability. |
+
 ## Interpretation
 
 - Use a 2-hop neighborhood for narrow files or leaf components.
 - Use a 3-hop neighborhood for route-to-component tracing.
 - Use a 4-hop neighborhood for route performance reports that should include API client calls.
 - Treat `PerformanceRisk` nodes as supporting leads. Confirm important runtime claims with code reading or measurement.
-- Treat algorithm nodes as opportunity evidence, not a mandate to implement an algorithm.
+- Treat algorithm nodes as opportunity evidence, not a mandate to implement an algorithm. They describe why an algorithm route may be worth evaluating, not that it must be shipped.
 - Prefer graph neighborhoods over full-repo context so the analysis remains focused.
 
 ## Extension Checklist

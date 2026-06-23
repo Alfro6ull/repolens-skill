@@ -257,7 +257,7 @@ function inferProfile({ target, trace, starts, sources }) {
   const detectedEntities = detectTerms(haystack, [
     { id: "collection", patterns: [/\bcollection\b/i, /\bgroup\b/i, /\bcategory\b/i] },
     { id: "item", patterns: [/\bitem\b/i, /items/i, /\bwork\b/i, /works/i, /\bcandidate\b/i, /candidates/i] },
-    { id: "user", patterns: [/\buser\b/i, /author/i] },
+    { id: "user", patterns: [/\buser\b/i, /\buser[_-]?id\b/i, /profile/i, /account/i] },
     { id: "tag", patterns: [/\btag\b/i, /tags/i] },
     { id: "score", patterns: [/\bscore\b/i, /vote/i, /rating/i] },
     { id: "keyword", patterns: [/keyword/i, /query/i, /\bq\b/] },
@@ -283,13 +283,13 @@ function inferProfile({ target, trace, starts, sources }) {
   if (/works?|tags?|score|recommend|similar/i.test(haystack)) taskSignals.push("recommendation");
   if (graphRankingSignals.length > 0 || /score|sort\(|rank|top/i.test(haystack)) taskSignals.push("ranking");
   if (graphEntities.includes("query") || graphActions.includes("search") || /keyword|search|filter\(/i.test(haystack)) taskSignals.push("search");
-  if (graphEntities.includes("user") || /user|author|profile|account/i.test(haystack)) taskSignals.push("personalization");
+  if (graphEntities.includes("user") || /\buser\b|profile|account/i.test(haystack)) taskSignals.push("personalization");
 
   const constraints = [];
   if (/title|tags?|description/i.test(haystack)) constraints.push("cold_start");
   if (/load_all|range\(500\)|fixture|mock|sample|static/i.test(haystack)) constraints.push("small_data");
   if (!graphActions.some((item) => ["click", "feedback", "exposure"].includes(item)) && !/exposure_id|impression|click|like|collect|favorite|view_event/i.test(haystack)) constraints.push("behavior_log_missing");
-  if (/tags?|score|title|author/i.test(haystack)) constraints.push("needs_explainability");
+  if (/tags?|score|title/i.test(haystack)) constraints.push("needs_explainability");
 
   const currentLogic = [];
   if (/fetch\(|@app\.get/i.test(haystack)) currentLogic.push("api_fetch");
@@ -299,7 +299,8 @@ function inferProfile({ target, trace, starts, sources }) {
   if (/keyword|search/i.test(haystack)) currentLogic.push("keyword_search");
 
   const objectives = [];
-  if (taskSignals.includes("recommendation")) objectives.push("improve_discovery", "personalize_candidates");
+  if (taskSignals.includes("recommendation")) objectives.push("improve_discovery");
+  if (taskSignals.includes("personalization")) objectives.push("personalize_candidates");
   if (taskSignals.includes("ranking")) objectives.push("optimize_ranking", "explainable_ranking");
   if (taskSignals.includes("search")) objectives.push("improve_search_relevance");
   if (taskSignals.includes("retrieval")) objectives.push("improve_search_relevance", "improve_discovery");

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-23T16:27:44.690Z",
+  "generated_at": "2026-06-23T16:56:35.426Z",
   "target": "/discover",
   "source_graph": ".project-memory/graph/code_graph.json",
   "profiles": [
@@ -57,9 +57,7 @@
           "src/App.tsx",
           "src/pages/DiscoverPage.tsx"
         ],
-        "risk_signals": [
-          "large_list_render"
-        ],
+        "risk_signals": [],
         "graph_facts": {
           "data_entities": [
             "content",
@@ -169,8 +167,7 @@
         "keyword",
         "query",
         "score",
-        "tag",
-        "user"
+        "tag"
       ],
       "actions": [
         "list",
@@ -191,7 +188,6 @@
         "score_sorting"
       ],
       "task_signals": [
-        "personalization",
         "ranking",
         "recommendation",
         "search"
@@ -205,8 +201,7 @@
         "explainable_ranking",
         "improve_discovery",
         "improve_search_relevance",
-        "optimize_ranking",
-        "personalize_candidates"
+        "optimize_ranking"
       ],
       "algorithm_opportunity": true,
       "opportunity_summary": "The graph exposes data entities, actions, or ranking signals that can be mapped to bounded algorithm routes."

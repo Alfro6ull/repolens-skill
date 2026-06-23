@@ -48,13 +48,22 @@ const report = fs.readFileSync(reportPath, "utf8");
 const knownAlgorithms = new Set(JSON.parse(fs.readFileSync(path.join(repoRoot, "repolens-algo", "knowledge", "algorithm_index.json"), "utf8")).algorithms.map((item) => item.id));
 const firstMatch = matches.matches[0];
 
+function assertMatchesUseLocalCards(matchGroup, reportText, label) {
+  for (const match of matchGroup.matches) {
+    assert.ok(knownAlgorithms.has(match.algorithm_id), `${label} should only use local algorithm cards`);
+    assert.ok(reportText.includes(`\`${match.algorithm_id}\``), `${label} report should show local algorithm id ${match.algorithm_id}`);
+  }
+}
+
 assert.equal(profiles.profiles[0].target, "/activity/:id");
 assert.equal(profiles.profiles[0].algorithm_opportunity, true);
 assert.ok(["content_based_recommendation", "hybrid_search_rag"].includes(firstMatch.top_algorithm));
-assert.ok(firstMatch.matches.every((match) => knownAlgorithms.has(match.algorithm_id)), "all matches should come from local algorithm cards");
+assertMatchesUseLocalCards(firstMatch, report, "phase-one");
 assert.match(report, /# Algorithm Opportunity Report: \/activity\/:id/);
 assert.match(report, /Data To Add Next/);
 assert.match(report, /Not Recommended Now/);
+assert.match(report, /Why This Algorithm Now/);
+assert.match(report, /What Data Blocks Heavier Algorithms/);
 assert.match(report, /Content-Based Recommendation|Hybrid Search \/ Lightweight RAG/);
 
 run("repolens-perf/scripts/index_project.mjs", [algorithmProjectRoot]);
@@ -72,17 +81,31 @@ const algorithmProfiles = JSON.parse(fs.readFileSync(path.join(algorithmProjectR
 const algorithmMatches = JSON.parse(fs.readFileSync(path.join(algorithmProjectRoot, ".project-memory", "algo", "algorithm_matches.json"), "utf8"));
 const algorithmReport = fs.readFileSync(path.join(algorithmProjectRoot, ".project-memory", "algo", "reports", "discover-algo-report.md"), "utf8");
 const discoverProfile = algorithmProfiles.profiles[0];
+const discoverMatches = algorithmMatches.matches[0];
 
 assert.equal(discoverProfile.algorithm_opportunity, true);
 assert.ok(discoverProfile.evidence.graph_facts.data_entities.includes("item"));
 assert.ok(discoverProfile.evidence.graph_facts.data_entities.includes("query"));
+assert.ok(discoverProfile.evidence.graph_facts.data_entities.includes("tag"));
 assert.ok(discoverProfile.evidence.graph_facts.ranking_signals.includes("explicit_score"));
+assert.ok(discoverProfile.evidence.graph_facts.ranking_signals.includes("text_similarity"));
 assert.ok(discoverProfile.task_signals.includes("search"));
 assert.ok(discoverProfile.task_signals.includes("ranking"));
-assert.equal(algorithmMatches.matches[0].top_algorithm, algorithmMatches.matches[0].matches[0].algorithm_id);
-assert.ok(algorithmMatches.matches[0].matches.every((match) => knownAlgorithms.has(match.algorithm_id)), "algorithm demo matches should come from local algorithm cards");
+assert.ok(!discoverProfile.task_signals.includes("personalization"));
+assert.ok(!discoverProfile.objectives.includes("personalize_candidates"));
+assert.doesNotMatch(JSON.stringify(discoverProfile.evidence.risk_signals), /large_list_render/);
+assert.ok(["content_based_recommendation", "hybrid_search_rag"].includes(discoverMatches.top_algorithm));
+assert.ok(discoverMatches.matches.some((match) => match.algorithm_id === "content_based_recommendation" && match.status === "recommended_now"));
+assert.ok(discoverMatches.matches.some((match) => match.algorithm_id === "hybrid_search_rag" && match.status === "recommended_now"));
+assert.ok(discoverMatches.matches.some((match) => match.algorithm_id === "semantic_retrieval" && match.status === "candidate_later"));
+assert.ok(discoverMatches.matches.some((match) => match.status === "candidate_later"));
+assert.ok(discoverMatches.matches.some((match) => match.status === "blocked_now"));
+assertMatchesUseLocalCards(discoverMatches, algorithmReport, "algorithm demo");
 assert.match(algorithmReport, /Knowledge Graph Signals/);
+assert.match(algorithmReport, /Why This Algorithm Now/);
+assert.match(algorithmReport, /What Data Blocks Heavier Algorithms/);
 assert.match(algorithmReport, /behavior_log_missing/);
+assert.doesNotMatch(algorithmReport, /large_list_render/);
 
 run("repolens-perf/scripts/index_project.mjs", [noAlgorithmProjectRoot]);
 run("repolens-algo/scripts/build_block_profiles.mjs", [noAlgorithmProjectRoot, "/status"]);
@@ -95,6 +118,8 @@ const noAlgorithmReport = fs.readFileSync(path.join(noAlgorithmProjectRoot, ".pr
 
 assert.equal(noAlgorithmProfiles.profiles[0].algorithm_opportunity, false);
 assert.equal(noAlgorithmMatches.matches[0].top_algorithm, null);
+assert.ok(noAlgorithmMatches.matches[0].matches.every((match) => match.status === "not_applicable"));
+assertMatchesUseLocalCards(noAlgorithmMatches.matches[0], noAlgorithmReport, "no-algorithm");
 assert.match(noAlgorithmReport, /does not expose enough item, query, ranking, retrieval, or personalization evidence/);
 
 console.log("algograph tests passed");

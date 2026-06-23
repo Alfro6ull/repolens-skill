@@ -55,7 +55,7 @@ function tableRows(matches) {
     .map((match) => {
       const why = compact(match.reasons.slice(0, 3).join("; ") || "low direct evidence");
       const warnings = compact(match.warnings.slice(0, 2).join("; ") || "none");
-      return `| ${match.score} | ${match.fit} | ${match.algorithm_name} | ${why} | ${warnings} |`;
+      return `| ${match.score} | ${match.status || "unknown"} | ${match.fit} | \`${match.algorithm_id}\` | ${match.algorithm_name} | ${why} | ${warnings} |`;
     })
     .join("\n");
 }
@@ -114,6 +114,63 @@ function graphFactLines(profile) {
   ];
 }
 
+function topCurrentMatch(matches) {
+  return matches.find((match) => match.status === "recommended_now") || matches[0];
+}
+
+function uniqueMatches(matches) {
+  const seen = new Set();
+  return matches.filter((match) => {
+    if (!match || seen.has(match.algorithm_id)) return false;
+    seen.add(match.algorithm_id);
+    return true;
+  });
+}
+
+function whyNowLines(profile, top) {
+  const facts = graphFacts(profile);
+  const reasonLines = top.reasons.slice(0, 4).map((reason) => `- ${reason}`);
+  return [
+    `- Current route: ${top.algorithm_name} (\`${top.algorithm_id}\`, ${top.status}).`,
+    `- Graph evidence: data entities [${facts.data_entities.join(", ") || "none"}], actions [${facts.user_actions.join(", ") || "none"}], ranking signals [${facts.ranking_signals.join(", ") || "none"}].`,
+    ...(reasonLines.length ? reasonLines : ["- The match is based on the local algorithm card and the current Block Profile."]),
+  ];
+}
+
+function blockingLines(matches) {
+  const blockers = unique(
+    matches
+      .filter((match) => ["candidate_later", "blocked_now"].includes(match.status))
+      .flatMap((match) => [
+        ...(match.missing_data || []).map((item) => `${match.status}: ${match.algorithm_name} needs ${item}`),
+        ...(match.warnings || []).map((warning) => `${match.status}: ${match.algorithm_name} - ${warning}`),
+      ]),
+  ).slice(0, 10);
+
+  return blockers.length ? blockers.map((item) => `- ${item}`) : ["- none detected"];
+}
+
+function roadmapLines(top, matches) {
+  const laterMatches = matches.filter((match) => match.status === "candidate_later");
+  const currentMatches = matches.filter((match) => match.status === "recommended_now");
+  const roadmapMatches = uniqueMatches([top, ...currentMatches, ...laterMatches]).slice(0, 3);
+  const lines = [
+    "### Phase 1: Rule baseline plus bounded ranking",
+    "Keep the current score, tags, and keyword filters as the measurable baseline. Log enough events to compare later algorithms.",
+    "",
+  ];
+
+  roadmapMatches.forEach((match, index) => {
+    const phase = index + 2;
+    const suffix = match.status === "candidate_later" ? " after data improves" : "";
+    lines.push(`### Phase ${phase}: ${match.algorithm_name}${suffix}`);
+    lines.push(match.first_version);
+    lines.push("");
+  });
+
+  return lines;
+}
+
 function noOpportunityReport(target, profile, matchGroup) {
   const matches = matchGroup.matches;
   return [
@@ -141,8 +198,8 @@ function noOpportunityReport(target, profile, matchGroup) {
     "",
     "## Diagnostic Algorithm Matches",
     "",
-    "| Score | Fit | Algorithm | Why Matched | Warnings |",
-    "|---:|---|---|---|---|",
+    "| Score | Status | Fit | Algorithm ID | Algorithm | Why Matched | Warnings |",
+    "|---:|---|---|---|---|---|---|",
     tableRows(matches),
     "",
     "## Not Recommended Now",
@@ -162,14 +219,12 @@ function reportMarkdown(target, profile, matchGroup) {
   const matches = matchGroup.matches;
   if (!profile.algorithm_opportunity) return noOpportunityReport(target, profile, matchGroup);
 
-  const top = matches[0];
-  const second = matches[1];
-  const third = matches[2];
+  const top = topCurrentMatch(matches);
   const lines = [
     `# Algorithm Opportunity Report: ${target}`,
     "",
     "## Executive Summary",
-    `RepoLens built a Block Profile for ${target} and matched it against local algorithm cards. The strongest current route is **${top.algorithm_name}** because it matches the module task signals and available code evidence while keeping the first version simple.`,
+    `RepoLens built a Block Profile for ${target} and matched it against local algorithm cards. The strongest current route is **${top.algorithm_name}** because it matches graph-visible entities, actions, and ranking signals while keeping the first version simple.`,
     "",
     "This is not a generic code review. The report translates code evidence into an algorithm opportunity boundary, then recommends only algorithms present in `repolens-algo/knowledge/algorithm_index.json`.",
     "",
@@ -188,11 +243,15 @@ function reportMarkdown(target, profile, matchGroup) {
     "",
     ...graphFactLines(profile),
     "",
+    "## Why This Algorithm Now",
+    "",
+    ...whyNowLines(profile, top),
+    "",
     "## Code Evidence",
     "",
     "| File | Line | Evidence |",
     "|---|---:|---|",
-    ...profile.evidence.code_lines.slice(0, 10).map((item) => `| ${item.file} | ${item.line} | ${compact(item.text, 110)} |`),
+    ...profile.evidence.code_lines.slice(0, 6).map((item) => `| ${item.file} | ${item.line} | ${compact(item.text, 110)} |`),
     "",
     "## Block Profile",
     "",
@@ -211,24 +270,17 @@ function reportMarkdown(target, profile, matchGroup) {
     "",
     "## Algorithm Matches",
     "",
-    "| Score | Fit | Algorithm | Why Matched | Warnings |",
-    "|---:|---|---|---|---|",
+    "| Score | Status | Fit | Algorithm ID | Algorithm | Why Matched | Warnings |",
+    "|---:|---|---|---|---|---|---|",
     tableRows(matches),
+    "",
+    "## What Data Blocks Heavier Algorithms",
+    "",
+    ...blockingLines(matches),
     "",
     "## Recommended Algorithm Roadmap",
     "",
-    "### Phase 1: Rule baseline plus bounded ranking",
-    "Use the current score, tags, and keyword filters as an explicit baseline. Add stable limits and log enough events to measure quality.",
-    "",
-    `### Phase 2: ${top.algorithm_name}`,
-    top.first_version,
-    "",
-    `### Phase 3: ${second.algorithm_name}`,
-    second.first_version,
-    "",
-    `### Phase 4: ${third.algorithm_name}`,
-    third.first_version,
-    "",
+    ...roadmapLines(top, matches),
     "## Not Recommended Now",
     "",
     "- Deep recommendation models: the current evidence points to small data and missing behavior logs.",

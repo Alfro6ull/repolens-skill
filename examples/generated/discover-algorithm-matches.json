@@ -1,62 +1,13 @@
 {
-  "generated_at": "2026-06-23T16:27:44.731Z",
+  "generated_at": "2026-06-23T16:56:35.465Z",
   "target": "/discover",
   "algorithm_index": "repolens-algo/knowledge/algorithm_index.json",
   "matches": [
     {
       "block_id": "discover",
       "target": "/discover",
-      "top_algorithm": "content_based_recommendation",
+      "top_algorithm": "hybrid_search_rag",
       "matches": [
-        {
-          "algorithm_id": "content_based_recommendation",
-          "algorithm_name": "Content-Based Recommendation",
-          "score": 29,
-          "fit": "strong",
-          "reasons": [
-            "matched task: recommendation",
-            "matched task: ranking",
-            "matched task: personalization",
-            "matched data: content metadata",
-            "matched objective: improve_discovery",
-            "matched objective: explainable_ranking",
-            "matched objective: personalize_candidates",
-            "matched fit condition: cold_start",
-            "matched fit condition: needs_explainability"
-          ],
-          "warnings": [],
-          "matched": {
-            "tasks": [
-              "recommendation",
-              "ranking",
-              "personalization"
-            ],
-            "data_shapes": [
-              "content metadata"
-            ],
-            "objectives": [
-              "improve_discovery",
-              "explainable_ranking",
-              "personalize_candidates"
-            ],
-            "constraints": [
-              "cold_start",
-              "needs_explainability"
-            ],
-            "anti_patterns": []
-          },
-          "missing_data": [],
-          "metrics": [
-            "CTR",
-            "Recall@K",
-            "NDCG@K",
-            "manual relevance review"
-          ],
-          "first_version": "Rank works by tag/title similarity plus popularity fallback.",
-          "complexity": "low",
-          "explainability": "high",
-          "card": "algorithm_cards/content_based_recommendation.md"
-        },
         {
           "algorithm_id": "hybrid_search_rag",
           "algorithm_name": "Hybrid Search / Lightweight RAG",
@@ -100,7 +51,54 @@
           "first_version": "Combine keyword filters with tag/title similarity and bounded retrieval.",
           "complexity": "medium",
           "explainability": "medium",
-          "card": "algorithm_cards/hybrid_search_rag.md"
+          "card": "algorithm_cards/hybrid_search_rag.md",
+          "status": "recommended_now"
+        },
+        {
+          "algorithm_id": "content_based_recommendation",
+          "algorithm_name": "Content-Based Recommendation",
+          "score": 23,
+          "fit": "strong",
+          "reasons": [
+            "matched task: recommendation",
+            "matched task: ranking",
+            "matched data: content metadata",
+            "matched objective: improve_discovery",
+            "matched objective: explainable_ranking",
+            "matched fit condition: cold_start",
+            "matched fit condition: needs_explainability"
+          ],
+          "warnings": [],
+          "matched": {
+            "tasks": [
+              "recommendation",
+              "ranking"
+            ],
+            "data_shapes": [
+              "content metadata"
+            ],
+            "objectives": [
+              "improve_discovery",
+              "explainable_ranking"
+            ],
+            "constraints": [
+              "cold_start",
+              "needs_explainability"
+            ],
+            "anti_patterns": []
+          },
+          "missing_data": [],
+          "metrics": [
+            "CTR",
+            "Recall@K",
+            "NDCG@K",
+            "manual relevance review"
+          ],
+          "first_version": "Rank works by tag/title similarity plus popularity fallback.",
+          "complexity": "low",
+          "explainability": "high",
+          "card": "algorithm_cards/content_based_recommendation.md",
+          "status": "recommended_now"
         },
         {
           "algorithm_id": "semantic_retrieval",
@@ -115,7 +113,9 @@
             "matched objective: improve_discovery",
             "matched fit condition: needs_explainability"
           ],
-          "warnings": [],
+          "warnings": [
+            "missing semantic retrieval signal"
+          ],
           "matched": {
             "tasks": [
               "search",
@@ -143,17 +143,17 @@
           "first_version": "Add an offline text embedding index for titles/descriptions and blend semantic candidates with keyword results.",
           "complexity": "medium",
           "explainability": "medium",
-          "card": "algorithm_cards/semantic_retrieval.md"
+          "card": "algorithm_cards/semantic_retrieval.md",
+          "status": "candidate_later"
         },
         {
           "algorithm_id": "learning_to_rank",
           "algorithm_name": "Learning to Rank",
-          "score": 18,
-          "fit": "strong",
+          "score": 14,
+          "fit": "medium",
           "reasons": [
             "matched task: ranking",
             "matched task: search",
-            "matched task: personalization",
             "matched data: ranked item list",
             "matched objective: optimize_ranking",
             "matched objective: improve_discovery"
@@ -166,8 +166,7 @@
           "matched": {
             "tasks": [
               "ranking",
-              "search",
-              "personalization"
+              "search"
             ],
             "data_shapes": [
               "ranked item list"
@@ -194,18 +193,17 @@
           "first_version": "Start with weighted scoring features, then train a ranking model after exposure and click logs exist.",
           "complexity": "high",
           "explainability": "medium",
-          "card": "algorithm_cards/learning_to_rank.md"
+          "card": "algorithm_cards/learning_to_rank.md",
+          "status": "candidate_later"
         },
         {
           "algorithm_id": "collaborative_filtering",
           "algorithm_name": "Collaborative Filtering",
-          "score": 10,
-          "fit": "medium",
+          "score": 4,
+          "fit": "weak",
           "reasons": [
             "matched task: recommendation",
             "matched task: ranking",
-            "matched task: personalization",
-            "matched objective: personalize_candidates",
             "matched objective: improve_discovery"
           ],
           "warnings": [
@@ -217,12 +215,10 @@
           "matched": {
             "tasks": [
               "recommendation",
-              "ranking",
-              "personalization"
+              "ranking"
             ],
             "data_shapes": [],
             "objectives": [
-              "personalize_candidates",
               "improve_discovery"
             ],
             "constraints": [],
@@ -244,19 +240,18 @@
           "first_version": "ItemCF over view/like/vote events with popularity fallback.",
           "complexity": "medium",
           "explainability": "medium",
-          "card": "algorithm_cards/collaborative_filtering.md"
+          "card": "algorithm_cards/collaborative_filtering.md",
+          "status": "blocked_now"
         },
         {
           "algorithm_id": "contextual_bandit",
           "algorithm_name": "Contextual Bandit Exploration",
-          "score": 10,
-          "fit": "medium",
+          "score": 4,
+          "fit": "weak",
           "reasons": [
             "matched task: ranking",
-            "matched task: personalization",
             "matched task: recommendation",
-            "matched objective: optimize_ranking",
-            "matched objective: personalize_candidates"
+            "matched objective: optimize_ranking"
           ],
           "warnings": [
             "profile has constraint: behavior_log_missing",
@@ -267,13 +262,11 @@
           "matched": {
             "tasks": [
               "ranking",
-              "personalization",
               "recommendation"
             ],
             "data_shapes": [],
             "objectives": [
-              "optimize_ranking",
-              "personalize_candidates"
+              "optimize_ranking"
             ],
             "constraints": [],
             "anti_patterns": [
@@ -294,7 +287,8 @@
           "first_version": "Start with epsilon-greedy exploration over a small set of transparent ranking policies after exposure logging is reliable.",
           "complexity": "high",
           "explainability": "low",
-          "card": "algorithm_cards/contextual_bandit.md"
+          "card": "algorithm_cards/contextual_bandit.md",
+          "status": "blocked_now"
         }
       ]
     }

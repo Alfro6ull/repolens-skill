@@ -1,8 +1,8 @@
 # RepoLens Trace: /discover
 
 - Start nodes: 6
-- Related nodes: 33
-- Related edges: 90
+- Related nodes: 32
+- Related edges: 88
 
 ## Start Nodes
 - File: src/api/discovery.ts (File:src/api/discovery.ts)
@@ -43,9 +43,6 @@
 - d0 src/api/discovery.ts - src/api/discovery.ts
 - d1 src/App.tsx - src/App.tsx
 - d0 src/pages/DiscoverPage.tsx - src/pages/DiscoverPage.tsx
-
-### PerformanceRisk
-- d1 P1 large_list_render - src/pages/DiscoverPage.tsx
 
 ### RankingSignal
 - d1 explicit score - backend/main.py
@@ -123,7 +120,6 @@
 - File:src/api/discovery.ts --suggests--> AlgorithmOpportunity:search:src/api/discovery.ts
 - File:src/pages/DiscoverPage.tsx --exports line 4--> ReactComponent:DiscoverPage:src/pages/DiscoverPage.tsx
 - File:src/pages/DiscoverPage.tsx --imports line 2--> File:src/api/discovery.ts
-- File:src/pages/DiscoverPage.tsx --mayCause--> PerformanceRisk:large_list_render:src/pages/DiscoverPage.tsx
 - File:src/pages/DiscoverPage.tsx --mentions--> DataEntity:content:src/pages/DiscoverPage.tsx
 - File:src/pages/DiscoverPage.tsx --mentions--> DataEntity:item:src/pages/DiscoverPage.tsx
 - File:src/pages/DiscoverPage.tsx --mentions--> DataEntity:tag:src/pages/DiscoverPage.tsx
@@ -142,7 +138,6 @@
 - RankingSignal:text_similarity:src/pages/DiscoverPage.tsx --supports--> AlgorithmOpportunity:ranking:src/pages/DiscoverPage.tsx
 - RankingSignal:text_similarity:src/pages/DiscoverPage.tsx --supports--> AlgorithmOpportunity:recommendation:src/pages/DiscoverPage.tsx
 - ReactComponent:App:src/App.tsx --renders--> ReactComponent:DiscoverPage:src/pages/DiscoverPage.tsx
-- ReactComponent:DiscoverPage:src/pages/DiscoverPage.tsx --mayCause--> PerformanceRisk:large_list_render:src/pages/DiscoverPage.tsx
 - ReactComponent:DiscoverPage:src/pages/DiscoverPage.tsx --mentions--> DataEntity:content:src/pages/DiscoverPage.tsx
 - ReactComponent:DiscoverPage:src/pages/DiscoverPage.tsx --mentions--> DataEntity:item:src/pages/DiscoverPage.tsx
 - ReactComponent:DiscoverPage:src/pages/DiscoverPage.tsx --mentions--> DataEntity:tag:src/pages/DiscoverPage.tsx

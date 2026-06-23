@@ -50,6 +50,16 @@ function fitLabel(score) {
   return "weak";
 }
 
+function statusLabel(match) {
+  const hasBlockers = match.warnings.some((warning) =>
+    /behavior_log_missing|missing required data|no_exposure_logs|small_data|cold_start|latency_sensitive|semantic retrieval signal/i.test(warning),
+  );
+
+  if (!hasBlockers) return "recommended_now";
+  if (match.fit === "strong" || match.score >= 12) return "candidate_later";
+  return "blocked_now";
+}
+
 function scoreAlgorithm(profile, algorithm) {
   const profileSignals = [
     ...profile.task_signals,
@@ -78,6 +88,12 @@ function scoreAlgorithm(profile, algorithm) {
     ...badForMatches.map((item) => `profile has constraint: ${item}`),
     ...missingData.map((item) => `missing required data: ${item}`),
   ];
+
+  const profileTaskSignals = profile.task_signals || [];
+  const graphRankingSignals = profile.evidence?.graph_facts?.ranking_signals || [];
+  if (algorithm.id === "semantic_retrieval" && !profileTaskSignals.includes("retrieval") && !graphRankingSignals.includes("semantic_similarity")) {
+    warnings.push("missing semantic retrieval signal");
+  }
   const reasons = [
     ...taskMatches.map((item) => `matched task: ${item}`),
     ...dataMatches.map((item) => `matched data: ${item}`),
@@ -117,11 +133,13 @@ async function main() {
   const matches = profiles.profiles.map((profile) => {
     const scored = index.algorithms
       .map((algorithm) => scoreAlgorithm(profile, algorithm))
+      .map((match) => ({ ...match, status: profile.algorithm_opportunity ? statusLabel(match) : "not_applicable" }))
       .sort((a, b) => b.score - a.score || a.algorithm_name.localeCompare(b.algorithm_name));
+    const currentTop = scored.find((match) => match.status === "recommended_now") || scored[0];
     return {
       block_id: profile.block_id,
       target: profile.target,
-      top_algorithm: profile.algorithm_opportunity ? scored[0]?.algorithm_id || null : null,
+      top_algorithm: profile.algorithm_opportunity ? currentTop?.algorithm_id || null : null,
       matches: scored,
     };
   });
