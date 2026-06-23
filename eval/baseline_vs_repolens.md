@@ -1,47 +1,46 @@
 # Baseline vs RepoLens Evaluation
 
-This evaluation compares a direct AI prompt with the RepoLens PerfGraph workflow on the same demo task.
+This evaluation compares a direct AI prompt with the RepoLens knowledge-graph workflow on the same algorithm opportunity task.
 
 ## Task
 
-Analyze performance risks for the demo route:
+Identify the first safe algorithm route for the demo module:
 
 ```text
-/activity/:id
+/discover
 ```
 
 ## Method
 
-- **Baseline**: ask an AI assistant to analyze the route from a short natural-language prompt and whatever files the user manually provides.
-- **RepoLens**: run `index_project.mjs`, generate a context pack for `/activity/:id`, then generate the performance report from the bounded graph neighborhood.
+- **Baseline**: ask an AI assistant to suggest algorithms from a short natural-language description and manually selected files.
+- **RepoLens**: run `index_project.mjs`, build a code knowledge graph, create a Block Profile for `/discover`, then match it against local algorithm cards.
 
 ## Result Summary
 
-| Metric | Direct AI Prompt | RepoLens PerfGraph |
+| Metric | Direct AI Prompt | RepoLens AlgoGraph |
 |---|---:|---:|
-| Relevant route/component/API/file coverage | 3/6 | 6/6 |
-| Recommendations with code evidence | 2/7 | 9/9 |
-| Unrelated or generic suggestions | 3 | 0 |
-| Executable fix tickets | 2 | 9 |
-| Focused coding-agent prompt | No | Yes |
+| Route/component/API coverage | Manual | Graph-derived |
+| Data entities identified | Inferred from prompt | item, tag, query, content |
+| Ranking signals identified | Ad hoc | explicit_score, text_similarity |
+| Missing data called out | Often generic | behavior_log_missing, exposure logs, click feedback |
+| Algorithm source boundary | Open-ended | local `algorithm_index.json` only |
+| Not-recommended algorithms | Usually omitted | LTR/CF/bandit blocked by missing logs |
 | Repeatable context boundary | No | Yes |
-
-Current RepoLens statistics are based on `repolens-perf/tests/fixtures/phase-one/.project-memory/reports/activity-id-perf-report.md` after running `npm run demo`.
 
 ## Evidence From Demo Output
 
 RepoLens generated:
 
-- `.project-memory/PROJECT_PROFILE.md`
+- `.project-memory/algorithm_signals.json`
 - `.project-memory/graph/code_graph.json`
-- `.project-memory/graph_metrics.json`
-- `.project-memory/context-packs/activity-id.md`
-- `.project-memory/reports/activity-id-perf-report.md`
+- `.project-memory/algo/block_profiles.json`
+- `.project-memory/algo/algorithm_matches.json`
+- `.project-memory/algo/reports/discover-algo-report.md`
 
-The `/activity/:id` report identifies the route, related components, API client calls, files, evidence lines, and nine deterministic performance signals.
+The `/discover` report identifies item metadata, query/search behavior, ranking signals, missing feedback logs, and a bounded first route through Content-Based Recommendation plus Hybrid Search.
 
 ## Interpretation
 
-Direct AI prompting can be useful, but it relies on manually selected context and often mixes project-specific findings with generic advice. RepoLens improves repeatability by first building a code graph, retrieving a bounded K-hop neighborhood, and requiring every report claim to cite graph or line evidence.
+Direct prompting can brainstorm algorithms, but it often jumps to heavy recommendations without proving that the code has the right entities, actions, or logs. RepoLens improves repeatability by first building a code knowledge graph, then constraining recommendations to local algorithm cards and explicit graph evidence.
 
-This does not prove runtime slowness. It proves that the AI review starts from a narrower and more inspectable context boundary.
+This does not prove product impact. It proves that algorithm planning starts from a narrower, inspectable evidence boundary.

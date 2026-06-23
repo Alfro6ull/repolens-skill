@@ -1,32 +1,34 @@
 {
-  "generated_at": "2026-06-18T08:19:56.830Z",
-  "target": "/activity/:id",
+  "generated_at": "2026-06-23T16:27:44.731Z",
+  "target": "/discover",
   "algorithm_index": "repolens-algo/knowledge/algorithm_index.json",
   "matches": [
     {
-      "block_id": "activity-id",
-      "target": "/activity/:id",
+      "block_id": "discover",
+      "target": "/discover",
       "top_algorithm": "content_based_recommendation",
       "matches": [
         {
           "algorithm_id": "content_based_recommendation",
           "algorithm_name": "Content-Based Recommendation",
-          "score": 25,
+          "score": 29,
           "fit": "strong",
           "reasons": [
             "matched task: recommendation",
+            "matched task: ranking",
             "matched task: personalization",
             "matched data: content metadata",
             "matched objective: improve_discovery",
+            "matched objective: explainable_ranking",
             "matched objective: personalize_candidates",
             "matched fit condition: cold_start",
-            "matched fit condition: small_data",
             "matched fit condition: needs_explainability"
           ],
           "warnings": [],
           "matched": {
             "tasks": [
               "recommendation",
+              "ranking",
               "personalization"
             ],
             "data_shapes": [
@@ -34,11 +36,11 @@
             ],
             "objectives": [
               "improve_discovery",
+              "explainable_ranking",
               "personalize_candidates"
             ],
             "constraints": [
               "cold_start",
-              "small_data",
               "needs_explainability"
             ],
             "anti_patterns": []
@@ -66,7 +68,7 @@
             "matched data: keyword query",
             "matched data: content metadata",
             "matched objective: improve_search_relevance",
-            "matched fit condition: small_data",
+            "matched objective: explainable_ranking",
             "matched fit condition: needs_explainability"
           ],
           "warnings": [],
@@ -80,10 +82,10 @@
               "content metadata"
             ],
             "objectives": [
-              "improve_search_relevance"
+              "improve_search_relevance",
+              "explainable_ranking"
             ],
             "constraints": [
-              "small_data",
               "needs_explainability"
             ],
             "anti_patterns": []
@@ -101,39 +103,85 @@
           "card": "algorithm_cards/hybrid_search_rag.md"
         },
         {
-          "algorithm_id": "learning_to_rank",
-          "algorithm_name": "Learning to Rank",
-          "score": 4,
-          "fit": "weak",
+          "algorithm_id": "semantic_retrieval",
+          "algorithm_name": "Semantic Retrieval",
+          "score": 21,
+          "fit": "strong",
           "reasons": [
             "matched task: search",
+            "matched task: recommendation",
+            "matched data: content metadata",
+            "matched objective: improve_search_relevance",
+            "matched objective: improve_discovery",
+            "matched fit condition: needs_explainability"
+          ],
+          "warnings": [],
+          "matched": {
+            "tasks": [
+              "search",
+              "recommendation"
+            ],
+            "data_shapes": [
+              "content metadata"
+            ],
+            "objectives": [
+              "improve_search_relevance",
+              "improve_discovery"
+            ],
+            "constraints": [
+              "needs_explainability"
+            ],
+            "anti_patterns": []
+          },
+          "missing_data": [],
+          "metrics": [
+            "Recall@K",
+            "MRR",
+            "query success rate",
+            "latency"
+          ],
+          "first_version": "Add an offline text embedding index for titles/descriptions and blend semantic candidates with keyword results.",
+          "complexity": "medium",
+          "explainability": "medium",
+          "card": "algorithm_cards/semantic_retrieval.md"
+        },
+        {
+          "algorithm_id": "learning_to_rank",
+          "algorithm_name": "Learning to Rank",
+          "score": 18,
+          "fit": "strong",
+          "reasons": [
+            "matched task: ranking",
+            "matched task: search",
             "matched task: personalization",
+            "matched data: ranked item list",
+            "matched objective: optimize_ranking",
             "matched objective: improve_discovery"
           ],
           "warnings": [
             "profile has constraint: behavior_log_missing",
-            "profile has constraint: small_data",
-            "missing required data: ranked item list",
             "missing required data: exposure logs",
             "missing required data: click feedback"
           ],
           "matched": {
             "tasks": [
+              "ranking",
               "search",
               "personalization"
             ],
-            "data_shapes": [],
+            "data_shapes": [
+              "ranked item list"
+            ],
             "objectives": [
+              "optimize_ranking",
               "improve_discovery"
             ],
             "constraints": [],
             "anti_patterns": [
-              "behavior_log_missing",
-              "small_data"
+              "behavior_log_missing"
             ]
           },
           "missing_data": [
-            "ranked item list",
             "exposure logs",
             "click feedback"
           ],
@@ -151,10 +199,11 @@
         {
           "algorithm_id": "collaborative_filtering",
           "algorithm_name": "Collaborative Filtering",
-          "score": 1,
-          "fit": "weak",
+          "score": 10,
+          "fit": "medium",
           "reasons": [
             "matched task: recommendation",
+            "matched task: ranking",
             "matched task: personalization",
             "matched objective: personalize_candidates",
             "matched objective: improve_discovery"
@@ -162,13 +211,13 @@
           "warnings": [
             "profile has constraint: cold_start",
             "profile has constraint: behavior_log_missing",
-            "profile has constraint: small_data",
             "missing required data: user-item interaction",
             "missing required data: implicit feedback"
           ],
           "matched": {
             "tasks": [
               "recommendation",
+              "ranking",
               "personalization"
             ],
             "data_shapes": [],
@@ -179,8 +228,7 @@
             "constraints": [],
             "anti_patterns": [
               "cold_start",
-              "behavior_log_missing",
-              "small_data"
+              "behavior_log_missing"
             ]
           },
           "missing_data": [
@@ -197,6 +245,56 @@
           "complexity": "medium",
           "explainability": "medium",
           "card": "algorithm_cards/collaborative_filtering.md"
+        },
+        {
+          "algorithm_id": "contextual_bandit",
+          "algorithm_name": "Contextual Bandit Exploration",
+          "score": 10,
+          "fit": "medium",
+          "reasons": [
+            "matched task: ranking",
+            "matched task: personalization",
+            "matched task: recommendation",
+            "matched objective: optimize_ranking",
+            "matched objective: personalize_candidates"
+          ],
+          "warnings": [
+            "profile has constraint: behavior_log_missing",
+            "profile has constraint: needs_explainability",
+            "missing required data: exposure logs",
+            "missing required data: click feedback"
+          ],
+          "matched": {
+            "tasks": [
+              "ranking",
+              "personalization",
+              "recommendation"
+            ],
+            "data_shapes": [],
+            "objectives": [
+              "optimize_ranking",
+              "personalize_candidates"
+            ],
+            "constraints": [],
+            "anti_patterns": [
+              "behavior_log_missing",
+              "needs_explainability"
+            ]
+          },
+          "missing_data": [
+            "exposure logs",
+            "click feedback"
+          ],
+          "metrics": [
+            "CTR",
+            "conversion rate",
+            "regret",
+            "guardrail latency"
+          ],
+          "first_version": "Start with epsilon-greedy exploration over a small set of transparent ranking policies after exposure logging is reliable.",
+          "complexity": "high",
+          "explainability": "low",
+          "card": "algorithm_cards/contextual_bandit.md"
         }
       ]
     }

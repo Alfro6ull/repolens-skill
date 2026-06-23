@@ -121,7 +121,7 @@ async function main() {
     return {
       block_id: profile.block_id,
       target: profile.target,
-      top_algorithm: scored[0]?.algorithm_id || null,
+      top_algorithm: profile.algorithm_opportunity ? scored[0]?.algorithm_id || null : null,
       matches: scored,
     };
   });

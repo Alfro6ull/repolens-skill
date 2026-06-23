@@ -9,10 +9,13 @@ import { fileURLToPath } from "node:url";
 const testDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(testDir, "../..");
 const fixtureRoot = path.join(testDir, "fixtures", "phase-one");
+const boundedFixtureRoot = path.join(testDir, "fixtures", "phase-one-bounded");
 const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "repolens-perfgraph-"));
 const projectRoot = path.join(tempRoot, "project");
+const boundedProjectRoot = path.join(tempRoot, "bounded-project");
 
 fs.cpSync(fixtureRoot, projectRoot, { recursive: true });
+fs.cpSync(boundedFixtureRoot, boundedProjectRoot, { recursive: true });
 
 function run(args) {
   return execFileSync(process.execPath, args, {
@@ -53,5 +56,25 @@ assert.match(report, /large_response_payload/);
 assert.doesNotMatch(report, /unbounded_search/);
 assert.doesNotMatch(contextPack, /unbounded_search/);
 assert.match(report, /List responses return only fields required by the consumer/);
+
+run(["repolens-perf/scripts/index_project.mjs", boundedProjectRoot]);
+const boundedGraphPath = path.join(boundedProjectRoot, ".project-memory", "graph", "code_graph.json");
+const boundedGraph = JSON.parse(fs.readFileSync(boundedGraphPath, "utf8"));
+const boundedEndpoint = boundedGraph.nodes.find((node) => node.id === endpointId);
+assert.ok(boundedEndpoint, "bounded fixture should still merge frontend and backend API endpoint references");
+assert.deepEqual(new Set(boundedEndpoint.meta.sources), new Set(["fetch", "fastapi"]));
+assert.ok(boundedEndpoint.meta.rawUrls.includes("/api/activities/${id}/works?${params.toString()}"));
+assert.ok(boundedEndpoint.meta.rawUrls.includes("/api/activities/{activity_id}/works"));
+
+const boundedSignalsPath = path.join(boundedProjectRoot, ".project-memory", "performance_signals.json");
+const boundedSignals = JSON.parse(fs.readFileSync(boundedSignalsPath, "utf8"));
+const boundedBackendRules = new Set(
+  boundedSignals
+    .filter((signal) => signal.file === "backend/main.py")
+    .map((signal) => signal.rule),
+);
+assert.ok(!boundedBackendRules.has("missing_pagination"), "bounded fixture should not report missing pagination");
+assert.ok(!boundedBackendRules.has("large_response_payload"), "bounded fixture should not report large response payload");
+assert.ok(!boundedBackendRules.has("n_plus_one_query"), "bounded fixture should not report N+1 query risk");
 
 console.log("perfgraph phase-one tests passed");

@@ -11,6 +11,10 @@ Use this schema when extending scanners or interpreting `.project-memory/graph/c
 | `Route` | `Route:<method>:<path>` | A frontend route or backend route decorator. |
 | `APIEndpoint` | `APIEndpoint:<method>:<url>` | A frontend request target or backend endpoint. |
 | `PerformanceRisk` | `PerformanceRisk:<rule>:<path>` | A deterministic static signal tied to a file. |
+| `DataEntity` | `DataEntity:<entity>:<path>` | A code-visible domain object such as item, user, tag, query, content, or document. |
+| `UserAction` | `UserAction:<action>:<path>` | A visible behavior or feedback action such as search, exposure, click, or feedback. |
+| `RankingSignal` | `RankingSignal:<signal>:<path>` | A ranking feature or scoring signal such as score, popularity, recency, text similarity, or semantic similarity. |
+| `AlgorithmOpportunity` | `AlgorithmOpportunity:<task>:<path>` | A bounded opportunity such as recommendation, ranking, search, retrieval, or personalization. |
 
 ## Edges
 
@@ -23,12 +27,19 @@ Use this schema when extending scanners or interpreting `.project-memory/graph/c
 | `requests` | `File -> APIEndpoint` | Frontend code calls an API endpoint. |
 | `defines` | `File -> APIEndpoint` | Backend code defines an API endpoint. |
 | `mayCause` | `File/ReactComponent -> PerformanceRisk` | Static rules found a possible risk. |
+| `mentions` | `File/ReactComponent -> DataEntity` | Code mentions a domain entity useful for Block Profiles. |
+| `captures` | `File/ReactComponent -> UserAction` | Code captures or names a user behavior signal. |
+| `usesSignal` | `File/ReactComponent -> RankingSignal` | Code uses a ranking or scoring signal. |
+| `exposes` | `APIEndpoint -> DataEntity/UserAction/RankingSignal` | An API endpoint exposes graph facts from its defining or calling file. |
+| `suggests` | `File -> AlgorithmOpportunity` | A file has enough graph evidence to suggest an algorithmic task. |
+| `supports` | `DataEntity/UserAction/RankingSignal -> AlgorithmOpportunity` | A graph fact supports a specific algorithm opportunity. |
 
 ## Generated Graph Artifacts
 
 | File | Meaning |
 |---|---|
 | `.project-memory/graph/code_graph.json` | Full node/edge graph. |
+| `.project-memory/algorithm_signals.json` | Extracted algorithm graph facts before graph materialization. |
 | `.project-memory/graph_metrics.json` | Node/edge counts, fan-out nodes, risk-adjacent nodes, and route risk density. |
 | `.project-memory/context-packs/<target>.md` | Bounded K-hop evidence pack for AI analysis. |
 
@@ -37,7 +48,8 @@ Use this schema when extending scanners or interpreting `.project-memory/graph/c
 - Use a 2-hop neighborhood for narrow files or leaf components.
 - Use a 3-hop neighborhood for route-to-component tracing.
 - Use a 4-hop neighborhood for route performance reports that should include API client calls.
-- Treat `PerformanceRisk` nodes as leads. Confirm important claims with code reading or runtime measurement.
+- Treat `PerformanceRisk` nodes as supporting leads. Confirm important runtime claims with code reading or measurement.
+- Treat algorithm nodes as opportunity evidence, not a mandate to implement an algorithm.
 - Prefer graph neighborhoods over full-repo context so the analysis remains focused.
 
 ## Extension Checklist

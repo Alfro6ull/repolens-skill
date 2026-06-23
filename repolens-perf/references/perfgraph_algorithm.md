@@ -1,6 +1,6 @@
 # PerfGraph Algorithm
 
-PerfGraph is the lightweight graph workflow behind RepoLens Perf. It is not a machine-learning model; it is a deterministic retrieval and scoring layer that gives an AI coding agent a bounded, evidence-rich context before analysis.
+PerfGraph is the lightweight graph workflow behind RepoLens. It is not a machine-learning model; it is a deterministic extraction and retrieval layer that gives AlgoGraph and AI coding agents a bounded, evidence-rich context before analysis.
 
 ## 1. Code Fact Extraction
 
@@ -11,7 +11,8 @@ PerfGraph is the lightweight graph workflow behind RepoLens Perf. It is not a ma
 - frontend routes and backend route decorators
 - React component declarations and render edges
 - frontend API calls and backend API endpoint definitions
-- static performance signals such as large list rendering, duplicated requests, rich text reparsing, missing pagination, and N+1-style calls
+- static performance signals such as large list rendering, duplicated requests, missing pagination, and N+1-style calls
+- algorithm graph facts such as data entities, user actions, ranking signals, and algorithm opportunities
 
 ## 2. Graph Construction
 
@@ -24,6 +25,10 @@ Core node types:
 - `Route`
 - `APIEndpoint`
 - `PerformanceRisk`
+- `DataEntity`
+- `UserAction`
+- `RankingSignal`
+- `AlgorithmOpportunity`
 
 Core edge types:
 
@@ -34,6 +39,12 @@ Core edge types:
 - `requests`
 - `defines`
 - `mayCause`
+- `mentions`
+- `captures`
+- `usesSignal`
+- `suggests`
+- `supports`
+- `exposes`
 
 ## 3. Target Matching
 
@@ -91,3 +102,14 @@ The AI should receive only the ranked graph neighborhood, project profile, relev
 - evidence line
 
 Static findings remain leads until confirmed with profiling, browser traces, API latency logs, or large fixtures.
+
+## 8. Algorithm Evidence
+
+AlgoGraph builds Block Profiles from the same graph. Prefer graph facts over raw source text when identifying:
+
+- entities such as item, user, tag, query, content, or document
+- actions such as search, exposure, click, or feedback
+- ranking signals such as score, popularity, recency, text similarity, or semantic similarity
+- opportunities such as recommendation, ranking, search, retrieval, or personalization
+
+If these graph facts are missing, AlgoGraph should avoid recommending an algorithm and instead state what evidence must be added first.

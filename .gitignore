@@ -3,6 +3,8 @@ node_modules/
 dist/
 build/
 coverage/
+.project-memory/
+**/.project-memory/
 *.zip
 
 README.submission.local.md

@@ -1,0 +1,4 @@
+interface:
+  display_name: "RepoLens Algo"
+  short_description: "Match modules to algorithm cards"
+  default_prompt: "Use $repolens-algo to build a Block Profile from the code knowledge graph and identify algorithm opportunities from local cards."

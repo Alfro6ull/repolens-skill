@@ -95,8 +95,73 @@ function dataToAdd(matches) {
   ]);
 }
 
+function graphFacts(profile) {
+  return profile.evidence?.graph_facts || {
+    data_entities: [],
+    user_actions: [],
+    ranking_signals: [],
+    algorithm_opportunities: [],
+  };
+}
+
+function graphFactLines(profile) {
+  const facts = graphFacts(profile);
+  return [
+    `- Data entities: ${facts.data_entities.length ? facts.data_entities.join(", ") : "none detected"}`,
+    `- User actions: ${facts.user_actions.length ? facts.user_actions.join(", ") : "none detected"}`,
+    `- Ranking signals: ${facts.ranking_signals.length ? facts.ranking_signals.join(", ") : "none detected"}`,
+    `- Algorithm opportunities: ${facts.algorithm_opportunities.length ? facts.algorithm_opportunities.join(", ") : "none detected"}`,
+  ];
+}
+
+function noOpportunityReport(target, profile, matchGroup) {
+  const matches = matchGroup.matches;
+  return [
+    `# Algorithm Opportunity Report: ${target}`,
+    "",
+    "## Executive Summary",
+    `RepoLens built a Block Profile for ${target}, but the graph neighborhood does not expose enough item, query, ranking, retrieval, or personalization evidence to recommend an algorithm implementation now.`,
+    "",
+    "This is the intended guardrail: AlgoGraph should not turn every module into a recommendation or ranking problem.",
+    "",
+    "## Module Identification",
+    "",
+    `- Block: ${profile.block_id}`,
+    `- Confidence: ${profile.confidence}`,
+    "- Routes:",
+    list(profile.evidence.routes, "none detected", "  "),
+    "- Components:",
+    list(profile.evidence.components, "none detected", "  "),
+    "- APIs:",
+    list(profile.evidence.apis, "none detected", "  "),
+    "",
+    "## Knowledge Graph Signals",
+    "",
+    ...graphFactLines(profile),
+    "",
+    "## Diagnostic Algorithm Matches",
+    "",
+    "| Score | Fit | Algorithm | Why Matched | Warnings |",
+    "|---:|---|---|---|---|",
+    tableRows(matches),
+    "",
+    "## Not Recommended Now",
+    "",
+    "- Do not implement a recommendation, ranking, search, retrieval, or personalization algorithm for this block until the graph shows a real algorithm boundary.",
+    "- Add item/query/ranking/user-action evidence first if this module is meant to become an algorithmic surface.",
+    "",
+    "## Source Artifacts",
+    "",
+    "- `.project-memory/algo/block_profiles.json`",
+    "- `.project-memory/algo/algorithm_matches.json`",
+    "- `repolens-algo/knowledge/algorithm_index.json`",
+  ].join("\n");
+}
+
 function reportMarkdown(target, profile, matchGroup) {
   const matches = matchGroup.matches;
+  if (!profile.algorithm_opportunity) return noOpportunityReport(target, profile, matchGroup);
+
   const top = matches[0];
   const second = matches[1];
   const third = matches[2];
@@ -118,6 +183,10 @@ function reportMarkdown(target, profile, matchGroup) {
     list(profile.evidence.components, "none detected", "  "),
     "- APIs:",
     list(profile.evidence.apis, "none detected", "  "),
+    "",
+    "## Knowledge Graph Signals",
+    "",
+    ...graphFactLines(profile),
     "",
     "## Code Evidence",
     "",

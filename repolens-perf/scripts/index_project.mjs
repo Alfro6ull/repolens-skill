@@ -98,6 +98,30 @@ const RULE_META = {
   },
 };
 
+const DATA_ENTITY_DETECTORS = [
+  { id: "item", label: "item", patterns: [/\b(items?|works?|products?|posts?|candidates?)\b/i] },
+  { id: "user", label: "user", patterns: [/\b(users?|authors?|accounts?|profiles?)\b/i] },
+  { id: "tag", label: "tag", patterns: [/\b(tags?|categories|topics)\b/i] },
+  { id: "query", label: "query", patterns: [/\b(query|keyword)\s*[:=]/i, /\bq\s*[:=]/i, /\bsearch\b/i] },
+  { id: "content", label: "content metadata", patterns: [/\b(title|description|metadata|coverUrl|body)\b/i] },
+  { id: "document", label: "document", patterns: [/\b(documents?|chunks?|passages?)\b/i] },
+];
+
+const USER_ACTION_DETECTORS = [
+  { id: "search", label: "search", patterns: [/\bsearch\b/i, /\bfilter\b/i, /\b(query|q)\s*[:=]/i] },
+  { id: "exposure", label: "exposure", patterns: [/\b(exposure_id|impression|shown|position)\b/i] },
+  { id: "click", label: "click", patterns: [/\b(click|clicked|ctr)\b/i] },
+  { id: "feedback", label: "feedback", patterns: [/\b(like|favorite|collect|vote|rating)\b/i] },
+];
+
+const RANKING_SIGNAL_DETECTORS = [
+  { id: "explicit_score", label: "explicit score", patterns: [/\b(score|rank|weight|top_k)\b/i, /\.sort\s*\(/i] },
+  { id: "popularity", label: "popularity", patterns: [/\b(popularity|views?|likes?|votes?|rating)\b/i] },
+  { id: "recency", label: "recency", patterns: [/\b(created_at|updated_at|timestamp|recent|published_at)\b/i] },
+  { id: "text_similarity", label: "text similarity", patterns: [/\b(tag_overlap|similarity|match|keyword|title)\b/i] },
+  { id: "semantic_similarity", label: "semantic similarity", patterns: [/\b(embedding|vector|semantic|ann|nearest)\b/i] },
+];
+
 function parseArgs(argv) {
   const args = [...argv];
   const rootArg = args[0] && !args[0].startsWith("--") ? args.shift() : ".";
@@ -265,6 +289,87 @@ function firstBlockingIoEvidence(content) {
 function firstSearchRouteEvidence(content) {
   const routeEvidence = firstLineContaining(content, ["/search", "search_"]);
   return routeEvidence || firstLineContaining(content, ["return [", "filter("]);
+}
+
+function firstPatternEvidence(content, patterns) {
+  const lines = content.split(/\r?\n/);
+  const foundIndex = lines.findIndex((line) => patterns.some((pattern) => pattern.test(line)));
+  if (foundIndex === -1) return null;
+  return {
+    line: foundIndex + 1,
+    text: lines[foundIndex].trim().slice(0, 220),
+  };
+}
+
+function detectAlgorithmFacts(file, content, detectors) {
+  return detectors
+    .filter((detector) => detector.patterns.some((pattern) => pattern.test(content)))
+    .map((detector) => ({
+      id: detector.id,
+      label: detector.label,
+      file,
+      evidence: firstPatternEvidence(content, detector.patterns),
+    }));
+}
+
+function opportunityEvidence(content, facts) {
+  const evidence = [
+    ...facts.dataEntities,
+    ...facts.userActions,
+    ...facts.rankingSignals,
+  ].find((fact) => fact.evidence)?.evidence;
+  return evidence || firstPatternEvidence(content, [/recommend|rank|search|personal|retriev/i]);
+}
+
+function analyzeAlgorithmFacts(file, kind, content) {
+  if (["docs", "style", "test"].includes(kind)) {
+    return { dataEntities: [], userActions: [], rankingSignals: [], algorithmOpportunities: [] };
+  }
+
+  const dataEntities = detectAlgorithmFacts(file, content, DATA_ENTITY_DETECTORS);
+  const userActions = detectAlgorithmFacts(file, content, USER_ACTION_DETECTORS);
+  const rankingSignals = detectAlgorithmFacts(file, content, RANKING_SIGNAL_DETECTORS);
+  const entityIds = new Set(dataEntities.map((item) => item.id));
+  const actionIds = new Set(userActions.map((item) => item.id));
+  const signalIds = new Set(rankingSignals.map((item) => item.id));
+  const opportunities = [];
+
+  function pushOpportunity(id, label, reason) {
+    opportunities.push({
+      id,
+      label,
+      file,
+      reason,
+      evidence: opportunityEvidence(content, { dataEntities, userActions, rankingSignals }),
+    });
+  }
+
+  if (entityIds.has("item") && (entityIds.has("tag") || entityIds.has("content") || entityIds.has("user"))) {
+    pushOpportunity("recommendation", "recommendation", "item metadata can support candidate recommendation");
+  }
+
+  if (entityIds.has("query") || actionIds.has("search")) {
+    pushOpportunity("search", "search", "query or search behavior is visible in code");
+  }
+
+  if (signalIds.has("explicit_score") || signalIds.has("popularity") || signalIds.has("text_similarity") || /\.sort\s*\(/.test(content)) {
+    pushOpportunity("ranking", "ranking", "ranking or scoring signal is visible in code");
+  }
+
+  if (entityIds.has("user") && entityIds.has("item")) {
+    pushOpportunity("personalization", "personalization", "user and item entities appear in the same module");
+  }
+
+  if (entityIds.has("document") || signalIds.has("semantic_similarity")) {
+    pushOpportunity("retrieval", "retrieval", "document or semantic retrieval signals are visible in code");
+  }
+
+  return {
+    dataEntities,
+    userActions,
+    rankingSignals,
+    algorithmOpportunities: opportunities,
+  };
 }
 
 function addMatch(regex, content, mapper) {
@@ -664,7 +769,7 @@ function moduleMarkdown(component, fileSignals, componentApis) {
   return `${lines.join("\n")}\n`;
 }
 
-function projectProfile(files, routes, components, apis, signals) {
+function projectProfile(files, routes, components, apis, signals, algorithmFacts) {
   const byKind = files.reduce((acc, file) => {
     acc[file.kind] = (acc[file.kind] || 0) + 1;
     return acc;
@@ -682,6 +787,7 @@ function projectProfile(files, routes, components, apis, signals) {
     `- React components detected: ${components.length}`,
     `- API references detected: ${apis.length}`,
     `- Performance signals detected: ${signals.length}`,
+    `- Algorithm opportunities detected: ${algorithmFacts.algorithmOpportunities.length}`,
     "",
     "## File Kinds",
     ...Object.entries(byKind)
@@ -695,9 +801,15 @@ function projectProfile(files, routes, components, apis, signals) {
           .map(([rule, count]) => `- ${rule}: ${count}`)
       : ["- none detected"]),
     "",
+    "## Algorithm Graph Signals",
+    `- Data entities: ${algorithmFacts.dataEntities.length}`,
+    `- User actions: ${algorithmFacts.userActions.length}`,
+    `- Ranking signals: ${algorithmFacts.rankingSignals.length}`,
+    `- Algorithm opportunities: ${algorithmFacts.algorithmOpportunities.length}`,
+    "",
     "## Suggested Next Commands",
-    "- Trace a route: `node repolens-perf/scripts/trace_module.mjs <repo> \"/activity/:id\" --hops 2`",
-    "- Generate a report: `node repolens-perf/scripts/perf_report.mjs <repo> \"/activity/:id\"`",
+    "- Trace a route: `node repolens-perf/scripts/trace_module.mjs <repo> \"/discover\" --hops 3`",
+    "- Build a Block Profile: `node repolens-algo/scripts/build_block_profiles.mjs <repo> \"/discover\"`",
     "",
   ].join("\n");
 }
@@ -712,6 +824,12 @@ async function main() {
   const components = [];
   const apis = [];
   const signals = [];
+  const algorithmFacts = {
+    dataEntities: [],
+    userActions: [],
+    rankingSignals: [],
+    algorithmOpportunities: [],
+  };
 
   for (const absolutePath of absoluteFiles.sort()) {
     const file = rel(options.root, absolutePath);
@@ -731,6 +849,11 @@ async function main() {
     components.push(...analyzeComponents(file, content));
     apis.push(...analyzeApis(file, content));
     signals.push(...analyzeSignals(file, kind, content));
+    const fileAlgorithmFacts = analyzeAlgorithmFacts(file, kind, content);
+    algorithmFacts.dataEntities.push(...fileAlgorithmFacts.dataEntities);
+    algorithmFacts.userActions.push(...fileAlgorithmFacts.userActions);
+    algorithmFacts.rankingSignals.push(...fileAlgorithmFacts.rankingSignals);
+    algorithmFacts.algorithmOpportunities.push(...fileAlgorithmFacts.algorithmOpportunities);
   }
 
   const fileSet = new Set(files.map((file) => file.path));
@@ -790,6 +913,47 @@ async function main() {
     addEdge(edges, `File:${api.file}`, id, edgeType, { line: api.line, source: api.source, rawUrl: api.rawUrl });
   }
 
+  const algorithmFactNodesByFile = new Map();
+  function rememberFact(file, id) {
+    if (!algorithmFactNodesByFile.has(file)) algorithmFactNodesByFile.set(file, []);
+    algorithmFactNodesByFile.get(file).push(id);
+  }
+
+  function attachFileScopedFact(fact, type, idPrefix, edgeType) {
+    const id = `${idPrefix}:${fact.id}:${fact.file}`;
+    ensureNode(nodes, id, type, fact.label, fact);
+    addEdge(edges, `File:${fact.file}`, id, edgeType, { evidence: fact.evidence });
+    for (const component of components.filter((item) => item.file === fact.file)) {
+      addEdge(edges, `ReactComponent:${component.name}:${component.file}`, id, edgeType, { evidence: fact.evidence });
+    }
+    for (const api of apis.filter((item) => item.file === fact.file)) {
+      addEdge(edges, `APIEndpoint:${api.method}:${api.url}`, id, "exposes", { evidence: fact.evidence });
+    }
+    rememberFact(fact.file, id);
+    return id;
+  }
+
+  for (const entity of algorithmFacts.dataEntities) {
+    attachFileScopedFact(entity, "DataEntity", "DataEntity", "mentions");
+  }
+
+  for (const action of algorithmFacts.userActions) {
+    attachFileScopedFact(action, "UserAction", "UserAction", "captures");
+  }
+
+  for (const signal of algorithmFacts.rankingSignals) {
+    attachFileScopedFact(signal, "RankingSignal", "RankingSignal", "usesSignal");
+  }
+
+  for (const opportunity of algorithmFacts.algorithmOpportunities) {
+    const id = `AlgorithmOpportunity:${opportunity.id}:${opportunity.file}`;
+    ensureNode(nodes, id, "AlgorithmOpportunity", opportunity.label, opportunity);
+    addEdge(edges, `File:${opportunity.file}`, id, "suggests", { evidence: opportunity.evidence, reason: opportunity.reason });
+    for (const factId of algorithmFactNodesByFile.get(opportunity.file) || []) {
+      addEdge(edges, factId, id, "supports", { reason: opportunity.reason });
+    }
+  }
+
   for (const signal of signals) {
     const id = `PerformanceRisk:${signal.rule}:${signal.file}`;
     ensureNode(nodes, id, "PerformanceRisk", `${signal.level} ${signal.rule}`, signal);
@@ -809,6 +973,7 @@ async function main() {
   await writeJson(path.join(options.outDir, "components.json"), components);
   await writeJson(path.join(options.outDir, "apis.json"), apis);
   await writeJson(path.join(options.outDir, "performance_signals.json"), signals);
+  await writeJson(path.join(options.outDir, "algorithm_signals.json"), algorithmFacts);
 
   const graphNodes = [...nodes.values()];
   const graphEdges = [...edges.values()];
@@ -821,7 +986,7 @@ async function main() {
   await writeJson(path.join(options.outDir, "graph", "code_graph.json"), graph);
   await writeJson(path.join(options.outDir, "graph_metrics.json"), graphMetrics(graphNodes, graphEdges));
 
-  await fs.writeFile(path.join(options.outDir, "PROJECT_PROFILE.md"), `${projectProfile(files, routes, components, apis, signals)}\n`, "utf8");
+  await fs.writeFile(path.join(options.outDir, "PROJECT_PROFILE.md"), `${projectProfile(files, routes, components, apis, signals, algorithmFacts)}\n`, "utf8");
 
   for (const component of components) {
     const fileSignals = signals.filter((signal) => signal.file === component.file);
@@ -833,7 +998,7 @@ async function main() {
     );
   }
 
-  console.log(`RepoLens indexed ${files.length} files, ${routes.length} routes, ${components.length} components, ${signals.length} performance signals.`);
+  console.log(`RepoLens indexed ${files.length} files, ${routes.length} routes, ${components.length} components, ${signals.length} performance signals, ${algorithmFacts.algorithmOpportunities.length} algorithm opportunities.`);
   console.log(`Memory written to ${options.outDir}`);
 }
 

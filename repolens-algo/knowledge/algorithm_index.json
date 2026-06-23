@@ -56,6 +56,34 @@
       "first_version": "Combine keyword filters with tag/title similarity and bounded retrieval.",
       "complexity": "medium",
       "explainability": "medium"
+    },
+    {
+      "id": "semantic_retrieval",
+      "name": "Semantic Retrieval",
+      "card": "algorithm_cards/semantic_retrieval.md",
+      "tasks": ["search", "retrieval", "recommendation"],
+      "data_required": ["content metadata"],
+      "good_for": ["semantic_similarity", "text_search", "needs_explainability"],
+      "bad_for": ["no_text_fields", "latency_sensitive_without_index", "small_data"],
+      "objectives": ["improve_search_relevance", "improve_discovery"],
+      "metrics": ["Recall@K", "MRR", "query success rate", "latency"],
+      "first_version": "Add an offline text embedding index for titles/descriptions and blend semantic candidates with keyword results.",
+      "complexity": "medium",
+      "explainability": "medium"
+    },
+    {
+      "id": "contextual_bandit",
+      "name": "Contextual Bandit Exploration",
+      "card": "algorithm_cards/contextual_bandit.md",
+      "tasks": ["ranking", "personalization", "recommendation"],
+      "data_required": ["exposure logs", "click feedback"],
+      "good_for": ["behavior_logs", "multi_feature_ranking", "exploration"],
+      "bad_for": ["behavior_log_missing", "small_data", "needs_explainability"],
+      "objectives": ["optimize_ranking", "personalize_candidates"],
+      "metrics": ["CTR", "conversion rate", "regret", "guardrail latency"],
+      "first_version": "Start with epsilon-greedy exploration over a small set of transparent ranking policies after exposure logging is reliable.",
+      "complexity": "high",
+      "explainability": "low"
     }
   ]
 }

@@ -1,11 +1,11 @@
 ---
 name: repolens-algo
-description: Build module Block Profiles from RepoLens project memory and match them to local algorithm opportunity cards.
+description: Build Block Profiles from a code knowledge graph and match local algorithm cards. Use for recommendation, ranking, search, retrieval, or personalization opportunities.
 ---
 
 # RepoLens AlgoGraph Skill
 
-Use this skill when the user wants to identify algorithm opportunities inside a code module, such as recommendation, ranking, search, retrieval, or personalization improvements.
+Use this skill when the user wants to identify algorithm opportunities inside a code module, such as recommendation, ranking, search, retrieval, or personalization improvements. Do not treat every module as algorithmic; use the graph evidence as the boundary.
 
 ## Workflow
 

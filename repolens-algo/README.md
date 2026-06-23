@@ -1,8 +1,8 @@
 # RepoLens AlgoGraph
 
-RepoLens AlgoGraph is a small algorithm opportunity layer on top of RepoLens `.project-memory`.
+RepoLens AlgoGraph is the algorithm opportunity layer on top of the RepoLens code knowledge graph.
 
-It does not replace the existing PerfGraph workflow. It reuses the code graph, context evidence, routes, components, APIs, and performance signals to build a structured Block Profile, then matches that profile against local algorithm cards.
+It reuses graph evidence such as routes, components, APIs, data entities, user actions, ranking signals, and supporting performance signals to build a structured Block Profile. The profile is then matched against local algorithm cards.
 
 ## What It Answers
 
@@ -38,9 +38,9 @@ npm run demo:algo
 Or call the scripts directly:
 
 ```bash
-node repolens-algo/scripts/build_block_profiles.mjs repolens-perf/tests/fixtures/phase-one "/activity/:id"
-node repolens-algo/scripts/retrieve_algorithms.mjs repolens-perf/tests/fixtures/phase-one "/activity/:id"
-node repolens-algo/scripts/generate_algo_report.mjs repolens-perf/tests/fixtures/phase-one "/activity/:id"
+node repolens-algo/scripts/build_block_profiles.mjs repolens-perf/tests/fixtures/algorithm-catalog "/discover"
+node repolens-algo/scripts/retrieve_algorithms.mjs repolens-perf/tests/fixtures/algorithm-catalog "/discover"
+node repolens-algo/scripts/generate_algo_report.mjs repolens-perf/tests/fixtures/algorithm-catalog "/discover"
 ```
 
 ## Outputs
@@ -48,9 +48,9 @@ node repolens-algo/scripts/generate_algo_report.mjs repolens-perf/tests/fixtures
 ```text
 .project-memory/algo/block_profiles.json
 .project-memory/algo/algorithm_matches.json
-.project-memory/algo/reports/activity-id-algo-report.md
+.project-memory/algo/reports/discover-algo-report.md
 ```
 
 ## Design Boundary
 
-AlgoGraph only recommends algorithms from local cards in `knowledge/algorithm_index.json`. This keeps the output bounded and avoids generic AI brainstorming.
+AlgoGraph only recommends algorithms from local cards in `knowledge/algorithm_index.json`. This keeps the output bounded and avoids generic AI brainstorming. If the graph does not expose item, query, ranking, retrieval, or personalization evidence, AlgoGraph should say that no algorithm route is recommended yet.

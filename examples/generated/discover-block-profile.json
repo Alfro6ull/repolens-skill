@@ -1,0 +1,215 @@
+{
+  "generated_at": "2026-06-23T16:27:44.690Z",
+  "target": "/discover",
+  "source_graph": ".project-memory/graph/code_graph.json",
+  "profiles": [
+    {
+      "block_id": "discover",
+      "block_type": "feature",
+      "target": "/discover",
+      "confidence": 0.95,
+      "start_nodes": [
+        {
+          "id": "File:src/api/discovery.ts",
+          "type": "File",
+          "label": "src/api/discovery.ts"
+        },
+        {
+          "id": "File:src/pages/DiscoverPage.tsx",
+          "type": "File",
+          "label": "src/pages/DiscoverPage.tsx"
+        },
+        {
+          "id": "ReactComponent:DiscoverPage:src/pages/DiscoverPage.tsx",
+          "type": "ReactComponent",
+          "label": "DiscoverPage"
+        },
+        {
+          "id": "Route:GET:/api/discover/works",
+          "type": "Route",
+          "label": "GET /api/discover/works"
+        },
+        {
+          "id": "Route:GET:/discover",
+          "type": "Route",
+          "label": "GET /discover"
+        },
+        {
+          "id": "APIEndpoint:GET:/api/discover/works",
+          "type": "APIEndpoint",
+          "label": "GET /api/discover/works"
+        }
+      ],
+      "evidence": {
+        "routes": [
+          "GET /api/discover/works",
+          "GET /discover"
+        ],
+        "components": [
+          "DiscoverPage"
+        ],
+        "apis": [
+          "GET /api/discover/works"
+        ],
+        "files": [
+          "backend/main.py",
+          "src/api/discovery.ts",
+          "src/App.tsx",
+          "src/pages/DiscoverPage.tsx"
+        ],
+        "risk_signals": [
+          "large_list_render"
+        ],
+        "graph_facts": {
+          "data_entities": [
+            "content",
+            "item",
+            "query",
+            "tag"
+          ],
+          "user_actions": [
+            "search"
+          ],
+          "ranking_signals": [
+            "explicit_score",
+            "text_similarity"
+          ],
+          "algorithm_opportunities": [
+            "ranking",
+            "recommendation",
+            "search"
+          ]
+        },
+        "code_lines": [
+          {
+            "file": "backend/main.py",
+            "line": 6,
+            "text": "@app.get(\"/api/discover/works\")"
+          },
+          {
+            "file": "backend/main.py",
+            "line": 7,
+            "text": "def discover_works("
+          },
+          {
+            "file": "backend/main.py",
+            "line": 9,
+            "text": "tags: str = \"\","
+          },
+          {
+            "file": "backend/main.py",
+            "line": 12,
+            "text": "selected_tags = {tag for tag in tags.split(\",\") if tag}"
+          },
+          {
+            "file": "backend/main.py",
+            "line": 15,
+            "text": "work"
+          },
+          {
+            "file": "backend/main.py",
+            "line": 16,
+            "text": "for work in candidates"
+          },
+          {
+            "file": "backend/main.py",
+            "line": 17,
+            "text": "if matches_text(q, work) or selected_tags.intersection(work[\"tags\"])"
+          },
+          {
+            "file": "backend/main.py",
+            "line": 19,
+            "text": "ranked = sorted(filtered, key=lambda work: (tag_overlap(selected_tags, work), work[\"score\"]), reverse=True)"
+          },
+          {
+            "file": "backend/main.py",
+            "line": 20,
+            "text": "items = ["
+          },
+          {
+            "file": "backend/main.py",
+            "line": 22,
+            "text": "\"id\": work[\"id\"],"
+          },
+          {
+            "file": "backend/main.py",
+            "line": 23,
+            "text": "\"title\": work[\"title\"],"
+          },
+          {
+            "file": "backend/main.py",
+            "line": 24,
+            "text": "\"authorName\": work[\"author_name\"],"
+          },
+          {
+            "file": "backend/main.py",
+            "line": 25,
+            "text": "\"tags\": work[\"tags\"],"
+          },
+          {
+            "file": "backend/main.py",
+            "line": 26,
+            "text": "\"score\": work[\"score\"],"
+          },
+          {
+            "file": "backend/main.py",
+            "line": 27,
+            "text": "\"coverUrl\": work[\"cover_url\"],"
+          },
+          {
+            "file": "backend/main.py",
+            "line": 29,
+            "text": "for work in ranked[:limit]"
+          }
+        ]
+      },
+      "entities": [
+        "content",
+        "item",
+        "keyword",
+        "query",
+        "score",
+        "tag",
+        "user"
+      ],
+      "actions": [
+        "list",
+        "search",
+        "sort",
+        "view"
+      ],
+      "data_shapes": [
+        "content metadata",
+        "item list",
+        "keyword query",
+        "ranked item list"
+      ],
+      "current_logic": [
+        "api_fetch",
+        "keyword_search",
+        "list_loading",
+        "score_sorting"
+      ],
+      "task_signals": [
+        "personalization",
+        "ranking",
+        "recommendation",
+        "search"
+      ],
+      "constraints": [
+        "behavior_log_missing",
+        "cold_start",
+        "needs_explainability"
+      ],
+      "objectives": [
+        "explainable_ranking",
+        "improve_discovery",
+        "improve_search_relevance",
+        "optimize_ranking",
+        "personalize_candidates"
+      ],
+      "algorithm_opportunity": true,
+      "opportunity_summary": "The graph exposes data entities, actions, or ranking signals that can be mapped to bounded algorithm routes."
+    }
+  ]
+}

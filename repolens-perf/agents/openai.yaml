@@ -1,4 +1,4 @@
 interface:
-  display_name: "RepoLens Perf Skill"
-  short_description: "Distill codebases into module-level performance evidence"
-  default_prompt: "Use $repolens-perf to distill this repository, trace a route or module, and produce an evidence-backed performance report."
+  display_name: "RepoLens Perf"
+  short_description: "Build code graph evidence"
+  default_prompt: "Use $repolens-perf to index this repository into a code knowledge graph and trace a route or module."

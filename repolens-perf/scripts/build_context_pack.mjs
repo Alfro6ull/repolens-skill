@@ -29,16 +29,26 @@ function includesTarget(value, target) {
   return String(value || "").toLowerCase().includes(target.toLowerCase());
 }
 
+function canMatchByLocation(node) {
+  return !["DataEntity", "UserAction", "RankingSignal", "AlgorithmOpportunity", "PerformanceRisk"].includes(node.type);
+}
+
 function findStartNodes(graph, target) {
   return graph.nodes.filter((node) => {
+    if (!canMatchByLocation(node)) {
+      return includesTarget(node.label, target) || includesTarget(node.meta?.id, target) || includesTarget(node.meta?.rule, target);
+    }
+
     return (
       includesTarget(node.id, target) ||
       includesTarget(node.label, target) ||
-      includesTarget(node.meta?.file, target) ||
-      includesTarget(node.meta?.path, target) ||
-      includesTarget(node.meta?.url, target) ||
-      includesTarget(node.meta?.rawUrl, target) ||
-      (Array.isArray(node.meta?.rawUrls) && node.meta.rawUrls.some((url) => includesTarget(url, target)))
+      (canMatchByLocation(node) && (
+        includesTarget(node.meta?.file, target) ||
+        includesTarget(node.meta?.path, target) ||
+        includesTarget(node.meta?.url, target) ||
+        includesTarget(node.meta?.rawUrl, target) ||
+        (Array.isArray(node.meta?.rawUrls) && node.meta.rawUrls.some((url) => includesTarget(url, target)))
+      ))
     );
   });
 }
@@ -158,6 +168,8 @@ function riskMatchesFocus(node, filePaths, targetTokens, selectedApis = []) {
   return true;
 }
 
+const ALGORITHM_NODE_TYPES = new Set(["DataEntity", "UserAction", "RankingSignal", "AlgorithmOpportunity"]);
+
 function focusRouteTrace(starts, trace) {
   const routeStarts = starts.filter((node) => node.type === "Route");
   if (routeStarts.length === 0) return trace;
@@ -232,7 +244,19 @@ function focusRouteTrace(starts, trace) {
       .map((node) => node.id),
   );
 
-  const keptIds = new Set([...routeIds, ...componentIds, ...apiIds, ...riskIds]);
+  const algorithmIds = new Set(
+    trace.nodes
+      .filter((node) => ALGORITHM_NODE_TYPES.has(node.type) && filePaths.has(node.meta?.file))
+      .map((node) => node.id),
+  );
+
+  for (const edge of trace.edges) {
+    if (edge.type !== "supports") continue;
+    if (algorithmIds.has(edge.source)) algorithmIds.add(edge.target);
+    if (algorithmIds.has(edge.target)) algorithmIds.add(edge.source);
+  }
+
+  const keptIds = new Set([...routeIds, ...componentIds, ...apiIds, ...riskIds, ...algorithmIds]);
   for (const node of trace.nodes) {
     if (node.type === "File" && filePaths.has(node.label)) keptIds.add(node.id);
   }
@@ -261,7 +285,11 @@ function evidenceForEdge(edge) {
 const NODE_TYPE_WEIGHT = {
   Route: 5,
   APIEndpoint: 4,
+  AlgorithmOpportunity: 4,
   ReactComponent: 3,
+  DataEntity: 3,
+  RankingSignal: 3,
+  UserAction: 3,
   PerformanceRisk: 3,
   File: 2,
 };
@@ -368,7 +396,7 @@ function formatContextPack(target, starts, trace, hops) {
         return `| ${escapeCell(source)} | ${edge.type} | ${escapeCell(targetNode)} | ${escapeCell(evidenceForEdge(edge))} |`;
       }),
     "",
-    "## Performance Risks",
+    "## Supporting Performance Signals",
     "",
     "| Score | Priority | Rule | Evidence | Recommended Fix |",
     "|---:|---|---|---|---|",
@@ -384,7 +412,7 @@ function formatContextPack(target, starts, trace, hops) {
     "",
     "### Evidence Rules",
     "",
-    "- Every performance claim should cite a route, file, component, API endpoint, edge, or risk rule from this pack.",
+    "- Every algorithm or performance claim should cite a route, file, component, API endpoint, graph fact, edge, or rule from this pack.",
     "- Treat static risks as leads until profiling, network traces, or API measurements confirm runtime impact.",
     "- Keep fixes within this graph neighborhood unless a direct dependency proves a wider change is necessary.",
     "",

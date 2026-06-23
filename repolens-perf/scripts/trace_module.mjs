@@ -29,14 +29,24 @@ function includesTarget(value, target) {
   return String(value || "").toLowerCase().includes(target.toLowerCase());
 }
 
+function canMatchByLocation(node) {
+  return !["DataEntity", "UserAction", "RankingSignal", "AlgorithmOpportunity", "PerformanceRisk"].includes(node.type);
+}
+
 function findStartNodes(graph, target) {
   return graph.nodes.filter((node) => {
+    if (!canMatchByLocation(node)) {
+      return includesTarget(node.label, target) || includesTarget(node.meta?.id, target) || includesTarget(node.meta?.rule, target);
+    }
+
     return (
       includesTarget(node.id, target) ||
       includesTarget(node.label, target) ||
-      includesTarget(node.meta?.file, target) ||
-      includesTarget(node.meta?.path, target) ||
-      includesTarget(node.meta?.url, target)
+      (canMatchByLocation(node) && (
+        includesTarget(node.meta?.file, target) ||
+        includesTarget(node.meta?.path, target) ||
+        includesTarget(node.meta?.url, target)
+      ))
     );
   });
 }

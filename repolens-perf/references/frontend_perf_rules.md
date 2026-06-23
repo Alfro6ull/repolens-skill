@@ -1,6 +1,6 @@
 # Frontend Performance Rules
 
-Use these rules for React, Vue, Svelte, and browser-heavy modules. RepoLens currently detects the most portable subset statically; add runtime profiling for high-risk changes.
+Use these rules for React and browser-heavy modules. RepoLens currently has the strongest static support for JSX/TSX React patterns; use runtime profiling or extend the scanner before treating Vue or Svelte coverage as complete.
 
 ## Rule Catalog
 
