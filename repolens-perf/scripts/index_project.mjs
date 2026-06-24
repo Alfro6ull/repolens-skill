@@ -129,13 +129,29 @@ function parseArgs(argv) {
 
   for (let i = 0; i < args.length; i += 1) {
     if (args[i] === "--out") {
+      if (!args[i + 1]) throw new Error("Missing value for --out");
       options.out = args[i + 1];
       i += 1;
     }
   }
 
-  options.outDir = path.resolve(options.root, options.out);
+  options.outDir = resolveSafeOutDir(options.root, options.out);
   return options;
+}
+
+function resolveSafeOutDir(root, rawOut) {
+  const out = String(rawOut || "").trim();
+  if (!out) throw new Error("Invalid --out: expected a non-empty path.");
+
+  const rootDir = path.resolve(root);
+  const outDir = path.resolve(rootDir, out);
+  const relativeOut = path.relative(rootDir, outDir);
+
+  if (!relativeOut || relativeOut.startsWith("..") || path.isAbsolute(relativeOut)) {
+    throw new Error(`Refuse to remove unsafe outDir outside project root: ${outDir}`);
+  }
+
+  return outDir;
 }
 
 function toPosix(filePath) {

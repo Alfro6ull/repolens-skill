@@ -25,6 +25,21 @@ function run(args) {
   });
 }
 
+function assertRunFails(args, pattern) {
+  assert.throws(
+    () => run(args),
+    (error) => {
+      assert.match(String(error.stderr), pattern);
+      return true;
+    },
+  );
+}
+
+assertRunFails(["repolens-perf/scripts/index_project.mjs", projectRoot, "--out"], /Missing value for --out/);
+assertRunFails(["repolens-perf/scripts/index_project.mjs", projectRoot, "--out", ""], /Missing value for --out/);
+assertRunFails(["repolens-perf/scripts/index_project.mjs", projectRoot, "--out", "."], /Refuse to remove unsafe outDir/);
+assertRunFails(["repolens-perf/scripts/index_project.mjs", projectRoot, "--out", ".."], /Refuse to remove unsafe outDir/);
+
 run(["repolens-perf/scripts/index_project.mjs", projectRoot]);
 
 const graphPath = path.join(projectRoot, ".project-memory", "graph", "code_graph.json");
