@@ -16,6 +16,11 @@ Use when keyword search misses relevant content because the query and item text 
 - Query text
 - Optional relevance or click feedback
 
+## Required Signals
+
+- Retrieval task signal, or
+- `semantic_similarity` ranking signal in the code knowledge graph
+
 ## First Version
 
 Build an offline embedding index for text fields, retrieve a bounded candidate set, then blend semantic score with keyword and metadata scores.

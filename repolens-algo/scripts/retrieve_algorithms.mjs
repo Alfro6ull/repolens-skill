@@ -52,12 +52,33 @@ function fitLabel(score) {
 
 function statusLabel(match) {
   const hasBlockers = match.warnings.some((warning) =>
-    /behavior_log_missing|missing required data|no_exposure_logs|small_data|cold_start|latency_sensitive|semantic retrieval signal/i.test(warning),
+    /behavior_log_missing|missing required data|missing card signal|no_exposure_logs|small_data|cold_start|latency_sensitive/i.test(warning),
   );
 
   if (!hasBlockers) return "recommended_now";
   if (match.fit === "strong" || match.score >= 12) return "candidate_later";
   return "blocked_now";
+}
+
+function profileFieldValues(profile, field) {
+  if (field.startsWith("graph_facts.")) {
+    return profile.evidence?.graph_facts?.[field.slice("graph_facts.".length)] || [];
+  }
+  return profile[field] || [];
+}
+
+function hasRequiredSignal(profile, requirement) {
+  const values = profileFieldValues(profile, requirement.field).map(normalize);
+  return values.includes(normalize(requirement.value));
+}
+
+function missingCardSignalWarnings(profile, algorithm) {
+  return (algorithm.required_signals || [])
+    .filter((requirementGroup) => {
+      const alternatives = requirementGroup.any || [];
+      return alternatives.length > 0 && !alternatives.some((requirement) => hasRequiredSignal(profile, requirement));
+    })
+    .map((requirementGroup) => requirementGroup.warning || "missing card signal");
 }
 
 function scoreAlgorithm(profile, algorithm) {
@@ -87,13 +108,9 @@ function scoreAlgorithm(profile, algorithm) {
   const warnings = [
     ...badForMatches.map((item) => `profile has constraint: ${item}`),
     ...missingData.map((item) => `missing required data: ${item}`),
+    ...missingCardSignalWarnings(profile, algorithm),
   ];
 
-  const profileTaskSignals = profile.task_signals || [];
-  const graphRankingSignals = profile.evidence?.graph_facts?.ranking_signals || [];
-  if (algorithm.id === "semantic_retrieval" && !profileTaskSignals.includes("retrieval") && !graphRankingSignals.includes("semantic_similarity")) {
-    warnings.push("missing semantic retrieval signal");
-  }
   const reasons = [
     ...taskMatches.map((item) => `matched task: ${item}`),
     ...dataMatches.map((item) => `matched data: ${item}`),

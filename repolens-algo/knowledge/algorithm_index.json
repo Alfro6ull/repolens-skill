@@ -65,6 +65,15 @@
       "data_required": ["content metadata"],
       "good_for": ["semantic_similarity", "text_search", "needs_explainability"],
       "bad_for": ["no_text_fields", "latency_sensitive_without_index", "small_data"],
+      "required_signals": [
+        {
+          "any": [
+            { "field": "task_signals", "value": "retrieval" },
+            { "field": "graph_facts.ranking_signals", "value": "semantic_similarity" }
+          ],
+          "warning": "missing card signal: semantic retrieval signal"
+        }
+      ],
       "objectives": ["improve_search_relevance", "improve_discovery"],
       "metrics": ["Recall@K", "MRR", "query success rate", "latency"],
       "first_version": "Add an offline text embedding index for titles/descriptions and blend semantic candidates with keyword results.",

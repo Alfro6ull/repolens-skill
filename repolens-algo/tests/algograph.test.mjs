@@ -45,7 +45,8 @@ assert.ok(fs.existsSync(reportPath), "AlgoGraph should write an algorithm opport
 const profiles = JSON.parse(fs.readFileSync(profilesPath, "utf8"));
 const matches = JSON.parse(fs.readFileSync(matchesPath, "utf8"));
 const report = fs.readFileSync(reportPath, "utf8");
-const knownAlgorithms = new Set(JSON.parse(fs.readFileSync(path.join(repoRoot, "repolens-algo", "knowledge", "algorithm_index.json"), "utf8")).algorithms.map((item) => item.id));
+const algorithmIndex = JSON.parse(fs.readFileSync(path.join(repoRoot, "repolens-algo", "knowledge", "algorithm_index.json"), "utf8"));
+const knownAlgorithms = new Set(algorithmIndex.algorithms.map((item) => item.id));
 const firstMatch = matches.matches[0];
 
 function assertMatchesUseLocalCards(matchGroup, reportText, label) {
@@ -97,7 +98,11 @@ assert.doesNotMatch(JSON.stringify(discoverProfile.evidence.risk_signals), /larg
 assert.ok(["content_based_recommendation", "hybrid_search_rag"].includes(discoverMatches.top_algorithm));
 assert.ok(discoverMatches.matches.some((match) => match.algorithm_id === "content_based_recommendation" && match.status === "recommended_now"));
 assert.ok(discoverMatches.matches.some((match) => match.algorithm_id === "hybrid_search_rag" && match.status === "recommended_now"));
-assert.ok(discoverMatches.matches.some((match) => match.algorithm_id === "semantic_retrieval" && match.status === "candidate_later"));
+const semanticCard = algorithmIndex.algorithms.find((algorithm) => algorithm.id === "semantic_retrieval");
+const semanticMatch = discoverMatches.matches.find((match) => match.algorithm_id === "semantic_retrieval");
+assert.ok(semanticCard.required_signals?.length > 0, "semantic retrieval should declare card-level signal requirements");
+assert.equal(semanticMatch.status, "candidate_later");
+assert.ok(semanticMatch.warnings.some((warning) => warning.includes("missing card signal")));
 assert.ok(discoverMatches.matches.some((match) => match.status === "candidate_later"));
 assert.ok(discoverMatches.matches.some((match) => match.status === "blocked_now"));
 assertMatchesUseLocalCards(discoverMatches, algorithmReport, "algorithm demo");

@@ -83,14 +83,14 @@ This is not a generic code review. The report translates code evidence into an a
 |---:|---|---|---|---|---|---|
 | 24 | recommended_now | strong | `hybrid_search_rag` | Hybrid Search / Lightweight RAG | matched task: search; matched task: recommendation; matched data: keyword query | none |
 | 23 | recommended_now | strong | `content_based_recommendation` | Content-Based Recommendation | matched task: recommendation; matched task: ranking; matched data: content metadata | none |
-| 21 | candidate_later | strong | `semantic_retrieval` | Semantic Retrieval | matched task: search; matched task: recommendation; matched data: content metadata | missing semantic retrieval signal |
+| 21 | candidate_later | strong | `semantic_retrieval` | Semantic Retrieval | matched task: search; matched task: recommendation; matched data: content metadata | missing card signal: semantic retrieval signal |
 | 14 | candidate_later | medium | `learning_to_rank` | Learning to Rank | matched task: ranking; matched task: search; matched data: ranked item list | profile has constraint: behavior_log_missing; missing required data: exposure logs |
 | 4 | blocked_now | weak | `collaborative_filtering` | Collaborative Filtering | matched task: recommendation; matched task: ranking; matched objective: improve_discovery | profile has constraint: cold_start; profile has constraint: behavior_log_missing |
 | 4 | blocked_now | weak | `contextual_bandit` | Contextual Bandit Exploration | matched task: ranking; matched task: recommendation; matched objective: optimize_ranking | profile has constraint: behavior_log_missing; profile has constraint: needs_explainability |
 
 ## What Data Blocks Heavier Algorithms
 
-- candidate_later: Semantic Retrieval - missing semantic retrieval signal
+- candidate_later: Semantic Retrieval - missing card signal: semantic retrieval signal
 - candidate_later: Learning to Rank needs exposure logs
 - candidate_later: Learning to Rank needs click feedback
 - candidate_later: Learning to Rank - profile has constraint: behavior_log_missing
@@ -120,7 +120,7 @@ Add an offline text embedding index for titles/descriptions and blend semantic c
 - Deep recommendation models: the current evidence points to small data and missing behavior logs.
 - Reinforcement learning: there is no online feedback loop or reward definition in the code evidence.
 - Real-time LLM reranking: cost and latency are not justified before a baseline ranking and query log exist.
-- Semantic Retrieval: missing semantic retrieval signal.
+- Semantic Retrieval: missing card signal: semantic retrieval signal.
 - Learning to Rank: profile has constraint: behavior_log_missing.
 - Learning to Rank: missing required data: exposure logs.
 - Collaborative Filtering: profile has constraint: cold_start.
