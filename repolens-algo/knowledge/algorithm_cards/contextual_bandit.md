@@ -18,6 +18,11 @@ Use when a ranked surface already has reliable exposure logging and the product 
 - action or reward signal
 - policy id
 
+## Required Signals
+
+- `exposure` user action in the code knowledge graph
+- `click` or `feedback` user action in the code knowledge graph
+
 ## First Version
 
 Start with epsilon-greedy exploration over a few transparent policies, log policy assignment, and keep a conservative fallback ranking.

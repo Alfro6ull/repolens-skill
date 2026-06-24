@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-24T01:38:04.626Z",
+  "generated_at": "2026-06-24T01:56:57.226Z",
   "target": "/discover",
   "algorithm_index": "repolens-algo/knowledge/algorithm_index.json",
   "matches": [
@@ -161,7 +161,9 @@
           "warnings": [
             "profile has constraint: behavior_log_missing",
             "missing required data: exposure logs",
-            "missing required data: click feedback"
+            "missing required data: click feedback",
+            "missing card signal: exposure logs",
+            "missing card signal: click or feedback logs"
           ],
           "matched": {
             "tasks": [
@@ -257,7 +259,9 @@
             "profile has constraint: behavior_log_missing",
             "profile has constraint: needs_explainability",
             "missing required data: exposure logs",
-            "missing required data: click feedback"
+            "missing required data: click feedback",
+            "missing card signal: exposure logs",
+            "missing card signal: click or feedback logs"
           ],
           "matched": {
             "tasks": [

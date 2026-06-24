@@ -103,6 +103,16 @@ const semanticMatch = discoverMatches.matches.find((match) => match.algorithm_id
 assert.ok(semanticCard.required_signals?.length > 0, "semantic retrieval should declare card-level signal requirements");
 assert.equal(semanticMatch.status, "candidate_later");
 assert.ok(semanticMatch.warnings.some((warning) => warning.includes("missing card signal")));
+const ltrCard = algorithmIndex.algorithms.find((algorithm) => algorithm.id === "learning_to_rank");
+const ltrMatch = discoverMatches.matches.find((match) => match.algorithm_id === "learning_to_rank");
+assert.ok(ltrCard.required_signals?.length > 0, "learning to rank should declare card-level signal requirements");
+assert.equal(ltrMatch.status, "candidate_later");
+assert.ok(ltrMatch.warnings.some((warning) => warning.includes("missing card signal: exposure logs")));
+const banditCard = algorithmIndex.algorithms.find((algorithm) => algorithm.id === "contextual_bandit");
+const banditMatch = discoverMatches.matches.find((match) => match.algorithm_id === "contextual_bandit");
+assert.ok(banditCard.required_signals?.length > 0, "contextual bandit should declare card-level signal requirements");
+assert.equal(banditMatch.status, "blocked_now");
+assert.ok(banditMatch.warnings.some((warning) => warning.includes("missing card signal: click or feedback logs")));
 assert.ok(discoverMatches.matches.some((match) => match.status === "candidate_later"));
 assert.ok(discoverMatches.matches.some((match) => match.status === "blocked_now"));
 assertMatchesUseLocalCards(discoverMatches, algorithmReport, "algorithm demo");

@@ -37,6 +37,21 @@
       "data_required": ["ranked item list", "exposure logs", "click feedback"],
       "good_for": ["multi_feature_ranking", "stable_feedback", "search_ranking"],
       "bad_for": ["behavior_log_missing", "small_data", "no_exposure_logs"],
+      "required_signals": [
+        {
+          "any": [
+            { "field": "graph_facts.user_actions", "value": "exposure" }
+          ],
+          "warning": "missing card signal: exposure logs"
+        },
+        {
+          "any": [
+            { "field": "graph_facts.user_actions", "value": "click" },
+            { "field": "graph_facts.user_actions", "value": "feedback" }
+          ],
+          "warning": "missing card signal: click or feedback logs"
+        }
+      ],
       "objectives": ["optimize_ranking", "improve_discovery"],
       "metrics": ["NDCG@K", "MRR", "CTR", "conversion rate"],
       "first_version": "Start with weighted scoring features, then train a ranking model after exposure and click logs exist.",
@@ -88,6 +103,21 @@
       "data_required": ["exposure logs", "click feedback"],
       "good_for": ["behavior_logs", "multi_feature_ranking", "exploration"],
       "bad_for": ["behavior_log_missing", "small_data", "needs_explainability"],
+      "required_signals": [
+        {
+          "any": [
+            { "field": "graph_facts.user_actions", "value": "exposure" }
+          ],
+          "warning": "missing card signal: exposure logs"
+        },
+        {
+          "any": [
+            { "field": "graph_facts.user_actions", "value": "click" },
+            { "field": "graph_facts.user_actions", "value": "feedback" }
+          ],
+          "warning": "missing card signal: click or feedback logs"
+        }
+      ],
       "objectives": ["optimize_ranking", "personalize_candidates"],
       "metrics": ["CTR", "conversion rate", "regret", "guardrail latency"],
       "first_version": "Start with epsilon-greedy exploration over a small set of transparent ranking policies after exposure logging is reliable.",

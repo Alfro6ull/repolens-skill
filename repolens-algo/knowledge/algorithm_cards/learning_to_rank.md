@@ -18,6 +18,11 @@ Use when a module already has stable ranking candidates, feature signals, exposu
 - Click or conversion feedback
 - Feature snapshots
 
+## Required Signals
+
+- `exposure` user action in the code knowledge graph
+- `click` or `feedback` user action in the code knowledge graph
+
 ## First Version
 
 Start with a transparent weighted score. Move to a learned ranking model only after exposure and click logs are reliable.

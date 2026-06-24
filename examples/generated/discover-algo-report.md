@@ -96,10 +96,10 @@ This is not a generic code review. The report translates code evidence into an a
 - candidate_later: Learning to Rank - profile has constraint: behavior_log_missing
 - candidate_later: Learning to Rank - missing required data: exposure logs
 - candidate_later: Learning to Rank - missing required data: click feedback
+- candidate_later: Learning to Rank - missing card signal: exposure logs
+- candidate_later: Learning to Rank - missing card signal: click or feedback logs
 - blocked_now: Collaborative Filtering needs user-item interaction
 - blocked_now: Collaborative Filtering needs implicit feedback
-- blocked_now: Collaborative Filtering - profile has constraint: cold_start
-- blocked_now: Collaborative Filtering - profile has constraint: behavior_log_missing
 
 ## Recommended Algorithm Roadmap
 
