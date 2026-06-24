@@ -2,43 +2,9 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-const SOURCE_EXTS = new Set([
-  ".js",
-  ".jsx",
-  ".ts",
-  ".tsx",
-  ".mjs",
-  ".cjs",
-  ".py",
-  ".css",
-  ".scss",
-  ".sass",
-  ".less",
-  ".md",
-  ".mdx",
-]);
-
-const EXCLUDED_DIRS = new Set([
-  ".git",
-  ".project-memory",
-  "node_modules",
-  "dist",
-  "build",
-  "coverage",
-  ".next",
-  ".nuxt",
-  ".turbo",
-  ".cache",
-  "vendor",
-  "__pycache__",
-]);
-
-const EXCLUDED_FILES = new Set([
-  "package-lock.json",
-  "pnpm-lock.yaml",
-  "yarn.lock",
-  "bun.lockb",
-]);
+import { rel, resolveSafeOutDir } from "./lib/path_utils.mjs";
+import { classifyFile, walkProjectFiles } from "./lib/project_walker.mjs";
+import { writeProjectMemory } from "./lib/project_writer.mjs";
 
 const RULE_META = {
   large_list_render: {
@@ -137,63 +103,6 @@ function parseArgs(argv) {
 
   options.outDir = resolveSafeOutDir(options.root, options.out);
   return options;
-}
-
-function resolveSafeOutDir(root, rawOut) {
-  const out = String(rawOut || "").trim();
-  if (!out) throw new Error("Invalid --out: expected a non-empty path.");
-
-  const rootDir = path.resolve(root);
-  const outDir = path.resolve(rootDir, out);
-  const relativeOut = path.relative(rootDir, outDir);
-
-  if (!relativeOut || relativeOut.startsWith("..") || path.isAbsolute(relativeOut)) {
-    throw new Error(`Refuse to remove unsafe outDir outside project root: ${outDir}`);
-  }
-
-  return outDir;
-}
-
-function toPosix(filePath) {
-  return filePath.split(path.sep).join("/");
-}
-
-function rel(root, absolutePath) {
-  return toPosix(path.relative(root, absolutePath));
-}
-
-function classifyFile(relativePath) {
-  const ext = path.extname(relativePath);
-  if (/\b(pages?|routes?)\b/i.test(relativePath)) return "route-or-page";
-  if (/\bcomponents?\b/i.test(relativePath)) return "component";
-  if (/\b(api|services?|clients?)\b/i.test(relativePath)) return "api-client";
-  if (/\b(stores?|state|redux|zustand)\b/i.test(relativePath)) return "state";
-  if (/\btests?|specs?|__tests__\b/i.test(relativePath)) return "test";
-  if ([".css", ".scss", ".sass", ".less"].includes(ext)) return "style";
-  if ([".py"].includes(ext)) return "backend";
-  if ([".md", ".mdx"].includes(ext)) return "docs";
-  return "source";
-}
-
-async function walk(root, current = root, results = []) {
-  const entries = await fs.readdir(current, { withFileTypes: true });
-
-  for (const entry of entries) {
-    if (entry.isDirectory()) {
-      if (EXCLUDED_DIRS.has(entry.name)) continue;
-      await walk(root, path.join(current, entry.name), results);
-      continue;
-    }
-
-    if (!entry.isFile()) continue;
-    if (EXCLUDED_FILES.has(entry.name)) continue;
-
-    const absolutePath = path.join(current, entry.name);
-    const ext = path.extname(entry.name);
-    if (SOURCE_EXTS.has(ext)) results.push(absolutePath);
-  }
-
-  return results;
 }
 
 function lineNumberFor(content, index) {
@@ -655,14 +564,6 @@ function addEdge(edges, source, target, type, meta = {}) {
   if (!edges.has(key)) edges.set(key, { source, target, type, meta });
 }
 
-function safeName(name) {
-  return name.replace(/[^a-z0-9_-]+/gi, "-").replace(/^-+|-+$/g, "").slice(0, 90) || "module";
-}
-
-async function writeJson(filePath, value) {
-  await fs.writeFile(filePath, `${JSON.stringify(value, null, 2)}\n`, "utf8");
-}
-
 function countBy(items, keyFn) {
   return items.reduce((acc, item) => {
     const key = keyFn(item) || "unknown";
@@ -836,8 +737,7 @@ function projectProfile(files, routes, components, apis, signals, algorithmFacts
 
 async function main() {
   const options = parseArgs(process.argv.slice(2));
-  const absoluteFiles = await walk(options.root);
-  const fileContents = new Map();
+  const absoluteFiles = await walkProjectFiles(options.root);
   const files = [];
   const imports = [];
   const routes = [];
@@ -856,7 +756,6 @@ async function main() {
     const content = await fs.readFile(absolutePath, "utf8");
     const stat = await fs.stat(absolutePath);
     const kind = classifyFile(file);
-    fileContents.set(file, content);
     files.push({
       path: file,
       kind,
@@ -983,18 +882,6 @@ async function main() {
     }
   }
 
-  await fs.rm(options.outDir, { recursive: true, force: true });
-  await fs.mkdir(path.join(options.outDir, "graph"), { recursive: true });
-  await fs.mkdir(path.join(options.outDir, "MODULE_SUMMARIES"), { recursive: true });
-
-  await writeJson(path.join(options.outDir, "files.json"), files);
-  await writeJson(path.join(options.outDir, "imports.json"), imports);
-  await writeJson(path.join(options.outDir, "routes.json"), routes);
-  await writeJson(path.join(options.outDir, "components.json"), components);
-  await writeJson(path.join(options.outDir, "apis.json"), apis);
-  await writeJson(path.join(options.outDir, "performance_signals.json"), signals);
-  await writeJson(path.join(options.outDir, "algorithm_signals.json"), algorithmFacts);
-
   const graphNodes = [...nodes.values()];
   const graphEdges = [...edges.values()];
   const graph = {
@@ -1003,20 +890,29 @@ async function main() {
     nodes: graphNodes,
     edges: graphEdges,
   };
-  await writeJson(path.join(options.outDir, "graph", "code_graph.json"), graph);
-  await writeJson(path.join(options.outDir, "graph_metrics.json"), graphMetrics(graphNodes, graphEdges));
-
-  await fs.writeFile(path.join(options.outDir, "PROJECT_PROFILE.md"), `${projectProfile(files, routes, components, apis, signals, algorithmFacts)}\n`, "utf8");
-
-  for (const component of components) {
+  const moduleSummaries = components.map((component) => {
     const fileSignals = signals.filter((signal) => signal.file === component.file);
     const componentApis = apis.filter((api) => api.file === component.file);
-    await fs.writeFile(
-      path.join(options.outDir, "MODULE_SUMMARIES", `${safeName(component.name)}.md`),
-      moduleMarkdown(component, fileSignals, componentApis),
-      "utf8",
-    );
-  }
+    return {
+      name: component.name,
+      markdown: moduleMarkdown(component, fileSignals, componentApis),
+    };
+  });
+
+  await writeProjectMemory({
+    outDir: options.outDir,
+    files,
+    imports,
+    routes,
+    components,
+    apis,
+    signals,
+    algorithmFacts,
+    graph,
+    metrics: graphMetrics(graphNodes, graphEdges),
+    projectProfileMarkdown: projectProfile(files, routes, components, apis, signals, algorithmFacts),
+    moduleSummaries,
+  });
 
   console.log(`RepoLens indexed ${files.length} files, ${routes.length} routes, ${components.length} components, ${signals.length} performance signals, ${algorithmFacts.algorithmOpportunities.length} algorithm opportunities.`);
   console.log(`Memory written to ${options.outDir}`);
