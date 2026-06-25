@@ -11,16 +11,16 @@
   "scripts": {
     "demo": "npm run demo:index && npm run demo:trace && npm run demo:context && npm run demo:algo && npm run test",
     "demo:all": "npm run demo",
-    "demo:index": "node repolens-perf/scripts/index_project.mjs repolens-perf/tests/fixtures/algorithm-catalog",
-    "demo:trace": "node repolens-perf/scripts/trace_module.mjs repolens-perf/tests/fixtures/algorithm-catalog \"/discover\" --out .project-memory/traces/discover-trace.md",
-    "demo:context": "node repolens-perf/scripts/build_context_pack.mjs repolens-perf/tests/fixtures/algorithm-catalog \"/discover\"",
-    "demo:report": "node repolens-perf/scripts/perf_report.mjs repolens-perf/tests/fixtures/algorithm-catalog \"/discover\"",
-    "demo:algo": "node repolens-algo/scripts/build_block_profiles.mjs repolens-perf/tests/fixtures/algorithm-catalog \"/discover\" && node repolens-algo/scripts/retrieve_algorithms.mjs repolens-perf/tests/fixtures/algorithm-catalog \"/discover\" && node repolens-algo/scripts/generate_algo_report.mjs repolens-perf/tests/fixtures/algorithm-catalog \"/discover\"",
+    "demo:index": "node repolens-graph/scripts/index_project.mjs repolens-graph/tests/fixtures/algorithm-catalog",
+    "demo:trace": "node repolens-graph/scripts/trace_module.mjs repolens-graph/tests/fixtures/algorithm-catalog \"/discover\" --out .project-memory/traces/discover-trace.md",
+    "demo:context": "node repolens-graph/scripts/build_context_pack.mjs repolens-graph/tests/fixtures/algorithm-catalog \"/discover\"",
+    "demo:report": "node repolens-graph/scripts/perf_report.mjs repolens-graph/tests/fixtures/algorithm-catalog \"/discover\"",
+    "demo:algo": "node repolens-algo/scripts/build_block_profiles.mjs repolens-graph/tests/fixtures/algorithm-catalog \"/discover\" && node repolens-algo/scripts/retrieve_algorithms.mjs repolens-graph/tests/fixtures/algorithm-catalog \"/discover\" && node repolens-algo/scripts/generate_algo_report.mjs repolens-graph/tests/fixtures/algorithm-catalog \"/discover\"",
     "algo:profile": "node repolens-algo/scripts/build_block_profiles.mjs",
     "algo:retrieve": "node repolens-algo/scripts/retrieve_algorithms.mjs",
     "algo:report": "node repolens-algo/scripts/generate_algo_report.mjs",
-    "test": "node repolens-perf/tests/perfgraph.test.mjs && node repolens-algo/tests/algograph.test.mjs",
-    "check:syntax": "node --check repolens-perf/scripts/index_project.mjs && node --check repolens-perf/scripts/lib/path_utils.mjs && node --check repolens-perf/scripts/lib/project_walker.mjs && node --check repolens-perf/scripts/lib/project_writer.mjs && node --check repolens-perf/scripts/trace_module.mjs && node --check repolens-perf/scripts/build_context_pack.mjs && node --check repolens-perf/scripts/perf_report.mjs && node --check repolens-algo/scripts/build_block_profiles.mjs && node --check repolens-algo/scripts/retrieve_algorithms.mjs && node --check repolens-algo/scripts/generate_algo_report.mjs && node --check scripts/validate_skills.mjs && node --check repolens-perf/tests/perfgraph.test.mjs && node --check repolens-algo/tests/algograph.test.mjs",
+    "test": "node repolens-graph/tests/graph.test.mjs && node repolens-algo/tests/algograph.test.mjs",
+    "check:syntax": "node --check repolens-graph/scripts/index_project.mjs && node --check repolens-graph/scripts/lib/path_utils.mjs && node --check repolens-graph/scripts/lib/project_walker.mjs && node --check repolens-graph/scripts/lib/project_writer.mjs && node --check repolens-graph/scripts/trace_module.mjs && node --check repolens-graph/scripts/build_context_pack.mjs && node --check repolens-graph/scripts/perf_report.mjs && node --check repolens-algo/scripts/build_block_profiles.mjs && node --check repolens-algo/scripts/retrieve_algorithms.mjs && node --check repolens-algo/scripts/generate_algo_report.mjs && node --check scripts/validate_skills.mjs && node --check repolens-graph/tests/graph.test.mjs && node --check repolens-algo/tests/algograph.test.mjs",
     "validate:skills": "node scripts/validate_skills.mjs",
     "check": "npm run check:syntax && npm run validate:skills"
   }

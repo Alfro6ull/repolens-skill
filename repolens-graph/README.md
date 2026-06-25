@@ -1,6 +1,6 @@
-# RepoLens PerfGraph
+# RepoLens Graph
 
-RepoLens PerfGraph is the lightweight code knowledge graph layer behind RepoLens. It distills a repository into `.project-memory`, builds a JSON graph, retrieves target-specific context, and emits supporting performance and algorithm graph signals.
+RepoLens Graph is the lightweight code knowledge graph layer behind RepoLens. It distills a repository into `.project-memory`, builds a JSON graph, retrieves target-specific context, and emits supporting performance and algorithm graph signals.
 
 ## Runtime
 
@@ -13,11 +13,11 @@ RepoLens PerfGraph is the lightweight code knowledge graph layer behind RepoLens
 ## Commands
 
 ```bash
-node repolens-perf/scripts/index_project.mjs repolens-perf/tests/fixtures/algorithm-catalog
-node repolens-perf/scripts/trace_module.mjs repolens-perf/tests/fixtures/algorithm-catalog "/discover"
-node repolens-perf/scripts/build_context_pack.mjs repolens-perf/tests/fixtures/algorithm-catalog "/discover"
-node repolens-perf/scripts/perf_report.mjs repolens-perf/tests/fixtures/algorithm-catalog "/discover"
-node repolens-perf/tests/perfgraph.test.mjs
+node repolens-graph/scripts/index_project.mjs repolens-graph/tests/fixtures/algorithm-catalog
+node repolens-graph/scripts/trace_module.mjs repolens-graph/tests/fixtures/algorithm-catalog "/discover"
+node repolens-graph/scripts/build_context_pack.mjs repolens-graph/tests/fixtures/algorithm-catalog "/discover"
+node repolens-graph/scripts/perf_report.mjs repolens-graph/tests/fixtures/algorithm-catalog "/discover"
+node repolens-graph/tests/graph.test.mjs
 ```
 
 From the repository root, the same demo can be reproduced with:
@@ -28,7 +28,7 @@ npm run demo
 
 ## Outputs
 
-PerfGraph writes generated memory into the analyzed repository:
+RepoLens Graph writes generated memory into the analyzed repository:
 
 ```text
 .project-memory/
@@ -50,6 +50,6 @@ PerfGraph writes generated memory into the analyzed repository:
 
 ## Scope
 
-PerfGraph performs static code graph analysis. It detects graph facts and risk signals, but it does not replace runtime profiling, network traces, API latency checks, or manual review.
+RepoLens Graph performs static code graph analysis. It detects graph facts and risk signals, but it does not replace runtime profiling, network traces, API latency checks, or manual review.
 
 Context packs and performance reports intentionally have different scopes. A context pack is a bounded graph handoff artifact for an AI coding agent; a performance report is a supporting artifact, not the main RepoLens product surface.

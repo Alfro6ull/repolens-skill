@@ -2,7 +2,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-const DEFAULT_SKILLS = ["repolens-perf", "repolens-algo"];
+const DEFAULT_SKILLS = ["repolens-graph", "repolens-algo"];
 const MAX_NAME_LENGTH = 64;
 const MAX_DESCRIPTION_LENGTH = 200;
 

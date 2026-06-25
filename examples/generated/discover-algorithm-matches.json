@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-24T01:56:57.226Z",
+  "generated_at": "2026-06-25T08:32:07.594Z",
   "target": "/discover",
   "algorithm_index": "repolens-algo/knowledge/algorithm_index.json",
   "matches": [
@@ -101,6 +101,52 @@
           "status": "recommended_now"
         },
         {
+          "algorithm_id": "explainable_scoring",
+          "algorithm_name": "Explainable Scoring",
+          "score": 21,
+          "fit": "strong",
+          "reasons": [
+            "matched task: explainable_scoring",
+            "matched data: ranked item list",
+            "matched objective: explainable_ranking",
+            "matched objective: optimize_ranking",
+            "matched fit condition: hardcoded_scoring",
+            "matched fit condition: score_sorting",
+            "matched fit condition: needs_explainability"
+          ],
+          "warnings": [],
+          "matched": {
+            "tasks": [
+              "explainable_scoring"
+            ],
+            "data_shapes": [
+              "ranked item list"
+            ],
+            "objectives": [
+              "explainable_ranking",
+              "optimize_ranking"
+            ],
+            "constraints": [
+              "hardcoded_scoring",
+              "score_sorting",
+              "needs_explainability"
+            ],
+            "anti_patterns": []
+          },
+          "missing_data": [],
+          "metrics": [
+            "score coverage",
+            "manual relevance review",
+            "NDCG@K",
+            "explanation completeness"
+          ],
+          "first_version": "Move the current score formula into a named function or config that returns both score and explanation fields.",
+          "complexity": "low",
+          "explainability": "high",
+          "card": "algorithm_cards/explainable_scoring.md",
+          "status": "recommended_now"
+        },
+        {
           "algorithm_id": "semantic_retrieval",
           "algorithm_name": "Semantic Retrieval",
           "score": 21,
@@ -145,6 +191,94 @@
           "explainability": "medium",
           "card": "algorithm_cards/semantic_retrieval.md",
           "status": "candidate_later"
+        },
+        {
+          "algorithm_id": "bounded_top_k",
+          "algorithm_name": "Bounded Top-K",
+          "score": 20,
+          "fit": "strong",
+          "reasons": [
+            "matched task: bounded_top_k",
+            "matched data: ranked item list",
+            "matched data: bounded result set",
+            "matched objective: bound_result_work",
+            "matched fit condition: bounded_result_set",
+            "matched fit condition: score_sorting"
+          ],
+          "warnings": [],
+          "matched": {
+            "tasks": [
+              "bounded_top_k"
+            ],
+            "data_shapes": [
+              "ranked item list",
+              "bounded result set"
+            ],
+            "objectives": [
+              "bound_result_work"
+            ],
+            "constraints": [
+              "bounded_result_set",
+              "score_sorting"
+            ],
+            "anti_patterns": []
+          },
+          "missing_data": [],
+          "metrics": [
+            "candidate count",
+            "p95 latency",
+            "Recall@K",
+            "tie-break stability"
+          ],
+          "first_version": "Filter first, keep only the requested top K candidates, and preserve a deterministic tie-break before heavier ranking work.",
+          "complexity": "low",
+          "explainability": "high",
+          "card": "algorithm_cards/bounded_top_k.md",
+          "status": "recommended_now"
+        },
+        {
+          "algorithm_id": "indexed_lookup",
+          "algorithm_name": "Indexed Lookup",
+          "score": 20,
+          "fit": "strong",
+          "reasons": [
+            "matched task: indexed_lookup",
+            "matched data: item list",
+            "matched data: lookup key or membership set",
+            "matched objective: reduce_lookup_cost",
+            "matched fit condition: membership_lookup",
+            "matched fit condition: list_loading"
+          ],
+          "warnings": [],
+          "matched": {
+            "tasks": [
+              "indexed_lookup"
+            ],
+            "data_shapes": [
+              "item list",
+              "lookup key or membership set"
+            ],
+            "objectives": [
+              "reduce_lookup_cost"
+            ],
+            "constraints": [
+              "membership_lookup",
+              "list_loading"
+            ],
+            "anti_patterns": []
+          },
+          "missing_data": [],
+          "metrics": [
+            "lookup count",
+            "CPU time",
+            "p95 latency",
+            "memory overhead"
+          ],
+          "first_version": "Build a Map or Set at the list-loading boundary and replace repeated scans with direct lookup while preserving render order.",
+          "complexity": "low",
+          "explainability": "high",
+          "card": "algorithm_cards/indexed_lookup.md",
+          "status": "recommended_now"
         },
         {
           "algorithm_id": "learning_to_rank",
@@ -197,6 +331,81 @@
           "explainability": "medium",
           "card": "algorithm_cards/learning_to_rank.md",
           "status": "candidate_later"
+        },
+        {
+          "algorithm_id": "batch_loading",
+          "algorithm_name": "Batch Loading",
+          "score": 11,
+          "fit": "medium",
+          "reasons": [
+            "matched data: item list",
+            "matched fit condition: api_fetch",
+            "matched fit condition: list_loading"
+          ],
+          "warnings": [
+            "missing card signal: n_plus_one lookup"
+          ],
+          "matched": {
+            "tasks": [],
+            "data_shapes": [
+              "item list"
+            ],
+            "objectives": [],
+            "constraints": [
+              "api_fetch",
+              "list_loading"
+            ],
+            "anti_patterns": []
+          },
+          "missing_data": [],
+          "metrics": [
+            "query count",
+            "request count",
+            "p95 latency",
+            "payload size"
+          ],
+          "first_version": "Collect related ids, fetch related records in one batch, map them by id, and enrich the parent list with a safe fallback.",
+          "complexity": "low",
+          "explainability": "high",
+          "card": "algorithm_cards/batch_loading.md",
+          "status": "blocked_now"
+        },
+        {
+          "algorithm_id": "rule_table",
+          "algorithm_name": "Rule Table",
+          "score": 6,
+          "fit": "weak",
+          "reasons": [
+            "matched fit condition: needs_explainability"
+          ],
+          "warnings": [
+            "missing required data: rule inputs",
+            "missing required data: rule outcome"
+          ],
+          "matched": {
+            "tasks": [],
+            "data_shapes": [],
+            "objectives": [],
+            "constraints": [
+              "needs_explainability"
+            ],
+            "anti_patterns": []
+          },
+          "missing_data": [
+            "rule inputs",
+            "rule outcome"
+          ],
+          "metrics": [
+            "rule coverage",
+            "changed-rule diff size",
+            "fallback rate",
+            "defect rate"
+          ],
+          "first_version": "Move the branch chain into an ordered table with explicit conditions, outcomes, priority, and fallback tests.",
+          "complexity": "low",
+          "explainability": "high",
+          "card": "algorithm_cards/rule_table.md",
+          "status": "blocked_now"
         },
         {
           "algorithm_id": "collaborative_filtering",

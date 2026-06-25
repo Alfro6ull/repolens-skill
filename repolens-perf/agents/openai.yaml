@@ -1,4 +1,0 @@
-interface:
-  display_name: "RepoLens Perf"
-  short_description: "Build code graph evidence"
-  default_prompt: "Use $repolens-perf to index this repository into a code knowledge graph and trace a route or module."

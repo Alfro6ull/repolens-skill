@@ -10,7 +10,7 @@ const testDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(testDir, "../..");
 const fixtureRoot = path.join(testDir, "fixtures", "phase-one");
 const boundedFixtureRoot = path.join(testDir, "fixtures", "phase-one-bounded");
-const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "repolens-perfgraph-"));
+const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "repolens-graph-"));
 const projectRoot = path.join(tempRoot, "project");
 const boundedProjectRoot = path.join(tempRoot, "bounded-project");
 
@@ -35,12 +35,12 @@ function assertRunFails(args, pattern) {
   );
 }
 
-assertRunFails(["repolens-perf/scripts/index_project.mjs", projectRoot, "--out"], /Missing value for --out/);
-assertRunFails(["repolens-perf/scripts/index_project.mjs", projectRoot, "--out", ""], /Missing value for --out/);
-assertRunFails(["repolens-perf/scripts/index_project.mjs", projectRoot, "--out", "."], /Refuse to remove unsafe outDir/);
-assertRunFails(["repolens-perf/scripts/index_project.mjs", projectRoot, "--out", ".."], /Refuse to remove unsafe outDir/);
+assertRunFails(["repolens-graph/scripts/index_project.mjs", projectRoot, "--out"], /Missing value for --out/);
+assertRunFails(["repolens-graph/scripts/index_project.mjs", projectRoot, "--out", ""], /Missing value for --out/);
+assertRunFails(["repolens-graph/scripts/index_project.mjs", projectRoot, "--out", "."], /Refuse to remove unsafe outDir/);
+assertRunFails(["repolens-graph/scripts/index_project.mjs", projectRoot, "--out", ".."], /Refuse to remove unsafe outDir/);
 
-run(["repolens-perf/scripts/index_project.mjs", projectRoot]);
+run(["repolens-graph/scripts/index_project.mjs", projectRoot]);
 
 const graphPath = path.join(projectRoot, ".project-memory", "graph", "code_graph.json");
 const graph = JSON.parse(fs.readFileSync(graphPath, "utf8"));
@@ -58,13 +58,13 @@ assert.ok(endpointEdges.some((edge) => edge.type === "defines"), "canonical endp
 const metricsPath = path.join(projectRoot, ".project-memory", "graph_metrics.json");
 assert.ok(fs.existsSync(metricsPath), "index should write graph metrics");
 
-run(["repolens-perf/scripts/build_context_pack.mjs", projectRoot, "/activity/:id"]);
+run(["repolens-graph/scripts/build_context_pack.mjs", projectRoot, "/activity/:id"]);
 const contextPack = fs.readFileSync(path.join(projectRoot, ".project-memory", "context-packs", "activity-id.md"), "utf8");
 assert.match(contextPack, /\| Score \| Distance \| Type \| Node \| Why Included \|/);
 assert.match(contextPack, /GET \/api\/activities\/:param\/works/);
 assert.match(contextPack, /large_response_payload|n_plus_one_query|missing_pagination/);
 
-run(["repolens-perf/scripts/perf_report.mjs", projectRoot, "/activity/:id"]);
+run(["repolens-graph/scripts/perf_report.mjs", projectRoot, "/activity/:id"]);
 const report = fs.readFileSync(path.join(projectRoot, ".project-memory", "reports", "activity-id-perf-report.md"), "utf8");
 assert.match(report, /\| Score \| Priority \| Rule \| Evidence \| Recommended Fix \|/);
 assert.match(report, /large_response_payload/);
@@ -72,7 +72,7 @@ assert.doesNotMatch(report, /unbounded_search/);
 assert.doesNotMatch(contextPack, /unbounded_search/);
 assert.match(report, /List responses return only fields required by the consumer/);
 
-run(["repolens-perf/scripts/index_project.mjs", boundedProjectRoot]);
+run(["repolens-graph/scripts/index_project.mjs", boundedProjectRoot]);
 const boundedGraphPath = path.join(boundedProjectRoot, ".project-memory", "graph", "code_graph.json");
 const boundedGraph = JSON.parse(fs.readFileSync(boundedGraphPath, "utf8"));
 const boundedEndpoint = boundedGraph.nodes.find((node) => node.id === endpointId);
@@ -92,4 +92,4 @@ assert.ok(!boundedBackendRules.has("missing_pagination"), "bounded fixture shoul
 assert.ok(!boundedBackendRules.has("large_response_payload"), "bounded fixture should not report large response payload");
 assert.ok(!boundedBackendRules.has("n_plus_one_query"), "bounded fixture should not report N+1 query risk");
 
-console.log("perfgraph phase-one tests passed");
+console.log("graph phase-one tests passed");

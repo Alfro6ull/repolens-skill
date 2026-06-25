@@ -9,7 +9,7 @@ Use this skill when the user wants to identify algorithm opportunities inside a 
 
 ## Workflow
 
-1. Ensure the repository has been indexed by `repolens-perf/scripts/index_project.mjs`.
+1. Ensure the repository has been indexed by `repolens-graph/scripts/index_project.mjs`.
 2. Build a Block Profile for a route, API, component, file, or keyword.
 3. Retrieve algorithm matches from the local algorithm cards.
 4. Generate an Algorithm Opportunity Report.

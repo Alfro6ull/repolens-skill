@@ -1,6 +1,6 @@
-# PerfGraph Algorithm
+# RepoLens Graph Algorithm
 
-PerfGraph is the lightweight graph workflow behind RepoLens. It is not a machine-learning model; it is a deterministic extraction and retrieval layer that gives AlgoGraph and AI coding agents a bounded, evidence-rich context before analysis.
+RepoLens Graph is the lightweight graph workflow behind RepoLens. It is not a machine-learning model; it is a deterministic extraction and retrieval layer that gives AlgoGraph and AI coding agents a bounded, evidence-rich context before analysis.
 
 ## 1. Code Fact Extraction
 

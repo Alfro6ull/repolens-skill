@@ -5,6 +5,7 @@ build/
 coverage/
 .project-memory/
 **/.project-memory/
+docs/
 *.zip
 
 README.submission.local.md

@@ -1,18 +1,18 @@
 ---
-name: repolens-perf
+name: repolens-graph
 description: Index repos into a code knowledge graph. Use for route/module/API tracing, context packs, graph facts, performance signals, or AlgoGraph preparation.
 ---
 
-# RepoLens Perf
+# RepoLens Graph
 
-RepoLens Perf is the indexing and tracing layer for RepoLens. It turns a repository into a small, inspectable code knowledge graph before asking the model to reason. Prefer generated graph facts and graph neighborhoods over broad guesses.
+RepoLens Graph is the indexing and tracing layer for RepoLens. It turns a repository into a small, inspectable code knowledge graph before asking the model to reason. Prefer generated graph facts and graph neighborhoods over broad guesses.
 
 ## Workflow
 
 1. Run the indexer from the target repository:
 
 ```bash
-node repolens-perf/scripts/index_project.mjs /path/to/repo
+node repolens-graph/scripts/index_project.mjs /path/to/repo
 ```
 
 This creates `.project-memory/` with project profile, route map, component map, API map, performance signals, algorithm signals, module summaries, and `graph/code_graph.json`.
@@ -20,26 +20,26 @@ This creates `.project-memory/` with project profile, route map, component map, 
 2. Trace a target route, file, component, API, or keyword:
 
 ```bash
-node repolens-perf/scripts/trace_module.mjs /path/to/repo "/discover" --hops 3
+node repolens-graph/scripts/trace_module.mjs /path/to/repo "/discover" --hops 3
 ```
 
 3. Build a context pack for the target graph neighborhood:
 
 ```bash
-node repolens-perf/scripts/build_context_pack.mjs /path/to/repo "/discover"
+node repolens-graph/scripts/build_context_pack.mjs /path/to/repo "/discover"
 ```
 
 4. Optionally generate a supporting performance report:
 
 ```bash
-node repolens-perf/scripts/perf_report.mjs /path/to/repo "/discover"
+node repolens-graph/scripts/perf_report.mjs /path/to/repo "/discover"
 ```
 
 5. Read only the reference material needed for the task:
 
 - Use `references/frontend_perf_rules.md` for React and browser UI risks.
 - Use `references/backend_perf_rules.md` for API/database/server risks.
-- Use `references/perfgraph_algorithm.md` when explaining graph extraction, K-hop retrieval, context ranking, risk scoring, or AI evidence constraints.
+- Use `references/graph_algorithm.md` when explaining graph extraction, K-hop retrieval, context ranking, risk scoring, or AI evidence constraints.
 - Use `references/graph_schema.md` when extending graph nodes, edges, or scanners.
 - Use `references/report_format.md` when writing optional performance reports or coding-agent prompts.
 

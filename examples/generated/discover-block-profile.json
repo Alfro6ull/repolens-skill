@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-24T01:56:57.198Z",
+  "generated_at": "2026-06-25T08:32:07.498Z",
   "target": "/discover",
   "source_graph": ".project-memory/graph/code_graph.json",
   "profiles": [
@@ -96,6 +96,11 @@
           },
           {
             "file": "backend/main.py",
+            "line": 10,
+            "text": "limit: int = Query(20, ge=1, le=50),"
+          },
+          {
+            "file": "backend/main.py",
             "line": 12,
             "text": "selected_tags = {tag for tag in tags.split(\",\") if tag}"
           },
@@ -153,11 +158,6 @@
             "file": "backend/main.py",
             "line": 27,
             "text": "\"coverUrl\": work[\"cover_url\"],"
-          },
-          {
-            "file": "backend/main.py",
-            "line": 29,
-            "text": "for work in ranked[:limit]"
           }
         ]
       },
@@ -176,18 +176,26 @@
         "view"
       ],
       "data_shapes": [
+        "bounded result set",
         "content metadata",
         "item list",
         "keyword query",
+        "lookup key or membership set",
         "ranked item list"
       ],
       "current_logic": [
         "api_fetch",
+        "bounded_result_set",
+        "hardcoded_scoring",
         "keyword_search",
         "list_loading",
+        "membership_lookup",
         "score_sorting"
       ],
       "task_signals": [
+        "bounded_top_k",
+        "explainable_scoring",
+        "indexed_lookup",
         "ranking",
         "recommendation",
         "search"
@@ -198,10 +206,12 @@
         "needs_explainability"
       ],
       "objectives": [
+        "bound_result_work",
         "explainable_ranking",
         "improve_discovery",
         "improve_search_relevance",
-        "optimize_ranking"
+        "optimize_ranking",
+        "reduce_lookup_cost"
       ],
       "algorithm_opportunity": true,
       "opportunity_summary": "The graph exposes data entities, actions, or ranking signals that can be mapped to bounded algorithm routes."

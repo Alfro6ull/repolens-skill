@@ -729,7 +729,7 @@ function projectProfile(files, routes, components, apis, signals, algorithmFacts
     `- Algorithm opportunities: ${algorithmFacts.algorithmOpportunities.length}`,
     "",
     "## Suggested Next Commands",
-    "- Trace a route: `node repolens-perf/scripts/trace_module.mjs <repo> \"/discover\" --hops 3`",
+    "- Trace a route: `node repolens-graph/scripts/trace_module.mjs <repo> \"/discover\" --hops 3`",
     "- Build a Block Profile: `node repolens-algo/scripts/build_block_profiles.mjs <repo> \"/discover\"`",
     "",
   ].join("\n");

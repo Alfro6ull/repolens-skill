@@ -30,6 +30,84 @@
       "explainability": "medium"
     },
     {
+      "id": "indexed_lookup",
+      "name": "Indexed Lookup",
+      "card": "algorithm_cards/indexed_lookup.md",
+      "tasks": ["indexed_lookup"],
+      "data_required": ["item list", "lookup key or membership set"],
+      "good_for": ["membership_lookup", "list_loading", "client_filtering"],
+      "bad_for": ["small_data"],
+      "objectives": ["reduce_lookup_cost"],
+      "metrics": ["lookup count", "CPU time", "p95 latency", "memory overhead"],
+      "first_version": "Build a Map or Set at the list-loading boundary and replace repeated scans with direct lookup while preserving render order.",
+      "complexity": "low",
+      "explainability": "high"
+    },
+    {
+      "id": "rule_table",
+      "name": "Rule Table",
+      "card": "algorithm_cards/rule_table.md",
+      "tasks": ["rule_table"],
+      "data_required": ["rule inputs", "rule outcome"],
+      "good_for": ["branching_rules", "needs_explainability"],
+      "bad_for": ["small_data"],
+      "objectives": ["make_rules_auditable"],
+      "metrics": ["rule coverage", "changed-rule diff size", "fallback rate", "defect rate"],
+      "first_version": "Move the branch chain into an ordered table with explicit conditions, outcomes, priority, and fallback tests.",
+      "complexity": "low",
+      "explainability": "high"
+    },
+    {
+      "id": "batch_loading",
+      "name": "Batch Loading",
+      "card": "algorithm_cards/batch_loading.md",
+      "tasks": ["batch_loading"],
+      "data_required": ["item list"],
+      "good_for": ["n_plus_one_lookup", "api_fetch", "list_loading"],
+      "bad_for": ["small_data"],
+      "required_signals": [
+        {
+          "any": [
+            { "field": "current_logic", "value": "n_plus_one_lookup" }
+          ],
+          "warning": "missing card signal: n_plus_one lookup"
+        }
+      ],
+      "objectives": ["reduce_round_trips"],
+      "metrics": ["query count", "request count", "p95 latency", "payload size"],
+      "first_version": "Collect related ids, fetch related records in one batch, map them by id, and enrich the parent list with a safe fallback.",
+      "complexity": "low",
+      "explainability": "high"
+    },
+    {
+      "id": "bounded_top_k",
+      "name": "Bounded Top-K",
+      "card": "algorithm_cards/bounded_top_k.md",
+      "tasks": ["bounded_top_k"],
+      "data_required": ["ranked item list", "bounded result set"],
+      "good_for": ["bounded_result_set", "score_sorting"],
+      "bad_for": ["no_item_metadata"],
+      "objectives": ["bound_result_work"],
+      "metrics": ["candidate count", "p95 latency", "Recall@K", "tie-break stability"],
+      "first_version": "Filter first, keep only the requested top K candidates, and preserve a deterministic tie-break before heavier ranking work.",
+      "complexity": "low",
+      "explainability": "high"
+    },
+    {
+      "id": "explainable_scoring",
+      "name": "Explainable Scoring",
+      "card": "algorithm_cards/explainable_scoring.md",
+      "tasks": ["explainable_scoring"],
+      "data_required": ["ranked item list"],
+      "good_for": ["hardcoded_scoring", "score_sorting", "needs_explainability"],
+      "bad_for": [],
+      "objectives": ["explainable_ranking", "optimize_ranking"],
+      "metrics": ["score coverage", "manual relevance review", "NDCG@K", "explanation completeness"],
+      "first_version": "Move the current score formula into a named function or config that returns both score and explanation fields.",
+      "complexity": "low",
+      "explainability": "high"
+    },
+    {
       "id": "learning_to_rank",
       "name": "Learning to Rank",
       "card": "algorithm_cards/learning_to_rank.md",

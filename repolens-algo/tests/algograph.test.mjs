@@ -8,9 +8,9 @@ import { fileURLToPath } from "node:url";
 
 const testDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(testDir, "../..");
-const fixtureRoot = path.join(repoRoot, "repolens-perf", "tests", "fixtures", "phase-one");
-const algorithmFixtureRoot = path.join(repoRoot, "repolens-perf", "tests", "fixtures", "algorithm-catalog");
-const noAlgorithmFixtureRoot = path.join(repoRoot, "repolens-perf", "tests", "fixtures", "no-algorithm-signal");
+const fixtureRoot = path.join(repoRoot, "repolens-graph", "tests", "fixtures", "phase-one");
+const algorithmFixtureRoot = path.join(repoRoot, "repolens-graph", "tests", "fixtures", "algorithm-catalog");
+const noAlgorithmFixtureRoot = path.join(repoRoot, "repolens-graph", "tests", "fixtures", "no-algorithm-signal");
 const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "repolens-algograph-"));
 const projectRoot = path.join(tempRoot, "project");
 const algorithmProjectRoot = path.join(tempRoot, "algorithm-project");
@@ -28,7 +28,7 @@ function run(script, args = []) {
   });
 }
 
-run("repolens-perf/scripts/index_project.mjs", [projectRoot]);
+run("repolens-graph/scripts/index_project.mjs", [projectRoot]);
 run("repolens-algo/scripts/build_block_profiles.mjs", [projectRoot, "/activity/:id"]);
 run("repolens-algo/scripts/retrieve_algorithms.mjs", [projectRoot, "/activity/:id"]);
 run("repolens-algo/scripts/generate_algo_report.mjs", [projectRoot, "/activity/:id"]);
@@ -48,6 +48,13 @@ const report = fs.readFileSync(reportPath, "utf8");
 const algorithmIndex = JSON.parse(fs.readFileSync(path.join(repoRoot, "repolens-algo", "knowledge", "algorithm_index.json"), "utf8"));
 const knownAlgorithms = new Set(algorithmIndex.algorithms.map((item) => item.id));
 const firstMatch = matches.matches[0];
+const basicAlgorithmDebtCards = [
+  "indexed_lookup",
+  "rule_table",
+  "batch_loading",
+  "bounded_top_k",
+  "explainable_scoring",
+];
 
 function assertMatchesUseLocalCards(matchGroup, reportText, label) {
   for (const match of matchGroup.matches) {
@@ -59,6 +66,9 @@ function assertMatchesUseLocalCards(matchGroup, reportText, label) {
 assert.equal(profiles.profiles[0].target, "/activity/:id");
 assert.equal(profiles.profiles[0].algorithm_opportunity, true);
 assert.ok(["content_based_recommendation", "hybrid_search_rag"].includes(firstMatch.top_algorithm));
+for (const algorithmId of basicAlgorithmDebtCards) {
+  assert.ok(knownAlgorithms.has(algorithmId), `algorithm index should include ${algorithmId}`);
+}
 assertMatchesUseLocalCards(firstMatch, report, "phase-one");
 assert.match(report, /# Algorithm Opportunity Report: \/activity\/:id/);
 assert.match(report, /Data To Add Next/);
@@ -67,7 +77,7 @@ assert.match(report, /Why This Algorithm Now/);
 assert.match(report, /What Data Blocks Heavier Algorithms/);
 assert.match(report, /Content-Based Recommendation|Hybrid Search \/ Lightweight RAG/);
 
-run("repolens-perf/scripts/index_project.mjs", [algorithmProjectRoot]);
+run("repolens-graph/scripts/index_project.mjs", [algorithmProjectRoot]);
 run("repolens-algo/scripts/build_block_profiles.mjs", [algorithmProjectRoot, "/discover"]);
 run("repolens-algo/scripts/retrieve_algorithms.mjs", [algorithmProjectRoot, "/discover"]);
 run("repolens-algo/scripts/generate_algo_report.mjs", [algorithmProjectRoot, "/discover"]);
@@ -90,6 +100,9 @@ assert.ok(discoverProfile.evidence.graph_facts.data_entities.includes("query"));
 assert.ok(discoverProfile.evidence.graph_facts.data_entities.includes("tag"));
 assert.ok(discoverProfile.evidence.graph_facts.ranking_signals.includes("explicit_score"));
 assert.ok(discoverProfile.evidence.graph_facts.ranking_signals.includes("text_similarity"));
+assert.ok(discoverProfile.task_signals.includes("bounded_top_k"));
+assert.ok(discoverProfile.task_signals.includes("explainable_scoring"));
+assert.ok(discoverProfile.task_signals.includes("indexed_lookup"));
 assert.ok(discoverProfile.task_signals.includes("search"));
 assert.ok(discoverProfile.task_signals.includes("ranking"));
 assert.ok(!discoverProfile.task_signals.includes("personalization"));
@@ -98,6 +111,10 @@ assert.doesNotMatch(JSON.stringify(discoverProfile.evidence.risk_signals), /larg
 assert.ok(["content_based_recommendation", "hybrid_search_rag"].includes(discoverMatches.top_algorithm));
 assert.ok(discoverMatches.matches.some((match) => match.algorithm_id === "content_based_recommendation" && match.status === "recommended_now"));
 assert.ok(discoverMatches.matches.some((match) => match.algorithm_id === "hybrid_search_rag" && match.status === "recommended_now"));
+assert.ok(discoverMatches.matches.some((match) => match.algorithm_id === "bounded_top_k" && match.status === "recommended_now"));
+assert.ok(discoverMatches.matches.some((match) => match.algorithm_id === "explainable_scoring" && match.status === "recommended_now"));
+assert.ok(discoverMatches.matches.some((match) => match.algorithm_id === "indexed_lookup" && match.status === "recommended_now"));
+assert.ok(discoverMatches.matches.some((match) => match.algorithm_id === "batch_loading" && match.status === "blocked_now"));
 const semanticCard = algorithmIndex.algorithms.find((algorithm) => algorithm.id === "semantic_retrieval");
 const semanticMatch = discoverMatches.matches.find((match) => match.algorithm_id === "semantic_retrieval");
 assert.ok(semanticCard.required_signals?.length > 0, "semantic retrieval should declare card-level signal requirements");
@@ -122,7 +139,7 @@ assert.match(algorithmReport, /What Data Blocks Heavier Algorithms/);
 assert.match(algorithmReport, /behavior_log_missing/);
 assert.doesNotMatch(algorithmReport, /large_list_render/);
 
-run("repolens-perf/scripts/index_project.mjs", [noAlgorithmProjectRoot]);
+run("repolens-graph/scripts/index_project.mjs", [noAlgorithmProjectRoot]);
 run("repolens-algo/scripts/build_block_profiles.mjs", [noAlgorithmProjectRoot, "/status"]);
 run("repolens-algo/scripts/retrieve_algorithms.mjs", [noAlgorithmProjectRoot, "/status"]);
 run("repolens-algo/scripts/generate_algo_report.mjs", [noAlgorithmProjectRoot, "/status"]);
@@ -135,6 +152,6 @@ assert.equal(noAlgorithmProfiles.profiles[0].algorithm_opportunity, false);
 assert.equal(noAlgorithmMatches.matches[0].top_algorithm, null);
 assert.ok(noAlgorithmMatches.matches[0].matches.every((match) => match.status === "not_applicable"));
 assertMatchesUseLocalCards(noAlgorithmMatches.matches[0], noAlgorithmReport, "no-algorithm");
-assert.match(noAlgorithmReport, /does not expose enough item, query, ranking, retrieval, or personalization evidence/);
+assert.match(noAlgorithmReport, /does not expose enough decision, lookup, rule, ranking, retrieval, or personalization evidence/);
 
 console.log("algograph tests passed");

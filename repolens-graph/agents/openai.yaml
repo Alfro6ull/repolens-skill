@@ -1,0 +1,4 @@
+interface:
+  display_name: "RepoLens Graph"
+  short_description: "Build code graph evidence"
+  default_prompt: "Use $repolens-graph to index this repository into a code knowledge graph and trace a route or module."

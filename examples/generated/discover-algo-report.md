@@ -40,9 +40,9 @@ This is not a generic code review. The report translates code evidence into an a
 | backend/main.py | 6 | @app.get("/api/discover/works") |
 | backend/main.py | 7 | def discover_works( |
 | backend/main.py | 9 | tags: str = "", |
+| backend/main.py | 10 | limit: int = Query(20, ge=1, le=50), |
 | backend/main.py | 12 | selected_tags = {tag for tag in tags.split(",") if tag} |
 | backend/main.py | 15 | work |
-| backend/main.py | 16 | for work in candidates |
 
 ## Block Profile
 
@@ -59,16 +59,24 @@ This is not a generic code review. The report translates code evidence into an a
   - sort
   - view
 - Data shapes:
+  - bounded result set
   - content metadata
   - item list
   - keyword query
+  - lookup key or membership set
   - ranked item list
 - Current logic:
   - api_fetch
+  - bounded_result_set
+  - hardcoded_scoring
   - keyword_search
   - list_loading
+  - membership_lookup
   - score_sorting
 - Task signals:
+  - bounded_top_k
+  - explainable_scoring
+  - indexed_lookup
   - ranking
   - recommendation
   - search
@@ -83,8 +91,13 @@ This is not a generic code review. The report translates code evidence into an a
 |---:|---|---|---|---|---|---|
 | 24 | recommended_now | strong | `hybrid_search_rag` | Hybrid Search / Lightweight RAG | matched task: search; matched task: recommendation; matched data: keyword query | none |
 | 23 | recommended_now | strong | `content_based_recommendation` | Content-Based Recommendation | matched task: recommendation; matched task: ranking; matched data: content metadata | none |
+| 21 | recommended_now | strong | `explainable_scoring` | Explainable Scoring | matched task: explainable_scoring; matched data: ranked item list; matched objective: e... | none |
 | 21 | candidate_later | strong | `semantic_retrieval` | Semantic Retrieval | matched task: search; matched task: recommendation; matched data: content metadata | missing card signal: semantic retrieval signal |
+| 20 | recommended_now | strong | `bounded_top_k` | Bounded Top-K | matched task: bounded_top_k; matched data: ranked item list; matched data: bounded resu... | none |
+| 20 | recommended_now | strong | `indexed_lookup` | Indexed Lookup | matched task: indexed_lookup; matched data: item list; matched data: lookup key or memb... | none |
 | 14 | candidate_later | medium | `learning_to_rank` | Learning to Rank | matched task: ranking; matched task: search; matched data: ranked item list | profile has constraint: behavior_log_missing; missing required data: exposure logs |
+| 11 | blocked_now | medium | `batch_loading` | Batch Loading | matched data: item list; matched fit condition: api_fetch; matched fit condition: list_... | missing card signal: n_plus_one lookup |
+| 6 | blocked_now | weak | `rule_table` | Rule Table | matched fit condition: needs_explainability | missing required data: rule inputs; missing required data: rule outcome |
 | 4 | blocked_now | weak | `collaborative_filtering` | Collaborative Filtering | matched task: recommendation; matched task: ranking; matched objective: improve_discovery | profile has constraint: cold_start; profile has constraint: behavior_log_missing |
 | 4 | blocked_now | weak | `contextual_bandit` | Contextual Bandit Exploration | matched task: ranking; matched task: recommendation; matched objective: optimize_ranking | profile has constraint: behavior_log_missing; profile has constraint: needs_explainability |
 
@@ -98,8 +111,8 @@ This is not a generic code review. The report translates code evidence into an a
 - candidate_later: Learning to Rank - missing required data: click feedback
 - candidate_later: Learning to Rank - missing card signal: exposure logs
 - candidate_later: Learning to Rank - missing card signal: click or feedback logs
-- blocked_now: Collaborative Filtering needs user-item interaction
-- blocked_now: Collaborative Filtering needs implicit feedback
+- blocked_now: Batch Loading - missing card signal: n_plus_one lookup
+- blocked_now: Rule Table needs rule inputs
 
 ## Recommended Algorithm Roadmap
 
@@ -112,8 +125,8 @@ Combine keyword filters with tag/title similarity and bounded retrieval.
 ### Phase 3: Content-Based Recommendation
 Rank works by tag/title similarity plus popularity fallback.
 
-### Phase 4: Semantic Retrieval after data improves
-Add an offline text embedding index for titles/descriptions and blend semantic candidates with keyword results.
+### Phase 4: Explainable Scoring
+Move the current score formula into a named function or config that returns both score and explanation fields.
 
 ## Not Recommended Now
 
@@ -123,6 +136,9 @@ Add an offline text embedding index for titles/descriptions and blend semantic c
 - Semantic Retrieval: missing card signal: semantic retrieval signal.
 - Learning to Rank: profile has constraint: behavior_log_missing.
 - Learning to Rank: missing required data: exposure logs.
+- Batch Loading: missing card signal: n_plus_one lookup.
+- Rule Table: missing required data: rule inputs.
+- Rule Table: missing required data: rule outcome.
 - Collaborative Filtering: profile has constraint: cold_start.
 - Collaborative Filtering: profile has constraint: behavior_log_missing.
 - Contextual Bandit Exploration: profile has constraint: behavior_log_missing.
@@ -132,6 +148,8 @@ Add an offline text embedding index for titles/descriptions and blend semantic c
 
 - exposure logs
 - click feedback
+- rule inputs
+- rule outcome
 - user-item interaction
 - implicit feedback
 - user_id
@@ -145,7 +163,7 @@ Add an offline text embedding index for titles/descriptions and blend semantic c
 ## Coding Agent Prompt
 
 ```text
-Use the RepoLens Algorithm Opportunity Report for /discover. Implement a first-version algorithm route without adding external services. Start with a bounded rule baseline and Hybrid Search / Lightweight RAG. Use available module evidence such as content metadata, item list, keyword query, ranked item list, content, item, keyword, query. Add a small telemetry contract for user_id, item_id, action_type, timestamp, exposure_id, position, and source_page. Do not implement deep recommendation models, reinforcement learning, or real-time LLM reranking in this phase. Keep the ranking explainable and add tests for deterministic ordering and missing-data fallback.
+Use the RepoLens Algorithm Opportunity Report for /discover. Implement a first-version algorithm route without adding external services. Start with a bounded rule baseline and Hybrid Search / Lightweight RAG. Use available module evidence such as bounded result set, content metadata, item list, keyword query, lookup key or membership set, ranked item list, content, item. Add a small telemetry contract for user_id, item_id, action_type, timestamp, exposure_id, position, and source_page. Do not implement deep recommendation models, reinforcement learning, or real-time LLM reranking in this phase. Keep the ranking explainable and add tests for deterministic ordering and missing-data fallback.
 ```
 
 ## Source Artifacts

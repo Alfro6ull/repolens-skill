@@ -229,7 +229,27 @@ function detectTerms(haystack, detectors) {
 }
 
 function collectEvidenceLines(sources) {
-  const interesting = [/items?/i, /works?/i, /records?/i, /entries?/i, /tags?/i, /score/i, /keyword/i, /filter\(/i, /sort\(/i, /fetch\(/i, /@app\.get/i];
+  const interesting = [
+    /items?/i,
+    /works?/i,
+    /records?/i,
+    /entries?/i,
+    /tags?/i,
+    /score/i,
+    /priority/i,
+    /weight/i,
+    /keyword/i,
+    /filter\(/i,
+    /sort\(/i,
+    /find\(/i,
+    /includes\(/i,
+    /intersection\(/i,
+    /\blimit\b/i,
+    /\bif\b/i,
+    /\belse\b/i,
+    /fetch\(/i,
+    /@app\.get/i,
+  ];
   const lines = [];
   for (const source of sources) {
     source.text.split(/\r?\n/).forEach((text, index) => {
@@ -253,6 +273,8 @@ function inferProfile({ target, trace, starts, sources }) {
   const graphOpportunities = unique(trace.nodes.filter((node) => node.type === "AlgorithmOpportunity").map((node) => node.meta?.id || node.label));
   const sourceText = sources.map((source) => source.text).join("\n");
   const haystack = [target, ...routes, ...components, ...apis, ...files, ...riskSignals, ...graphEntities, ...graphActions, ...graphRankingSignals, ...graphOpportunities, sourceText].join("\n");
+  const branchCount = (haystack.match(/\bif\b|\belif\b|\belse\b|switch\s*\(|\bcase\b/gi) || []).length;
+  const hasBranchingRules = branchCount >= 3 || /\belif\b|\belse\b|switch\s*\(|\bcase\b/i.test(haystack);
 
   const detectedEntities = detectTerms(haystack, [
     { id: "collection", patterns: [/\bcollection\b/i, /\bgroup\b/i, /\bcategory\b/i] },
@@ -278,12 +300,19 @@ function inferProfile({ target, trace, starts, sources }) {
   if (graphEntities.includes("item") || /works?|items?|candidates?|load_all/i.test(haystack)) dataShapes.push("item list");
   if (graphRankingSignals.length > 0 || /score|sort\(|rank/i.test(haystack)) dataShapes.push("ranked item list");
   if (graphActions.some((item) => ["click", "feedback", "exposure"].includes(item)) || /like|vote|collect|comment|submit/i.test(haystack)) dataShapes.push("implicit feedback candidate");
+  if (/\b(limit|top|take)\b|slice\(0|ranked\[:limit\]|Query\([^)]*\ble\b/i.test(haystack)) dataShapes.push("bounded result set");
+  if (/\bSet\(|\bMap\(|\.has\(|\.includes\(|\.find\(|intersection\(/i.test(haystack)) dataShapes.push("lookup key or membership set");
 
   const taskSignals = [...graphOpportunities];
   if (/works?|tags?|score|recommend|similar/i.test(haystack)) taskSignals.push("recommendation");
   if (graphRankingSignals.length > 0 || /score|sort\(|rank|top/i.test(haystack)) taskSignals.push("ranking");
   if (graphEntities.includes("query") || graphActions.includes("search") || /keyword|search|filter\(/i.test(haystack)) taskSignals.push("search");
   if (graphEntities.includes("user") || /\buser\b|profile|account/i.test(haystack)) taskSignals.push("personalization");
+  if (/\bSet\(|\bMap\(|\.has\(|\.includes\(|\.find\(|intersection\(/i.test(haystack)) taskSignals.push("indexed_lookup");
+  if (hasBranchingRules) taskSignals.push("rule_table");
+  if (riskSignals.includes("n_plus_one_query") || /load_author\([^)]*\)/i.test(haystack)) taskSignals.push("batch_loading");
+  if (/\b(limit|top|take)\b|slice\(0|ranked\[:limit\]|Query\([^)]*\ble\b/i.test(haystack)) taskSignals.push("bounded_top_k");
+  if (graphRankingSignals.length > 0 || /\b(score|priority|weight|risk)\b|tag_overlap/i.test(haystack)) taskSignals.push("explainable_scoring");
 
   const constraints = [];
   if (/title|tags?|description/i.test(haystack)) constraints.push("cold_start");
@@ -297,6 +326,11 @@ function inferProfile({ target, trace, starts, sources }) {
   if (/filter\(/i.test(haystack)) currentLogic.push("client_filtering");
   if (graphRankingSignals.length > 0 || /sort\(/i.test(haystack)) currentLogic.push("score_sorting");
   if (/keyword|search/i.test(haystack)) currentLogic.push("keyword_search");
+  if (hasBranchingRules) currentLogic.push("branching_rules");
+  if (/\bSet\(|\bMap\(|\.has\(|\.includes\(|\.find\(|intersection\(/i.test(haystack)) currentLogic.push("membership_lookup");
+  if (riskSignals.includes("n_plus_one_query") || /load_author\([^)]*\)/i.test(haystack)) currentLogic.push("n_plus_one_lookup");
+  if (/\b(limit|top|take)\b|slice\(0|ranked\[:limit\]|Query\([^)]*\ble\b/i.test(haystack)) currentLogic.push("bounded_result_set");
+  if (graphRankingSignals.length > 0 || /\b(score|priority|weight|risk)\b|tag_overlap/i.test(haystack)) currentLogic.push("hardcoded_scoring");
 
   const objectives = [];
   if (taskSignals.includes("recommendation")) objectives.push("improve_discovery");
@@ -304,6 +338,11 @@ function inferProfile({ target, trace, starts, sources }) {
   if (taskSignals.includes("ranking")) objectives.push("optimize_ranking", "explainable_ranking");
   if (taskSignals.includes("search")) objectives.push("improve_search_relevance");
   if (taskSignals.includes("retrieval")) objectives.push("improve_search_relevance", "improve_discovery");
+  if (taskSignals.includes("indexed_lookup")) objectives.push("reduce_lookup_cost");
+  if (taskSignals.includes("rule_table")) objectives.push("make_rules_auditable");
+  if (taskSignals.includes("batch_loading")) objectives.push("reduce_round_trips");
+  if (taskSignals.includes("bounded_top_k")) objectives.push("bound_result_work");
+  if (taskSignals.includes("explainable_scoring")) objectives.push("explainable_ranking");
 
   const codeLines = collectEvidenceLines(sources);
   const graphFactCount = graphEntities.length + graphActions.length + graphRankingSignals.length + graphOpportunities.length;
@@ -337,7 +376,20 @@ function inferProfile({ target, trace, starts, sources }) {
     task_signals: finalTaskSignals,
     constraints: unique(constraints),
     objectives: unique(objectives),
-    algorithm_opportunity: finalTaskSignals.some((task) => ["recommendation", "ranking", "search", "retrieval", "personalization"].includes(task)),
+    algorithm_opportunity: finalTaskSignals.some((task) =>
+      [
+        "recommendation",
+        "ranking",
+        "search",
+        "retrieval",
+        "personalization",
+        "indexed_lookup",
+        "rule_table",
+        "batch_loading",
+        "bounded_top_k",
+        "explainable_scoring",
+      ].includes(task),
+    ),
     opportunity_summary: finalTaskSignals.length
       ? "The graph exposes data entities, actions, or ranking signals that can be mapped to bounded algorithm routes."
       : "No algorithm opportunity was inferred from the current graph neighborhood.",
