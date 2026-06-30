@@ -53,8 +53,7 @@ async function readSourceFiles(root, files) {
   const sources = [];
   for (const file of files) {
     try {
-      const text = await fs.readFile(path.join(root, file), "utf8");
-      sources.push({ file, text: compactSourceText(text) });
+      sources.push({ file, text: await readTextPrefix(path.join(root, file), SOURCE_TEXT_BUDGET) });
     } catch {
       // Ignore missing files; graph evidence is still useful.
     }
@@ -70,9 +69,15 @@ function detectTerms(haystack, detectors) {
   return detectors.filter((item) => item.patterns.some((pattern) => pattern.test(haystack))).map((item) => item.id);
 }
 
-function compactSourceText(text) {
-  if (text.length <= SOURCE_TEXT_BUDGET) return text;
-  return text.slice(0, SOURCE_TEXT_BUDGET);
+async function readTextPrefix(file, maxBytes) {
+  const handle = await fs.open(file, "r");
+  try {
+    const buffer = Buffer.alloc(maxBytes);
+    const { bytesRead } = await handle.read(buffer, 0, maxBytes, 0);
+    return buffer.subarray(0, bytesRead).toString("utf8");
+  } finally {
+    await handle.close();
+  }
 }
 
 function collectEvidenceLines(sources) {

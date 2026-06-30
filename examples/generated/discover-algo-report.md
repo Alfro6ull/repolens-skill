@@ -1,7 +1,7 @@
 # Algorithm Opportunity Report: /discover
 
 ## Executive Summary
-RepoLens built a Block Profile for /discover and matched it against local algorithm cards. The strongest current route is **Hybrid Search / Lightweight RAG** because it matches graph-visible entities, actions, and ranking signals while keeping the first version simple.
+RepoLens built a Block Profile for /discover and matched it against local algorithm cards. The strongest current route is **Content-Based Recommendation** because it matches graph-visible entities, actions, and ranking signals while keeping the first version simple.
 
 This is not a generic code review. The report translates code evidence into an algorithm opportunity boundary, then recommends only algorithms present in `repolens-algo/knowledge/algorithm_index.json`.
 
@@ -26,12 +26,12 @@ This is not a generic code review. The report translates code evidence into an a
 
 ## Why This Algorithm Now
 
-- Current route: Hybrid Search / Lightweight RAG (`hybrid_search_rag`, recommended_now).
+- Current route: Content-Based Recommendation (`content_based_recommendation`, recommended_now).
 - Graph evidence: data entities [content, item, query, tag], actions [search], ranking signals [explicit_score, text_similarity].
-- matched task: search
 - matched task: recommendation
-- matched data: keyword query
+- matched task: ranking
 - matched data: content metadata
+- matched objective: improve_discovery
 
 ## Code Evidence
 
@@ -118,11 +118,11 @@ This is not a generic code review. The report translates code evidence into an a
 ### Phase 1: Rule baseline plus bounded ranking
 Keep the current score, tags, and keyword filters as the measurable baseline. Log enough events to compare later algorithms.
 
-### Phase 2: Hybrid Search / Lightweight RAG
-Combine keyword filters with tag/title similarity and bounded retrieval.
-
-### Phase 3: Content-Based Recommendation
+### Phase 2: Content-Based Recommendation
 Rank works by tag/title similarity plus popularity fallback.
+
+### Phase 3: Hybrid Search / Lightweight RAG
+Combine keyword filters with tag/title similarity and bounded retrieval.
 
 ### Phase 4: Explainable Scoring
 Move the current score formula into a named function or config that returns both score and explanation fields.
@@ -162,7 +162,7 @@ Move the current score formula into a named function or config that returns both
 ## Coding Agent Prompt
 
 ```text
-Use the RepoLens Algorithm Opportunity Report for /discover. Implement a first-version algorithm route without adding external services. Start with a bounded rule baseline and Hybrid Search / Lightweight RAG. Use available module evidence such as bounded result set, content metadata, item list, keyword query, lookup key or membership set, ranked item list, content, item. Add a small telemetry contract for user_id, item_id, action_type, timestamp, exposure_id, position, and source_page. Do not implement deep recommendation models, reinforcement learning, or real-time LLM reranking in this phase. Keep the ranking explainable and add tests for deterministic ordering and missing-data fallback.
+Use the RepoLens Algorithm Opportunity Report for /discover. Implement a first-version algorithm route without adding external services. Start with a bounded rule baseline and Content-Based Recommendation. Use available module evidence such as bounded result set, content metadata, item list, keyword query, lookup key or membership set, ranked item list, content, item. Add a small telemetry contract for user_id, item_id, action_type, timestamp, exposure_id, position, and source_page. Do not implement deep recommendation models, reinforcement learning, or real-time LLM reranking in this phase. Keep the ranking explainable and add tests for deterministic ordering and missing-data fallback.
 ```
 
 ## Source Artifacts

@@ -88,8 +88,8 @@ const RANKING_SIGNAL_DETECTORS = [
   { id: "semantic_similarity", label: "semantic similarity", confidence: 0.78, patterns: [/\b(embedding|vector|semantic|ann|nearest)\b/i] },
 ];
 
-const NON_RUNTIME_KINDS = new Set(["docs", "style", "test", "generated"]);
-const ALGORITHM_FACT_KINDS = new Set(["route-or-page", "component", "api-client", "backend", "state"]);
+const NON_RUNTIME_KINDS = new Set(["docs", "style", "test", "generated", "tooling"]);
+const ALGORITHM_FACT_KINDS = new Set(["route-or-page", "component", "api-client", "backend", "state", "source"]);
 
 function parseArgs(argv) {
   const args = [...argv];

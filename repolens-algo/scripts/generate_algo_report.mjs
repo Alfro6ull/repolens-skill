@@ -116,7 +116,11 @@ function graphFactLines(profile) {
   ];
 }
 
-function topCurrentMatch(matches) {
+function topCurrentMatch(matches, preferredAlgorithmId = null) {
+  if (preferredAlgorithmId) {
+    const preferred = matches.find((match) => match.algorithm_id === preferredAlgorithmId);
+    if (preferred) return preferred;
+  }
   return matches.find((match) => match.status === "recommended_now") || matches[0];
 }
 
@@ -221,7 +225,7 @@ function reportMarkdown(target, profile, matchGroup) {
   const matches = matchGroup.matches;
   if (!profile.algorithm_opportunity) return noOpportunityReport(target, profile, matchGroup);
 
-  const top = topCurrentMatch(matches);
+  const top = topCurrentMatch(matches, matchGroup.top_algorithm);
   const lines = [
     `# Algorithm Opportunity Report: ${target}`,
     "",

@@ -40,6 +40,29 @@ fs.writeFileSync(
     "",
   ].join("\n"),
 );
+fs.mkdirSync(path.join(projectRoot, "src", "features"), { recursive: true });
+fs.writeFileSync(
+  path.join(projectRoot, "src", "features", "rankWorks.ts"),
+  [
+    "export function rankWorks(works, tags) {",
+    "  return works",
+    "    .filter((work) => tags.some((tag) => work.tags.includes(tag)))",
+    "    .sort((left, right) => right.score - left.score);",
+    "}",
+    "",
+  ].join("\n"),
+);
+fs.mkdirSync(path.join(projectRoot, "scripts"), { recursive: true });
+fs.writeFileSync(
+  path.join(projectRoot, "scripts", "detectorNoise.mjs"),
+  [
+    "const item = 'detector noise';",
+    "const query = 'search';",
+    "const score = 1;",
+    "console.log(item, query, score);",
+    "",
+  ].join("\n"),
+);
 fs.appendFileSync(
   path.join(projectRoot, "backend", "main.py"),
   [
@@ -107,10 +130,21 @@ const metricsPath = path.join(projectRoot, ".project-memory", "graph_metrics.jso
 assert.ok(fs.existsSync(metricsPath), "index should write graph metrics");
 const files = JSON.parse(fs.readFileSync(path.join(projectRoot, ".project-memory", "files.json"), "utf8"));
 assert.equal(files.find((file) => file.path.endsWith("FixtureOnlyPage.tsx"))?.kind, "test");
+assert.equal(files.find((file) => file.path.endsWith("rankWorks.ts"))?.kind, "source");
+assert.equal(files.find((file) => file.path.endsWith("detectorNoise.mjs"))?.kind, "tooling");
 const signals = JSON.parse(fs.readFileSync(path.join(projectRoot, ".project-memory", "performance_signals.json"), "utf8"));
 assert.ok(
   !signals.some((signal) => signal.file.includes("tests/fixtures")),
   "test fixtures should not produce performance signals",
+);
+const algorithmSignals = JSON.parse(fs.readFileSync(path.join(projectRoot, ".project-memory", "algorithm_signals.json"), "utf8"));
+assert.ok(
+  algorithmSignals.algorithmOpportunities.some((opportunity) => opportunity.file === "src/features/rankWorks.ts"),
+  "runtime source files should be allowed to produce algorithm facts",
+);
+assert.ok(
+  !algorithmSignals.algorithmOpportunities.some((opportunity) => opportunity.file === "scripts/detectorNoise.mjs"),
+  "tooling files should not produce algorithm facts",
 );
 
 assertRunFails(

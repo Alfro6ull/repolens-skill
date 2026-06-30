@@ -43,6 +43,8 @@ export function classifyFile(relativePath) {
   const ext = path.extname(relativePath);
   if (/\b(tests?|specs?|__tests__|fixtures?)\b/i.test(relativePath)) return "test";
   if (/\b(generated|snapshots?)\b/i.test(relativePath)) return "generated";
+  if (/(^|\/)(scripts?|tools?|bin|cli)(\/|$)/i.test(relativePath)) return "tooling";
+  if (/(^|\/)(config|configs)(\/|$)|(^|\/)[^/]*\.config\.[cm]?[jt]s$/i.test(relativePath)) return "tooling";
   if (/\b(pages?|routes?)\b/i.test(relativePath)) return "route-or-page";
   if (/\bcomponents?\b/i.test(relativePath)) return "component";
   if (/\b(api|services?|clients?)\b/i.test(relativePath)) return "api-client";

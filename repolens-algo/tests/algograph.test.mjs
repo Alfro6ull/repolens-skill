@@ -137,6 +137,9 @@ assert.ok(discoverMatches.matches.some((match) => match.algorithm_id === "bounde
 assert.ok(discoverMatches.matches.some((match) => match.algorithm_id === "explainable_scoring" && match.status === "recommended_now"));
 assert.ok(discoverMatches.matches.some((match) => match.algorithm_id === "indexed_lookup" && match.status === "recommended_now"));
 assert.ok(discoverMatches.matches.some((match) => match.algorithm_id === "batch_loading" && match.status === "blocked_now"));
+const topDiscoverMatch = discoverMatches.matches.find((match) => match.algorithm_id === discoverMatches.top_algorithm);
+assert.ok(topDiscoverMatch, "top algorithm should resolve to a scored match");
+assert.match(algorithmReport, new RegExp(`Current route: ${topDiscoverMatch.algorithm_name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`));
 const semanticCard = algorithmIndex.algorithms.find((algorithm) => algorithm.id === "semantic_retrieval");
 const semanticMatch = discoverMatches.matches.find((match) => match.algorithm_id === "semantic_retrieval");
 assert.ok(semanticCard.required_signals?.length > 0, "semantic retrieval should declare card-level signal requirements");
