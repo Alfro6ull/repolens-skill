@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import { safeName } from "./path_utils.mjs";
+import { generatedMarkerName, safeName } from "./path_utils.mjs";
 
 export async function writeJson(filePath, value) {
   await fs.writeFile(filePath, `${JSON.stringify(value, null, 2)}\n`, "utf8");
@@ -15,6 +15,7 @@ export async function resetProjectMemory(outDir) {
   await fs.rm(outDir, { recursive: true, force: true });
   await fs.mkdir(path.join(outDir, "graph"), { recursive: true });
   await fs.mkdir(path.join(outDir, "MODULE_SUMMARIES"), { recursive: true });
+  await fs.writeFile(path.join(outDir, generatedMarkerName()), "RepoLens generated directory.\n", "utf8");
 }
 
 export async function writeProjectMemory({

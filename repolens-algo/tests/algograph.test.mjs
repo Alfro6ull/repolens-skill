@@ -28,7 +28,22 @@ function run(script, args = []) {
   });
 }
 
+function assertRunFails(script, args, pattern) {
+  assert.throws(
+    () => run(script, args),
+    (error) => {
+      assert.match(String(error.stderr), pattern);
+      return true;
+    },
+  );
+}
+
 run("repolens-graph/scripts/index_project.mjs", [projectRoot]);
+assertRunFails(
+  "repolens-algo/scripts/build_block_profiles.mjs",
+  [projectRoot, "/activity/:id", "--out", "../block_profiles.json"],
+  /Refuse to write unsafe outFile outside project root/,
+);
 run("repolens-algo/scripts/build_block_profiles.mjs", [projectRoot, "/activity/:id"]);
 run("repolens-algo/scripts/retrieve_algorithms.mjs", [projectRoot, "/activity/:id"]);
 run("repolens-algo/scripts/generate_algo_report.mjs", [projectRoot, "/activity/:id"]);
@@ -37,12 +52,15 @@ const algoRoot = path.join(projectRoot, ".project-memory", "algo");
 const profilesPath = path.join(algoRoot, "block_profiles.json");
 const matchesPath = path.join(algoRoot, "algorithm_matches.json");
 const reportPath = path.join(algoRoot, "reports", "activity-id-algo-report.md");
+const contextGraphPath = path.join(projectRoot, ".project-memory", "traces", "activity-id-context-graph.json");
 
 assert.ok(fs.existsSync(profilesPath), "AlgoGraph should write block_profiles.json");
 assert.ok(fs.existsSync(matchesPath), "AlgoGraph should write algorithm_matches.json");
 assert.ok(fs.existsSync(reportPath), "AlgoGraph should write an algorithm opportunity report");
+assert.ok(fs.existsSync(contextGraphPath), "AlgoGraph should materialize the bounded context graph");
 
 const profiles = JSON.parse(fs.readFileSync(profilesPath, "utf8"));
+const contextGraph = JSON.parse(fs.readFileSync(contextGraphPath, "utf8"));
 const matches = JSON.parse(fs.readFileSync(matchesPath, "utf8"));
 const report = fs.readFileSync(reportPath, "utf8");
 const algorithmIndex = JSON.parse(fs.readFileSync(path.join(repoRoot, "repolens-algo", "knowledge", "algorithm_index.json"), "utf8"));
@@ -64,6 +82,10 @@ function assertMatchesUseLocalCards(matchGroup, reportText, label) {
 }
 
 assert.equal(profiles.profiles[0].target, "/activity/:id");
+assert.equal(profiles.source_context_graph, ".project-memory/traces/activity-id-context-graph.json");
+assert.equal(contextGraph.target, "/activity/:id");
+assert.ok(contextGraph.nodes.length > 0);
+assert.ok(contextGraph.edges.length > 0);
 assert.equal(profiles.profiles[0].algorithm_opportunity, true);
 assert.ok(["content_based_recommendation", "hybrid_search_rag"].includes(firstMatch.top_algorithm));
 for (const algorithmId of basicAlgorithmDebtCards) {
@@ -123,7 +145,7 @@ assert.ok(semanticMatch.warnings.some((warning) => warning.includes("missing car
 const ltrCard = algorithmIndex.algorithms.find((algorithm) => algorithm.id === "learning_to_rank");
 const ltrMatch = discoverMatches.matches.find((match) => match.algorithm_id === "learning_to_rank");
 assert.ok(ltrCard.required_signals?.length > 0, "learning to rank should declare card-level signal requirements");
-assert.equal(ltrMatch.status, "candidate_later");
+assert.equal(ltrMatch.status, "blocked_now");
 assert.ok(ltrMatch.warnings.some((warning) => warning.includes("missing card signal: exposure logs")));
 const banditCard = algorithmIndex.algorithms.find((algorithm) => algorithm.id === "contextual_bandit");
 const banditMatch = discoverMatches.matches.find((match) => match.algorithm_id === "contextual_bandit");

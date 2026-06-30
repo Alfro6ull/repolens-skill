@@ -1,0 +1,1663 @@
+{
+  "version": 1,
+  "target": "/discover",
+  "hops": 4,
+  "start_nodes": [
+    {
+      "id": "File:src/api/discovery.ts",
+      "type": "File",
+      "label": "src/api/discovery.ts",
+      "meta": {
+        "path": "src/api/discovery.ts",
+        "kind": "api-client",
+        "ext": ".ts",
+        "bytes": 278,
+        "lines": 10
+      }
+    },
+    {
+      "id": "File:src/pages/DiscoverPage.tsx",
+      "type": "File",
+      "label": "src/pages/DiscoverPage.tsx",
+      "meta": {
+        "path": "src/pages/DiscoverPage.tsx",
+        "kind": "route-or-page",
+        "ext": ".tsx",
+        "bytes": 827,
+        "lines": 29
+      }
+    },
+    {
+      "id": "ReactComponent:DiscoverPage:src/pages/DiscoverPage.tsx",
+      "type": "ReactComponent",
+      "label": "DiscoverPage",
+      "meta": {
+        "name": "DiscoverPage",
+        "file": "src/pages/DiscoverPage.tsx",
+        "line": 4,
+        "renders": [],
+        "hooks": [
+          "useEffect",
+          "useState"
+        ],
+        "requests": [],
+        "signals": []
+      }
+    },
+    {
+      "id": "Route:GET:/api/discover/works",
+      "type": "Route",
+      "label": "GET /api/discover/works",
+      "meta": {
+        "path": "/api/discover/works",
+        "method": "GET",
+        "file": "backend/main.py",
+        "component": null,
+        "line": 6,
+        "source": "fastapi"
+      }
+    },
+    {
+      "id": "Route:GET:/discover",
+      "type": "Route",
+      "label": "GET /discover",
+      "meta": {
+        "path": "/discover",
+        "method": "GET",
+        "file": "src/App.tsx",
+        "component": "DiscoverPage",
+        "line": 5,
+        "source": "react-router"
+      }
+    },
+    {
+      "id": "APIEndpoint:GET:/api/discover/works",
+      "type": "APIEndpoint",
+      "label": "GET /api/discover/works",
+      "meta": {
+        "file": "backend/main.py",
+        "method": "GET",
+        "url": "/api/discover/works",
+        "rawUrl": "/api/discover/works",
+        "line": 6,
+        "source": "fastapi",
+        "rawUrls": [
+          "/api/discover/works",
+          "/api/discover/works?${params.toString()}"
+        ],
+        "sources": [
+          "fastapi",
+          "fetch"
+        ]
+      }
+    }
+  ],
+  "nodes": [
+    {
+      "id": "File:backend/main.py",
+      "type": "File",
+      "label": "backend/main.py",
+      "meta": {
+        "path": "backend/main.py",
+        "kind": "backend",
+        "ext": ".py",
+        "bytes": 1722,
+        "lines": 66
+      }
+    },
+    {
+      "id": "File:src/App.tsx",
+      "type": "File",
+      "label": "src/App.tsx",
+      "meta": {
+        "path": "src/App.tsx",
+        "kind": "source",
+        "ext": ".tsx",
+        "bytes": 186,
+        "lines": 7
+      }
+    },
+    {
+      "id": "File:src/api/discovery.ts",
+      "type": "File",
+      "label": "src/api/discovery.ts",
+      "meta": {
+        "path": "src/api/discovery.ts",
+        "kind": "api-client",
+        "ext": ".ts",
+        "bytes": 278,
+        "lines": 10
+      }
+    },
+    {
+      "id": "File:src/pages/DiscoverPage.tsx",
+      "type": "File",
+      "label": "src/pages/DiscoverPage.tsx",
+      "meta": {
+        "path": "src/pages/DiscoverPage.tsx",
+        "kind": "route-or-page",
+        "ext": ".tsx",
+        "bytes": 827,
+        "lines": 29
+      }
+    },
+    {
+      "id": "ReactComponent:DiscoverPage:src/pages/DiscoverPage.tsx",
+      "type": "ReactComponent",
+      "label": "DiscoverPage",
+      "meta": {
+        "name": "DiscoverPage",
+        "file": "src/pages/DiscoverPage.tsx",
+        "line": 4,
+        "renders": [],
+        "hooks": [
+          "useEffect",
+          "useState"
+        ],
+        "requests": [],
+        "signals": []
+      }
+    },
+    {
+      "id": "Route:GET:/api/discover/works",
+      "type": "Route",
+      "label": "GET /api/discover/works",
+      "meta": {
+        "path": "/api/discover/works",
+        "method": "GET",
+        "file": "backend/main.py",
+        "component": null,
+        "line": 6,
+        "source": "fastapi"
+      }
+    },
+    {
+      "id": "Route:GET:/discover",
+      "type": "Route",
+      "label": "GET /discover",
+      "meta": {
+        "path": "/discover",
+        "method": "GET",
+        "file": "src/App.tsx",
+        "component": "DiscoverPage",
+        "line": 5,
+        "source": "react-router"
+      }
+    },
+    {
+      "id": "APIEndpoint:GET:/api/discover/works",
+      "type": "APIEndpoint",
+      "label": "GET /api/discover/works",
+      "meta": {
+        "file": "backend/main.py",
+        "method": "GET",
+        "url": "/api/discover/works",
+        "rawUrl": "/api/discover/works",
+        "line": 6,
+        "source": "fastapi",
+        "rawUrls": [
+          "/api/discover/works",
+          "/api/discover/works?${params.toString()}"
+        ],
+        "sources": [
+          "fastapi",
+          "fetch"
+        ]
+      }
+    },
+    {
+      "id": "DataEntity:item:backend/main.py",
+      "type": "DataEntity",
+      "label": "item",
+      "meta": {
+        "id": "item",
+        "label": "item",
+        "file": "backend/main.py",
+        "source": "static:data_entity_detector",
+        "confidence": 0.78,
+        "evidence": {
+          "line": 6,
+          "text": "@app.get(\"/api/discover/works\")"
+        }
+      }
+    },
+    {
+      "id": "DataEntity:tag:backend/main.py",
+      "type": "DataEntity",
+      "label": "tag",
+      "meta": {
+        "id": "tag",
+        "label": "tag",
+        "file": "backend/main.py",
+        "source": "static:data_entity_detector",
+        "confidence": 0.8,
+        "evidence": {
+          "line": 9,
+          "text": "tags: str = \"\","
+        }
+      }
+    },
+    {
+      "id": "DataEntity:query:backend/main.py",
+      "type": "DataEntity",
+      "label": "query",
+      "meta": {
+        "id": "query",
+        "label": "query",
+        "file": "backend/main.py",
+        "source": "static:data_entity_detector",
+        "confidence": 0.76,
+        "evidence": {
+          "line": 8,
+          "text": "q: str = \"\","
+        }
+      }
+    },
+    {
+      "id": "DataEntity:content:backend/main.py",
+      "type": "DataEntity",
+      "label": "content metadata",
+      "meta": {
+        "id": "content",
+        "label": "content metadata",
+        "file": "backend/main.py",
+        "source": "static:data_entity_detector",
+        "confidence": 0.74,
+        "evidence": {
+          "line": 23,
+          "text": "\"title\": work[\"title\"],"
+        }
+      }
+    },
+    {
+      "id": "DataEntity:item:src/api/discovery.ts",
+      "type": "DataEntity",
+      "label": "item",
+      "meta": {
+        "id": "item",
+        "label": "item",
+        "file": "src/api/discovery.ts",
+        "source": "static:data_entity_detector",
+        "confidence": 0.78,
+        "evidence": {
+          "line": 7,
+          "text": "const response = await fetch(`/api/discover/works?${params.toString()}`);"
+        }
+      }
+    },
+    {
+      "id": "DataEntity:tag:src/api/discovery.ts",
+      "type": "DataEntity",
+      "label": "tag",
+      "meta": {
+        "id": "tag",
+        "label": "tag",
+        "file": "src/api/discovery.ts",
+        "source": "static:data_entity_detector",
+        "confidence": 0.8,
+        "evidence": {
+          "line": 1,
+          "text": "export async function searchWorks(query: string, tags: string[] = []) {"
+        }
+      }
+    },
+    {
+      "id": "DataEntity:query:src/api/discovery.ts",
+      "type": "DataEntity",
+      "label": "query",
+      "meta": {
+        "id": "query",
+        "label": "query",
+        "file": "src/api/discovery.ts",
+        "source": "static:data_entity_detector",
+        "confidence": 0.76,
+        "evidence": {
+          "line": 1,
+          "text": "export async function searchWorks(query: string, tags: string[] = []) {"
+        }
+      }
+    },
+    {
+      "id": "DataEntity:item:src/pages/DiscoverPage.tsx",
+      "type": "DataEntity",
+      "label": "item",
+      "meta": {
+        "id": "item",
+        "label": "item",
+        "file": "src/pages/DiscoverPage.tsx",
+        "source": "static:data_entity_detector",
+        "confidence": 0.78,
+        "evidence": {
+          "line": 6,
+          "text": "const [works, setWorks] = useState([]);"
+        }
+      }
+    },
+    {
+      "id": "DataEntity:tag:src/pages/DiscoverPage.tsx",
+      "type": "DataEntity",
+      "label": "tag",
+      "meta": {
+        "id": "tag",
+        "label": "tag",
+        "file": "src/pages/DiscoverPage.tsx",
+        "source": "static:data_entity_detector",
+        "confidence": 0.8,
+        "evidence": {
+          "line": 21,
+          "text": "<p>{featuredWork.tags.join(\", \")}</p>"
+        }
+      }
+    },
+    {
+      "id": "DataEntity:content:src/pages/DiscoverPage.tsx",
+      "type": "DataEntity",
+      "label": "content metadata",
+      "meta": {
+        "id": "content",
+        "label": "content metadata",
+        "file": "src/pages/DiscoverPage.tsx",
+        "source": "static:data_entity_detector",
+        "confidence": 0.74,
+        "evidence": {
+          "line": 19,
+          "text": "<img src={featuredWork.coverUrl} alt=\"\" loading=\"lazy\" />"
+        }
+      }
+    },
+    {
+      "id": "UserAction:search:backend/main.py",
+      "type": "UserAction",
+      "label": "search",
+      "meta": {
+        "id": "search",
+        "label": "search",
+        "file": "backend/main.py",
+        "source": "static:user_action_detector",
+        "confidence": 0.76,
+        "evidence": {
+          "line": 8,
+          "text": "q: str = \"\","
+        }
+      }
+    },
+    {
+      "id": "UserAction:search:src/api/discovery.ts",
+      "type": "UserAction",
+      "label": "search",
+      "meta": {
+        "id": "search",
+        "label": "search",
+        "file": "src/api/discovery.ts",
+        "source": "static:user_action_detector",
+        "confidence": 0.76,
+        "evidence": {
+          "line": 1,
+          "text": "export async function searchWorks(query: string, tags: string[] = []) {"
+        }
+      }
+    },
+    {
+      "id": "RankingSignal:explicit_score:backend/main.py",
+      "type": "RankingSignal",
+      "label": "explicit score",
+      "meta": {
+        "id": "explicit_score",
+        "label": "explicit score",
+        "file": "backend/main.py",
+        "source": "static:ranking_signal_detector",
+        "confidence": 0.8,
+        "evidence": {
+          "line": 19,
+          "text": "ranked = sorted(filtered, key=lambda work: (tag_overlap(selected_tags, work), work[\"score\"]), reverse=True)"
+        }
+      }
+    },
+    {
+      "id": "RankingSignal:text_similarity:backend/main.py",
+      "type": "RankingSignal",
+      "label": "text similarity",
+      "meta": {
+        "id": "text_similarity",
+        "label": "text similarity",
+        "file": "backend/main.py",
+        "source": "static:ranking_signal_detector",
+        "confidence": 0.78,
+        "evidence": {
+          "line": 19,
+          "text": "ranked = sorted(filtered, key=lambda work: (tag_overlap(selected_tags, work), work[\"score\"]), reverse=True)"
+        }
+      }
+    },
+    {
+      "id": "RankingSignal:explicit_score:src/pages/DiscoverPage.tsx",
+      "type": "RankingSignal",
+      "label": "explicit score",
+      "meta": {
+        "id": "explicit_score",
+        "label": "explicit score",
+        "file": "src/pages/DiscoverPage.tsx",
+        "source": "static:ranking_signal_detector",
+        "confidence": 0.8,
+        "evidence": {
+          "line": 22,
+          "text": "<strong>{featuredWork.score}</strong>"
+        }
+      }
+    },
+    {
+      "id": "RankingSignal:text_similarity:src/pages/DiscoverPage.tsx",
+      "type": "RankingSignal",
+      "label": "text similarity",
+      "meta": {
+        "id": "text_similarity",
+        "label": "text similarity",
+        "file": "src/pages/DiscoverPage.tsx",
+        "source": "static:ranking_signal_detector",
+        "confidence": 0.78,
+        "evidence": {
+          "line": 20,
+          "text": "<h2>{featuredWork.title}</h2>"
+        }
+      }
+    },
+    {
+      "id": "AlgorithmOpportunity:recommendation:backend/main.py",
+      "type": "AlgorithmOpportunity",
+      "label": "recommendation",
+      "meta": {
+        "id": "recommendation",
+        "label": "recommendation",
+        "file": "backend/main.py",
+        "reason": "item metadata can support candidate recommendation",
+        "source": "inference:algorithm_opportunity",
+        "confidence": 0.8,
+        "evidence": {
+          "line": 6,
+          "text": "@app.get(\"/api/discover/works\")"
+        }
+      }
+    },
+    {
+      "id": "AlgorithmOpportunity:search:backend/main.py",
+      "type": "AlgorithmOpportunity",
+      "label": "search",
+      "meta": {
+        "id": "search",
+        "label": "search",
+        "file": "backend/main.py",
+        "reason": "query or search behavior is visible in code",
+        "source": "inference:algorithm_opportunity",
+        "confidence": 0.76,
+        "evidence": {
+          "line": 6,
+          "text": "@app.get(\"/api/discover/works\")"
+        }
+      }
+    },
+    {
+      "id": "AlgorithmOpportunity:ranking:backend/main.py",
+      "type": "AlgorithmOpportunity",
+      "label": "ranking",
+      "meta": {
+        "id": "ranking",
+        "label": "ranking",
+        "file": "backend/main.py",
+        "reason": "ranking or scoring signal is visible in code",
+        "source": "inference:algorithm_opportunity",
+        "confidence": 0.78,
+        "evidence": {
+          "line": 6,
+          "text": "@app.get(\"/api/discover/works\")"
+        }
+      }
+    },
+    {
+      "id": "AlgorithmOpportunity:recommendation:src/api/discovery.ts",
+      "type": "AlgorithmOpportunity",
+      "label": "recommendation",
+      "meta": {
+        "id": "recommendation",
+        "label": "recommendation",
+        "file": "src/api/discovery.ts",
+        "reason": "item metadata can support candidate recommendation",
+        "source": "inference:algorithm_opportunity",
+        "confidence": 0.8,
+        "evidence": {
+          "line": 7,
+          "text": "const response = await fetch(`/api/discover/works?${params.toString()}`);"
+        }
+      }
+    },
+    {
+      "id": "AlgorithmOpportunity:search:src/api/discovery.ts",
+      "type": "AlgorithmOpportunity",
+      "label": "search",
+      "meta": {
+        "id": "search",
+        "label": "search",
+        "file": "src/api/discovery.ts",
+        "reason": "query or search behavior is visible in code",
+        "source": "inference:algorithm_opportunity",
+        "confidence": 0.76,
+        "evidence": {
+          "line": 7,
+          "text": "const response = await fetch(`/api/discover/works?${params.toString()}`);"
+        }
+      }
+    },
+    {
+      "id": "AlgorithmOpportunity:recommendation:src/pages/DiscoverPage.tsx",
+      "type": "AlgorithmOpportunity",
+      "label": "recommendation",
+      "meta": {
+        "id": "recommendation",
+        "label": "recommendation",
+        "file": "src/pages/DiscoverPage.tsx",
+        "reason": "item metadata can support candidate recommendation",
+        "source": "inference:algorithm_opportunity",
+        "confidence": 0.8,
+        "evidence": {
+          "line": 6,
+          "text": "const [works, setWorks] = useState([]);"
+        }
+      }
+    },
+    {
+      "id": "AlgorithmOpportunity:ranking:src/pages/DiscoverPage.tsx",
+      "type": "AlgorithmOpportunity",
+      "label": "ranking",
+      "meta": {
+        "id": "ranking",
+        "label": "ranking",
+        "file": "src/pages/DiscoverPage.tsx",
+        "reason": "ranking or scoring signal is visible in code",
+        "source": "inference:algorithm_opportunity",
+        "confidence": 0.78,
+        "evidence": {
+          "line": 6,
+          "text": "const [works, setWorks] = useState([]);"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "source": "File:src/App.tsx",
+      "target": "File:src/pages/DiscoverPage.tsx",
+      "type": "imports",
+      "meta": {
+        "line": 2,
+        "specifier": "./pages/DiscoverPage"
+      }
+    },
+    {
+      "source": "File:src/pages/DiscoverPage.tsx",
+      "target": "File:src/api/discovery.ts",
+      "type": "imports",
+      "meta": {
+        "line": 2,
+        "specifier": "../api/discovery"
+      }
+    },
+    {
+      "source": "File:src/pages/DiscoverPage.tsx",
+      "target": "ReactComponent:DiscoverPage:src/pages/DiscoverPage.tsx",
+      "type": "exports",
+      "meta": {
+        "line": 4
+      }
+    },
+    {
+      "source": "Route:GET:/api/discover/works",
+      "target": "File:backend/main.py",
+      "type": "routesTo",
+      "meta": {
+        "line": 6,
+        "source": "fastapi"
+      }
+    },
+    {
+      "source": "Route:GET:/discover",
+      "target": "File:src/App.tsx",
+      "type": "routesTo",
+      "meta": {
+        "line": 5,
+        "source": "react-router"
+      }
+    },
+    {
+      "source": "Route:GET:/discover",
+      "target": "ReactComponent:DiscoverPage:src/pages/DiscoverPage.tsx",
+      "type": "renders",
+      "meta": {
+        "line": 5
+      }
+    },
+    {
+      "source": "File:backend/main.py",
+      "target": "APIEndpoint:GET:/api/discover/works",
+      "type": "defines",
+      "meta": {
+        "line": 6,
+        "source": "fastapi",
+        "rawUrl": "/api/discover/works"
+      }
+    },
+    {
+      "source": "File:src/api/discovery.ts",
+      "target": "APIEndpoint:GET:/api/discover/works",
+      "type": "requests",
+      "meta": {
+        "line": 7,
+        "source": "fetch",
+        "rawUrl": "/api/discover/works?${params.toString()}"
+      }
+    },
+    {
+      "source": "File:backend/main.py",
+      "target": "DataEntity:item:backend/main.py",
+      "type": "mentions",
+      "meta": {
+        "evidence": {
+          "line": 6,
+          "text": "@app.get(\"/api/discover/works\")"
+        }
+      }
+    },
+    {
+      "source": "APIEndpoint:GET:/api/discover/works",
+      "target": "DataEntity:item:backend/main.py",
+      "type": "exposes",
+      "meta": {
+        "evidence": {
+          "line": 6,
+          "text": "@app.get(\"/api/discover/works\")"
+        }
+      }
+    },
+    {
+      "source": "File:backend/main.py",
+      "target": "DataEntity:tag:backend/main.py",
+      "type": "mentions",
+      "meta": {
+        "evidence": {
+          "line": 9,
+          "text": "tags: str = \"\","
+        }
+      }
+    },
+    {
+      "source": "APIEndpoint:GET:/api/discover/works",
+      "target": "DataEntity:tag:backend/main.py",
+      "type": "exposes",
+      "meta": {
+        "evidence": {
+          "line": 9,
+          "text": "tags: str = \"\","
+        }
+      }
+    },
+    {
+      "source": "File:backend/main.py",
+      "target": "DataEntity:query:backend/main.py",
+      "type": "mentions",
+      "meta": {
+        "evidence": {
+          "line": 8,
+          "text": "q: str = \"\","
+        }
+      }
+    },
+    {
+      "source": "APIEndpoint:GET:/api/discover/works",
+      "target": "DataEntity:query:backend/main.py",
+      "type": "exposes",
+      "meta": {
+        "evidence": {
+          "line": 8,
+          "text": "q: str = \"\","
+        }
+      }
+    },
+    {
+      "source": "File:backend/main.py",
+      "target": "DataEntity:content:backend/main.py",
+      "type": "mentions",
+      "meta": {
+        "evidence": {
+          "line": 23,
+          "text": "\"title\": work[\"title\"],"
+        }
+      }
+    },
+    {
+      "source": "APIEndpoint:GET:/api/discover/works",
+      "target": "DataEntity:content:backend/main.py",
+      "type": "exposes",
+      "meta": {
+        "evidence": {
+          "line": 23,
+          "text": "\"title\": work[\"title\"],"
+        }
+      }
+    },
+    {
+      "source": "File:src/api/discovery.ts",
+      "target": "DataEntity:item:src/api/discovery.ts",
+      "type": "mentions",
+      "meta": {
+        "evidence": {
+          "line": 7,
+          "text": "const response = await fetch(`/api/discover/works?${params.toString()}`);"
+        }
+      }
+    },
+    {
+      "source": "APIEndpoint:GET:/api/discover/works",
+      "target": "DataEntity:item:src/api/discovery.ts",
+      "type": "exposes",
+      "meta": {
+        "evidence": {
+          "line": 7,
+          "text": "const response = await fetch(`/api/discover/works?${params.toString()}`);"
+        }
+      }
+    },
+    {
+      "source": "File:src/api/discovery.ts",
+      "target": "DataEntity:tag:src/api/discovery.ts",
+      "type": "mentions",
+      "meta": {
+        "evidence": {
+          "line": 1,
+          "text": "export async function searchWorks(query: string, tags: string[] = []) {"
+        }
+      }
+    },
+    {
+      "source": "APIEndpoint:GET:/api/discover/works",
+      "target": "DataEntity:tag:src/api/discovery.ts",
+      "type": "exposes",
+      "meta": {
+        "evidence": {
+          "line": 1,
+          "text": "export async function searchWorks(query: string, tags: string[] = []) {"
+        }
+      }
+    },
+    {
+      "source": "File:src/api/discovery.ts",
+      "target": "DataEntity:query:src/api/discovery.ts",
+      "type": "mentions",
+      "meta": {
+        "evidence": {
+          "line": 1,
+          "text": "export async function searchWorks(query: string, tags: string[] = []) {"
+        }
+      }
+    },
+    {
+      "source": "APIEndpoint:GET:/api/discover/works",
+      "target": "DataEntity:query:src/api/discovery.ts",
+      "type": "exposes",
+      "meta": {
+        "evidence": {
+          "line": 1,
+          "text": "export async function searchWorks(query: string, tags: string[] = []) {"
+        }
+      }
+    },
+    {
+      "source": "File:src/pages/DiscoverPage.tsx",
+      "target": "DataEntity:item:src/pages/DiscoverPage.tsx",
+      "type": "mentions",
+      "meta": {
+        "evidence": {
+          "line": 6,
+          "text": "const [works, setWorks] = useState([]);"
+        }
+      }
+    },
+    {
+      "source": "ReactComponent:DiscoverPage:src/pages/DiscoverPage.tsx",
+      "target": "DataEntity:item:src/pages/DiscoverPage.tsx",
+      "type": "mentions",
+      "meta": {
+        "evidence": {
+          "line": 6,
+          "text": "const [works, setWorks] = useState([]);"
+        }
+      }
+    },
+    {
+      "source": "File:src/pages/DiscoverPage.tsx",
+      "target": "DataEntity:tag:src/pages/DiscoverPage.tsx",
+      "type": "mentions",
+      "meta": {
+        "evidence": {
+          "line": 21,
+          "text": "<p>{featuredWork.tags.join(\", \")}</p>"
+        }
+      }
+    },
+    {
+      "source": "ReactComponent:DiscoverPage:src/pages/DiscoverPage.tsx",
+      "target": "DataEntity:tag:src/pages/DiscoverPage.tsx",
+      "type": "mentions",
+      "meta": {
+        "evidence": {
+          "line": 21,
+          "text": "<p>{featuredWork.tags.join(\", \")}</p>"
+        }
+      }
+    },
+    {
+      "source": "File:src/pages/DiscoverPage.tsx",
+      "target": "DataEntity:content:src/pages/DiscoverPage.tsx",
+      "type": "mentions",
+      "meta": {
+        "evidence": {
+          "line": 19,
+          "text": "<img src={featuredWork.coverUrl} alt=\"\" loading=\"lazy\" />"
+        }
+      }
+    },
+    {
+      "source": "ReactComponent:DiscoverPage:src/pages/DiscoverPage.tsx",
+      "target": "DataEntity:content:src/pages/DiscoverPage.tsx",
+      "type": "mentions",
+      "meta": {
+        "evidence": {
+          "line": 19,
+          "text": "<img src={featuredWork.coverUrl} alt=\"\" loading=\"lazy\" />"
+        }
+      }
+    },
+    {
+      "source": "File:backend/main.py",
+      "target": "UserAction:search:backend/main.py",
+      "type": "captures",
+      "meta": {
+        "evidence": {
+          "line": 8,
+          "text": "q: str = \"\","
+        }
+      }
+    },
+    {
+      "source": "APIEndpoint:GET:/api/discover/works",
+      "target": "UserAction:search:backend/main.py",
+      "type": "exposes",
+      "meta": {
+        "evidence": {
+          "line": 8,
+          "text": "q: str = \"\","
+        }
+      }
+    },
+    {
+      "source": "File:src/api/discovery.ts",
+      "target": "UserAction:search:src/api/discovery.ts",
+      "type": "captures",
+      "meta": {
+        "evidence": {
+          "line": 1,
+          "text": "export async function searchWorks(query: string, tags: string[] = []) {"
+        }
+      }
+    },
+    {
+      "source": "APIEndpoint:GET:/api/discover/works",
+      "target": "UserAction:search:src/api/discovery.ts",
+      "type": "exposes",
+      "meta": {
+        "evidence": {
+          "line": 1,
+          "text": "export async function searchWorks(query: string, tags: string[] = []) {"
+        }
+      }
+    },
+    {
+      "source": "File:backend/main.py",
+      "target": "RankingSignal:explicit_score:backend/main.py",
+      "type": "usesSignal",
+      "meta": {
+        "evidence": {
+          "line": 19,
+          "text": "ranked = sorted(filtered, key=lambda work: (tag_overlap(selected_tags, work), work[\"score\"]), reverse=True)"
+        }
+      }
+    },
+    {
+      "source": "APIEndpoint:GET:/api/discover/works",
+      "target": "RankingSignal:explicit_score:backend/main.py",
+      "type": "exposes",
+      "meta": {
+        "evidence": {
+          "line": 19,
+          "text": "ranked = sorted(filtered, key=lambda work: (tag_overlap(selected_tags, work), work[\"score\"]), reverse=True)"
+        }
+      }
+    },
+    {
+      "source": "File:backend/main.py",
+      "target": "RankingSignal:text_similarity:backend/main.py",
+      "type": "usesSignal",
+      "meta": {
+        "evidence": {
+          "line": 19,
+          "text": "ranked = sorted(filtered, key=lambda work: (tag_overlap(selected_tags, work), work[\"score\"]), reverse=True)"
+        }
+      }
+    },
+    {
+      "source": "APIEndpoint:GET:/api/discover/works",
+      "target": "RankingSignal:text_similarity:backend/main.py",
+      "type": "exposes",
+      "meta": {
+        "evidence": {
+          "line": 19,
+          "text": "ranked = sorted(filtered, key=lambda work: (tag_overlap(selected_tags, work), work[\"score\"]), reverse=True)"
+        }
+      }
+    },
+    {
+      "source": "File:src/pages/DiscoverPage.tsx",
+      "target": "RankingSignal:explicit_score:src/pages/DiscoverPage.tsx",
+      "type": "usesSignal",
+      "meta": {
+        "evidence": {
+          "line": 22,
+          "text": "<strong>{featuredWork.score}</strong>"
+        }
+      }
+    },
+    {
+      "source": "ReactComponent:DiscoverPage:src/pages/DiscoverPage.tsx",
+      "target": "RankingSignal:explicit_score:src/pages/DiscoverPage.tsx",
+      "type": "usesSignal",
+      "meta": {
+        "evidence": {
+          "line": 22,
+          "text": "<strong>{featuredWork.score}</strong>"
+        }
+      }
+    },
+    {
+      "source": "File:src/pages/DiscoverPage.tsx",
+      "target": "RankingSignal:text_similarity:src/pages/DiscoverPage.tsx",
+      "type": "usesSignal",
+      "meta": {
+        "evidence": {
+          "line": 20,
+          "text": "<h2>{featuredWork.title}</h2>"
+        }
+      }
+    },
+    {
+      "source": "ReactComponent:DiscoverPage:src/pages/DiscoverPage.tsx",
+      "target": "RankingSignal:text_similarity:src/pages/DiscoverPage.tsx",
+      "type": "usesSignal",
+      "meta": {
+        "evidence": {
+          "line": 20,
+          "text": "<h2>{featuredWork.title}</h2>"
+        }
+      }
+    },
+    {
+      "source": "File:backend/main.py",
+      "target": "AlgorithmOpportunity:recommendation:backend/main.py",
+      "type": "suggests",
+      "meta": {
+        "evidence": {
+          "line": 6,
+          "text": "@app.get(\"/api/discover/works\")"
+        },
+        "reason": "item metadata can support candidate recommendation"
+      }
+    },
+    {
+      "source": "DataEntity:item:backend/main.py",
+      "target": "AlgorithmOpportunity:recommendation:backend/main.py",
+      "type": "supports",
+      "meta": {
+        "reason": "item metadata can support candidate recommendation"
+      }
+    },
+    {
+      "source": "DataEntity:tag:backend/main.py",
+      "target": "AlgorithmOpportunity:recommendation:backend/main.py",
+      "type": "supports",
+      "meta": {
+        "reason": "item metadata can support candidate recommendation"
+      }
+    },
+    {
+      "source": "DataEntity:query:backend/main.py",
+      "target": "AlgorithmOpportunity:recommendation:backend/main.py",
+      "type": "supports",
+      "meta": {
+        "reason": "item metadata can support candidate recommendation"
+      }
+    },
+    {
+      "source": "DataEntity:content:backend/main.py",
+      "target": "AlgorithmOpportunity:recommendation:backend/main.py",
+      "type": "supports",
+      "meta": {
+        "reason": "item metadata can support candidate recommendation"
+      }
+    },
+    {
+      "source": "UserAction:search:backend/main.py",
+      "target": "AlgorithmOpportunity:recommendation:backend/main.py",
+      "type": "supports",
+      "meta": {
+        "reason": "item metadata can support candidate recommendation"
+      }
+    },
+    {
+      "source": "RankingSignal:explicit_score:backend/main.py",
+      "target": "AlgorithmOpportunity:recommendation:backend/main.py",
+      "type": "supports",
+      "meta": {
+        "reason": "item metadata can support candidate recommendation"
+      }
+    },
+    {
+      "source": "RankingSignal:text_similarity:backend/main.py",
+      "target": "AlgorithmOpportunity:recommendation:backend/main.py",
+      "type": "supports",
+      "meta": {
+        "reason": "item metadata can support candidate recommendation"
+      }
+    },
+    {
+      "source": "File:backend/main.py",
+      "target": "AlgorithmOpportunity:search:backend/main.py",
+      "type": "suggests",
+      "meta": {
+        "evidence": {
+          "line": 6,
+          "text": "@app.get(\"/api/discover/works\")"
+        },
+        "reason": "query or search behavior is visible in code"
+      }
+    },
+    {
+      "source": "DataEntity:item:backend/main.py",
+      "target": "AlgorithmOpportunity:search:backend/main.py",
+      "type": "supports",
+      "meta": {
+        "reason": "query or search behavior is visible in code"
+      }
+    },
+    {
+      "source": "DataEntity:tag:backend/main.py",
+      "target": "AlgorithmOpportunity:search:backend/main.py",
+      "type": "supports",
+      "meta": {
+        "reason": "query or search behavior is visible in code"
+      }
+    },
+    {
+      "source": "DataEntity:query:backend/main.py",
+      "target": "AlgorithmOpportunity:search:backend/main.py",
+      "type": "supports",
+      "meta": {
+        "reason": "query or search behavior is visible in code"
+      }
+    },
+    {
+      "source": "DataEntity:content:backend/main.py",
+      "target": "AlgorithmOpportunity:search:backend/main.py",
+      "type": "supports",
+      "meta": {
+        "reason": "query or search behavior is visible in code"
+      }
+    },
+    {
+      "source": "UserAction:search:backend/main.py",
+      "target": "AlgorithmOpportunity:search:backend/main.py",
+      "type": "supports",
+      "meta": {
+        "reason": "query or search behavior is visible in code"
+      }
+    },
+    {
+      "source": "RankingSignal:explicit_score:backend/main.py",
+      "target": "AlgorithmOpportunity:search:backend/main.py",
+      "type": "supports",
+      "meta": {
+        "reason": "query or search behavior is visible in code"
+      }
+    },
+    {
+      "source": "RankingSignal:text_similarity:backend/main.py",
+      "target": "AlgorithmOpportunity:search:backend/main.py",
+      "type": "supports",
+      "meta": {
+        "reason": "query or search behavior is visible in code"
+      }
+    },
+    {
+      "source": "File:backend/main.py",
+      "target": "AlgorithmOpportunity:ranking:backend/main.py",
+      "type": "suggests",
+      "meta": {
+        "evidence": {
+          "line": 6,
+          "text": "@app.get(\"/api/discover/works\")"
+        },
+        "reason": "ranking or scoring signal is visible in code"
+      }
+    },
+    {
+      "source": "DataEntity:item:backend/main.py",
+      "target": "AlgorithmOpportunity:ranking:backend/main.py",
+      "type": "supports",
+      "meta": {
+        "reason": "ranking or scoring signal is visible in code"
+      }
+    },
+    {
+      "source": "DataEntity:tag:backend/main.py",
+      "target": "AlgorithmOpportunity:ranking:backend/main.py",
+      "type": "supports",
+      "meta": {
+        "reason": "ranking or scoring signal is visible in code"
+      }
+    },
+    {
+      "source": "DataEntity:query:backend/main.py",
+      "target": "AlgorithmOpportunity:ranking:backend/main.py",
+      "type": "supports",
+      "meta": {
+        "reason": "ranking or scoring signal is visible in code"
+      }
+    },
+    {
+      "source": "DataEntity:content:backend/main.py",
+      "target": "AlgorithmOpportunity:ranking:backend/main.py",
+      "type": "supports",
+      "meta": {
+        "reason": "ranking or scoring signal is visible in code"
+      }
+    },
+    {
+      "source": "UserAction:search:backend/main.py",
+      "target": "AlgorithmOpportunity:ranking:backend/main.py",
+      "type": "supports",
+      "meta": {
+        "reason": "ranking or scoring signal is visible in code"
+      }
+    },
+    {
+      "source": "RankingSignal:explicit_score:backend/main.py",
+      "target": "AlgorithmOpportunity:ranking:backend/main.py",
+      "type": "supports",
+      "meta": {
+        "reason": "ranking or scoring signal is visible in code"
+      }
+    },
+    {
+      "source": "RankingSignal:text_similarity:backend/main.py",
+      "target": "AlgorithmOpportunity:ranking:backend/main.py",
+      "type": "supports",
+      "meta": {
+        "reason": "ranking or scoring signal is visible in code"
+      }
+    },
+    {
+      "source": "File:src/api/discovery.ts",
+      "target": "AlgorithmOpportunity:recommendation:src/api/discovery.ts",
+      "type": "suggests",
+      "meta": {
+        "evidence": {
+          "line": 7,
+          "text": "const response = await fetch(`/api/discover/works?${params.toString()}`);"
+        },
+        "reason": "item metadata can support candidate recommendation"
+      }
+    },
+    {
+      "source": "DataEntity:item:src/api/discovery.ts",
+      "target": "AlgorithmOpportunity:recommendation:src/api/discovery.ts",
+      "type": "supports",
+      "meta": {
+        "reason": "item metadata can support candidate recommendation"
+      }
+    },
+    {
+      "source": "DataEntity:tag:src/api/discovery.ts",
+      "target": "AlgorithmOpportunity:recommendation:src/api/discovery.ts",
+      "type": "supports",
+      "meta": {
+        "reason": "item metadata can support candidate recommendation"
+      }
+    },
+    {
+      "source": "DataEntity:query:src/api/discovery.ts",
+      "target": "AlgorithmOpportunity:recommendation:src/api/discovery.ts",
+      "type": "supports",
+      "meta": {
+        "reason": "item metadata can support candidate recommendation"
+      }
+    },
+    {
+      "source": "UserAction:search:src/api/discovery.ts",
+      "target": "AlgorithmOpportunity:recommendation:src/api/discovery.ts",
+      "type": "supports",
+      "meta": {
+        "reason": "item metadata can support candidate recommendation"
+      }
+    },
+    {
+      "source": "File:src/api/discovery.ts",
+      "target": "AlgorithmOpportunity:search:src/api/discovery.ts",
+      "type": "suggests",
+      "meta": {
+        "evidence": {
+          "line": 7,
+          "text": "const response = await fetch(`/api/discover/works?${params.toString()}`);"
+        },
+        "reason": "query or search behavior is visible in code"
+      }
+    },
+    {
+      "source": "DataEntity:item:src/api/discovery.ts",
+      "target": "AlgorithmOpportunity:search:src/api/discovery.ts",
+      "type": "supports",
+      "meta": {
+        "reason": "query or search behavior is visible in code"
+      }
+    },
+    {
+      "source": "DataEntity:tag:src/api/discovery.ts",
+      "target": "AlgorithmOpportunity:search:src/api/discovery.ts",
+      "type": "supports",
+      "meta": {
+        "reason": "query or search behavior is visible in code"
+      }
+    },
+    {
+      "source": "DataEntity:query:src/api/discovery.ts",
+      "target": "AlgorithmOpportunity:search:src/api/discovery.ts",
+      "type": "supports",
+      "meta": {
+        "reason": "query or search behavior is visible in code"
+      }
+    },
+    {
+      "source": "UserAction:search:src/api/discovery.ts",
+      "target": "AlgorithmOpportunity:search:src/api/discovery.ts",
+      "type": "supports",
+      "meta": {
+        "reason": "query or search behavior is visible in code"
+      }
+    },
+    {
+      "source": "File:src/pages/DiscoverPage.tsx",
+      "target": "AlgorithmOpportunity:recommendation:src/pages/DiscoverPage.tsx",
+      "type": "suggests",
+      "meta": {
+        "evidence": {
+          "line": 6,
+          "text": "const [works, setWorks] = useState([]);"
+        },
+        "reason": "item metadata can support candidate recommendation"
+      }
+    },
+    {
+      "source": "DataEntity:item:src/pages/DiscoverPage.tsx",
+      "target": "AlgorithmOpportunity:recommendation:src/pages/DiscoverPage.tsx",
+      "type": "supports",
+      "meta": {
+        "reason": "item metadata can support candidate recommendation"
+      }
+    },
+    {
+      "source": "DataEntity:tag:src/pages/DiscoverPage.tsx",
+      "target": "AlgorithmOpportunity:recommendation:src/pages/DiscoverPage.tsx",
+      "type": "supports",
+      "meta": {
+        "reason": "item metadata can support candidate recommendation"
+      }
+    },
+    {
+      "source": "DataEntity:content:src/pages/DiscoverPage.tsx",
+      "target": "AlgorithmOpportunity:recommendation:src/pages/DiscoverPage.tsx",
+      "type": "supports",
+      "meta": {
+        "reason": "item metadata can support candidate recommendation"
+      }
+    },
+    {
+      "source": "RankingSignal:explicit_score:src/pages/DiscoverPage.tsx",
+      "target": "AlgorithmOpportunity:recommendation:src/pages/DiscoverPage.tsx",
+      "type": "supports",
+      "meta": {
+        "reason": "item metadata can support candidate recommendation"
+      }
+    },
+    {
+      "source": "RankingSignal:text_similarity:src/pages/DiscoverPage.tsx",
+      "target": "AlgorithmOpportunity:recommendation:src/pages/DiscoverPage.tsx",
+      "type": "supports",
+      "meta": {
+        "reason": "item metadata can support candidate recommendation"
+      }
+    },
+    {
+      "source": "File:src/pages/DiscoverPage.tsx",
+      "target": "AlgorithmOpportunity:ranking:src/pages/DiscoverPage.tsx",
+      "type": "suggests",
+      "meta": {
+        "evidence": {
+          "line": 6,
+          "text": "const [works, setWorks] = useState([]);"
+        },
+        "reason": "ranking or scoring signal is visible in code"
+      }
+    },
+    {
+      "source": "DataEntity:item:src/pages/DiscoverPage.tsx",
+      "target": "AlgorithmOpportunity:ranking:src/pages/DiscoverPage.tsx",
+      "type": "supports",
+      "meta": {
+        "reason": "ranking or scoring signal is visible in code"
+      }
+    },
+    {
+      "source": "DataEntity:tag:src/pages/DiscoverPage.tsx",
+      "target": "AlgorithmOpportunity:ranking:src/pages/DiscoverPage.tsx",
+      "type": "supports",
+      "meta": {
+        "reason": "ranking or scoring signal is visible in code"
+      }
+    },
+    {
+      "source": "DataEntity:content:src/pages/DiscoverPage.tsx",
+      "target": "AlgorithmOpportunity:ranking:src/pages/DiscoverPage.tsx",
+      "type": "supports",
+      "meta": {
+        "reason": "ranking or scoring signal is visible in code"
+      }
+    },
+    {
+      "source": "RankingSignal:explicit_score:src/pages/DiscoverPage.tsx",
+      "target": "AlgorithmOpportunity:ranking:src/pages/DiscoverPage.tsx",
+      "type": "supports",
+      "meta": {
+        "reason": "ranking or scoring signal is visible in code"
+      }
+    },
+    {
+      "source": "RankingSignal:text_similarity:src/pages/DiscoverPage.tsx",
+      "target": "AlgorithmOpportunity:ranking:src/pages/DiscoverPage.tsx",
+      "type": "supports",
+      "meta": {
+        "reason": "ranking or scoring signal is visible in code"
+      }
+    }
+  ],
+  "visits": {
+    "File:src/api/discovery.ts": {
+      "depth": 0,
+      "reason": "target match",
+      "via": null
+    },
+    "File:src/pages/DiscoverPage.tsx": {
+      "depth": 0,
+      "reason": "target match",
+      "via": null
+    },
+    "ReactComponent:DiscoverPage:src/pages/DiscoverPage.tsx": {
+      "depth": 0,
+      "reason": "target match",
+      "via": null
+    },
+    "Route:GET:/api/discover/works": {
+      "depth": 0,
+      "reason": "target match",
+      "via": null
+    },
+    "Route:GET:/discover": {
+      "depth": 0,
+      "reason": "target match",
+      "via": null
+    },
+    "APIEndpoint:GET:/api/discover/works": {
+      "depth": 0,
+      "reason": "target match",
+      "via": null
+    },
+    "DataEntity:item:src/api/discovery.ts": {
+      "depth": 1,
+      "reason": "mentions from File:src/api/discovery.ts",
+      "via": {
+        "source": "File:src/api/discovery.ts",
+        "target": "DataEntity:item:src/api/discovery.ts",
+        "type": "mentions"
+      }
+    },
+    "DataEntity:tag:src/api/discovery.ts": {
+      "depth": 1,
+      "reason": "mentions from File:src/api/discovery.ts",
+      "via": {
+        "source": "File:src/api/discovery.ts",
+        "target": "DataEntity:tag:src/api/discovery.ts",
+        "type": "mentions"
+      }
+    },
+    "DataEntity:query:src/api/discovery.ts": {
+      "depth": 1,
+      "reason": "mentions from File:src/api/discovery.ts",
+      "via": {
+        "source": "File:src/api/discovery.ts",
+        "target": "DataEntity:query:src/api/discovery.ts",
+        "type": "mentions"
+      }
+    },
+    "UserAction:search:src/api/discovery.ts": {
+      "depth": 1,
+      "reason": "captures from File:src/api/discovery.ts",
+      "via": {
+        "source": "File:src/api/discovery.ts",
+        "target": "UserAction:search:src/api/discovery.ts",
+        "type": "captures"
+      }
+    },
+    "AlgorithmOpportunity:recommendation:src/api/discovery.ts": {
+      "depth": 1,
+      "reason": "suggests from File:src/api/discovery.ts",
+      "via": {
+        "source": "File:src/api/discovery.ts",
+        "target": "AlgorithmOpportunity:recommendation:src/api/discovery.ts",
+        "type": "suggests"
+      }
+    },
+    "AlgorithmOpportunity:search:src/api/discovery.ts": {
+      "depth": 1,
+      "reason": "suggests from File:src/api/discovery.ts",
+      "via": {
+        "source": "File:src/api/discovery.ts",
+        "target": "AlgorithmOpportunity:search:src/api/discovery.ts",
+        "type": "suggests"
+      }
+    },
+    "File:src/App.tsx": {
+      "depth": 1,
+      "reason": "imports to File:src/pages/DiscoverPage.tsx",
+      "via": {
+        "source": "File:src/App.tsx",
+        "target": "File:src/pages/DiscoverPage.tsx",
+        "type": "imports"
+      }
+    },
+    "DataEntity:item:src/pages/DiscoverPage.tsx": {
+      "depth": 1,
+      "reason": "mentions from File:src/pages/DiscoverPage.tsx",
+      "via": {
+        "source": "File:src/pages/DiscoverPage.tsx",
+        "target": "DataEntity:item:src/pages/DiscoverPage.tsx",
+        "type": "mentions"
+      }
+    },
+    "DataEntity:tag:src/pages/DiscoverPage.tsx": {
+      "depth": 1,
+      "reason": "mentions from File:src/pages/DiscoverPage.tsx",
+      "via": {
+        "source": "File:src/pages/DiscoverPage.tsx",
+        "target": "DataEntity:tag:src/pages/DiscoverPage.tsx",
+        "type": "mentions"
+      }
+    },
+    "DataEntity:content:src/pages/DiscoverPage.tsx": {
+      "depth": 1,
+      "reason": "mentions from File:src/pages/DiscoverPage.tsx",
+      "via": {
+        "source": "File:src/pages/DiscoverPage.tsx",
+        "target": "DataEntity:content:src/pages/DiscoverPage.tsx",
+        "type": "mentions"
+      }
+    },
+    "RankingSignal:explicit_score:src/pages/DiscoverPage.tsx": {
+      "depth": 1,
+      "reason": "usesSignal from File:src/pages/DiscoverPage.tsx",
+      "via": {
+        "source": "File:src/pages/DiscoverPage.tsx",
+        "target": "RankingSignal:explicit_score:src/pages/DiscoverPage.tsx",
+        "type": "usesSignal"
+      }
+    },
+    "RankingSignal:text_similarity:src/pages/DiscoverPage.tsx": {
+      "depth": 1,
+      "reason": "usesSignal from File:src/pages/DiscoverPage.tsx",
+      "via": {
+        "source": "File:src/pages/DiscoverPage.tsx",
+        "target": "RankingSignal:text_similarity:src/pages/DiscoverPage.tsx",
+        "type": "usesSignal"
+      }
+    },
+    "AlgorithmOpportunity:recommendation:src/pages/DiscoverPage.tsx": {
+      "depth": 1,
+      "reason": "suggests from File:src/pages/DiscoverPage.tsx",
+      "via": {
+        "source": "File:src/pages/DiscoverPage.tsx",
+        "target": "AlgorithmOpportunity:recommendation:src/pages/DiscoverPage.tsx",
+        "type": "suggests"
+      }
+    },
+    "AlgorithmOpportunity:ranking:src/pages/DiscoverPage.tsx": {
+      "depth": 1,
+      "reason": "suggests from File:src/pages/DiscoverPage.tsx",
+      "via": {
+        "source": "File:src/pages/DiscoverPage.tsx",
+        "target": "AlgorithmOpportunity:ranking:src/pages/DiscoverPage.tsx",
+        "type": "suggests"
+      }
+    },
+    "File:backend/main.py": {
+      "depth": 1,
+      "reason": "routesTo from Route:GET:/api/discover/works",
+      "via": {
+        "source": "Route:GET:/api/discover/works",
+        "target": "File:backend/main.py",
+        "type": "routesTo"
+      }
+    },
+    "DataEntity:item:backend/main.py": {
+      "depth": 1,
+      "reason": "exposes from APIEndpoint:GET:/api/discover/works",
+      "via": {
+        "source": "APIEndpoint:GET:/api/discover/works",
+        "target": "DataEntity:item:backend/main.py",
+        "type": "exposes"
+      }
+    },
+    "DataEntity:tag:backend/main.py": {
+      "depth": 1,
+      "reason": "exposes from APIEndpoint:GET:/api/discover/works",
+      "via": {
+        "source": "APIEndpoint:GET:/api/discover/works",
+        "target": "DataEntity:tag:backend/main.py",
+        "type": "exposes"
+      }
+    },
+    "DataEntity:query:backend/main.py": {
+      "depth": 1,
+      "reason": "exposes from APIEndpoint:GET:/api/discover/works",
+      "via": {
+        "source": "APIEndpoint:GET:/api/discover/works",
+        "target": "DataEntity:query:backend/main.py",
+        "type": "exposes"
+      }
+    },
+    "DataEntity:content:backend/main.py": {
+      "depth": 1,
+      "reason": "exposes from APIEndpoint:GET:/api/discover/works",
+      "via": {
+        "source": "APIEndpoint:GET:/api/discover/works",
+        "target": "DataEntity:content:backend/main.py",
+        "type": "exposes"
+      }
+    },
+    "UserAction:search:backend/main.py": {
+      "depth": 1,
+      "reason": "exposes from APIEndpoint:GET:/api/discover/works",
+      "via": {
+        "source": "APIEndpoint:GET:/api/discover/works",
+        "target": "UserAction:search:backend/main.py",
+        "type": "exposes"
+      }
+    },
+    "RankingSignal:explicit_score:backend/main.py": {
+      "depth": 1,
+      "reason": "exposes from APIEndpoint:GET:/api/discover/works",
+      "via": {
+        "source": "APIEndpoint:GET:/api/discover/works",
+        "target": "RankingSignal:explicit_score:backend/main.py",
+        "type": "exposes"
+      }
+    },
+    "RankingSignal:text_similarity:backend/main.py": {
+      "depth": 1,
+      "reason": "exposes from APIEndpoint:GET:/api/discover/works",
+      "via": {
+        "source": "APIEndpoint:GET:/api/discover/works",
+        "target": "RankingSignal:text_similarity:backend/main.py",
+        "type": "exposes"
+      }
+    },
+    "AlgorithmOpportunity:recommendation:backend/main.py": {
+      "depth": 2,
+      "reason": "suggests from File:backend/main.py",
+      "via": {
+        "source": "File:backend/main.py",
+        "target": "AlgorithmOpportunity:recommendation:backend/main.py",
+        "type": "suggests"
+      }
+    },
+    "AlgorithmOpportunity:search:backend/main.py": {
+      "depth": 2,
+      "reason": "suggests from File:backend/main.py",
+      "via": {
+        "source": "File:backend/main.py",
+        "target": "AlgorithmOpportunity:search:backend/main.py",
+        "type": "suggests"
+      }
+    },
+    "AlgorithmOpportunity:ranking:backend/main.py": {
+      "depth": 2,
+      "reason": "suggests from File:backend/main.py",
+      "via": {
+        "source": "File:backend/main.py",
+        "target": "AlgorithmOpportunity:ranking:backend/main.py",
+        "type": "suggests"
+      }
+    }
+  }
+}

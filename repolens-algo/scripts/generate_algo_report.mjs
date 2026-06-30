@@ -2,6 +2,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
+import { resolveSafeOutFile } from "./lib/path_utils.mjs";
+
 function parseArgs(argv) {
   const args = [...argv];
   const root = path.resolve(args[0] && !args[0].startsWith("--") ? args.shift() : ".");
@@ -316,7 +318,7 @@ async function main() {
   const matchGroup = matches.matches.find((item) => item.block_id === profile.block_id) || matches.matches[0];
   const markdown = reportMarkdown(options.target, profile, matchGroup);
   const outPath = options.out
-    ? path.resolve(options.root, options.out)
+    ? resolveSafeOutFile(options.root, options.out)
     : path.join(options.root, ".project-memory", "algo", "reports", `${safeSlug(options.target)}-algo-report.md`);
   await writeText(outPath, markdown);
   console.log(`Algorithm opportunity report written to ${outPath}`);

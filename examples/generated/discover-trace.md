@@ -1,8 +1,9 @@
 # RepoLens Trace: /discover
 
+- Hops: 4
 - Start nodes: 6
-- Related nodes: 32
-- Related edges: 88
+- Related nodes: 31
+- Related edges: 86
 
 ## Start Nodes
 - File: src/api/discovery.ts (File:src/api/discovery.ts)
@@ -51,7 +52,6 @@
 - d1 text similarity - src/pages/DiscoverPage.tsx
 
 ### ReactComponent
-- d1 App - src/App.tsx
 - d0 DiscoverPage - src/pages/DiscoverPage.tsx
 
 ### Route
@@ -109,7 +109,6 @@
 - File:backend/main.py --suggests--> AlgorithmOpportunity:search:backend/main.py
 - File:backend/main.py --usesSignal--> RankingSignal:explicit_score:backend/main.py
 - File:backend/main.py --usesSignal--> RankingSignal:text_similarity:backend/main.py
-- File:src/App.tsx --exports line 4--> ReactComponent:App:src/App.tsx
 - File:src/App.tsx --imports line 2--> File:src/pages/DiscoverPage.tsx
 - File:src/api/discovery.ts --captures--> UserAction:search:src/api/discovery.ts
 - File:src/api/discovery.ts --mentions--> DataEntity:item:src/api/discovery.ts
@@ -137,7 +136,6 @@
 - RankingSignal:text_similarity:backend/main.py --supports--> AlgorithmOpportunity:search:backend/main.py
 - RankingSignal:text_similarity:src/pages/DiscoverPage.tsx --supports--> AlgorithmOpportunity:ranking:src/pages/DiscoverPage.tsx
 - RankingSignal:text_similarity:src/pages/DiscoverPage.tsx --supports--> AlgorithmOpportunity:recommendation:src/pages/DiscoverPage.tsx
-- ReactComponent:App:src/App.tsx --renders--> ReactComponent:DiscoverPage:src/pages/DiscoverPage.tsx
 - ReactComponent:DiscoverPage:src/pages/DiscoverPage.tsx --mentions--> DataEntity:content:src/pages/DiscoverPage.tsx
 - ReactComponent:DiscoverPage:src/pages/DiscoverPage.tsx --mentions--> DataEntity:item:src/pages/DiscoverPage.tsx
 - ReactComponent:DiscoverPage:src/pages/DiscoverPage.tsx --mentions--> DataEntity:tag:src/pages/DiscoverPage.tsx

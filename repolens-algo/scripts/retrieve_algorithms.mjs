@@ -3,6 +3,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { resolveSafeOutFile } from "./lib/path_utils.mjs";
+
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const skillRoot = path.resolve(scriptDir, "..");
 
@@ -50,12 +52,22 @@ function fitLabel(score) {
   return "weak";
 }
 
+function complexityRank(value) {
+  return { low: 1, medium: 2, high: 3 }[normalize(value)] || 4;
+}
+
+function readinessScore({ missingData, missingCardSignals, badForMatches }) {
+  return Math.max(0, 100 - missingData.length * 30 - missingCardSignals.length * 20 - badForMatches.length * 25);
+}
+
 function statusLabel(match) {
   const hasBlockers = match.warnings.some((warning) =>
     /behavior_log_missing|missing required data|missing card signal|no_exposure_logs|small_data|cold_start|latency_sensitive/i.test(warning),
   );
 
   if (!hasBlockers) return "recommended_now";
+  if (match.missing_data.length > 0 && match.readiness_score < 60) return "blocked_now";
+  if (match.complexity === "high" && match.readiness_score < 50) return "blocked_now";
   if (match.fit === "strong" || match.score >= 12) return "candidate_later";
   return "blocked_now";
 }
@@ -96,7 +108,9 @@ function scoreAlgorithm(profile, algorithm) {
   const goodForMatches = intersection(algorithm.good_for || [], profileSignals);
   const badForMatches = intersection(algorithm.bad_for || [], profile.constraints || []);
   const missingData = (algorithm.data_required || []).filter((item) => !intersection([item], profile.data_shapes || []).length);
+  const missingCardSignals = missingCardSignalWarnings(profile, algorithm);
   const evidenceStrength = Math.min(4, Math.ceil((profile.evidence?.code_lines?.length || 0) / 4));
+  const readiness = readinessScore({ missingData, missingCardSignals, badForMatches });
   const score =
     taskMatches.length * 4 +
     dataMatches.length * 3 +
@@ -108,7 +122,7 @@ function scoreAlgorithm(profile, algorithm) {
   const warnings = [
     ...badForMatches.map((item) => `profile has constraint: ${item}`),
     ...missingData.map((item) => `missing required data: ${item}`),
-    ...missingCardSignalWarnings(profile, algorithm),
+    ...missingCardSignals,
   ];
 
   const reasons = [
@@ -125,6 +139,7 @@ function scoreAlgorithm(profile, algorithm) {
     fit: fitLabel(score),
     reasons,
     warnings,
+    readiness_score: readiness,
     matched: {
       tasks: taskMatches,
       data_shapes: dataMatches,
@@ -152,7 +167,10 @@ async function main() {
       .map((algorithm) => scoreAlgorithm(profile, algorithm))
       .map((match) => ({ ...match, status: profile.algorithm_opportunity ? statusLabel(match) : "not_applicable" }))
       .sort((a, b) => b.score - a.score || a.algorithm_name.localeCompare(b.algorithm_name));
-    const currentTop = scored.find((match) => match.status === "recommended_now") || scored[0];
+    const recommendedNow = scored
+      .filter((match) => match.status === "recommended_now")
+      .sort((a, b) => complexityRank(a.complexity) - complexityRank(b.complexity) || b.readiness_score - a.readiness_score || b.score - a.score || a.algorithm_name.localeCompare(b.algorithm_name));
+    const currentTop = recommendedNow[0] || scored[0];
     return {
       block_id: profile.block_id,
       target: profile.target,
@@ -168,7 +186,7 @@ async function main() {
     matches,
   };
   const outPath = options.out
-    ? path.resolve(options.root, options.out)
+    ? resolveSafeOutFile(options.root, options.out)
     : path.join(options.root, ".project-memory", "algo", "algorithm_matches.json");
   await writeJson(outPath, output);
   console.log(`Algorithm matches written to ${outPath}`);

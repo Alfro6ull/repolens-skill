@@ -36,6 +36,7 @@ RepoLens Graph writes generated memory into the analyzed repository:
   graph/code_graph.json
   graph_metrics.json
   algorithm_signals.json
+  traces/<target>-context-graph.json
   context-packs/
   reports/
 ```

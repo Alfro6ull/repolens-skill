@@ -41,7 +41,8 @@ Use this schema when extending scanners or interpreting `.project-memory/graph/c
 | `.project-memory/graph/code_graph.json` | Full node/edge graph. |
 | `.project-memory/algorithm_signals.json` | Extracted algorithm graph facts before graph materialization. |
 | `.project-memory/graph_metrics.json` | Node/edge counts, fan-out nodes, risk-adjacent nodes, and route risk density. |
-| `.project-memory/context-packs/<target>.md` | Bounded K-hop evidence pack for AI analysis. |
+| `.project-memory/traces/<target>-context-graph.json` | Bounded K-hop subgraph used by context packs, Block Profiles, and reports. |
+| `.project-memory/context-packs/<target>.md` | Readable Markdown view over the bounded context graph. |
 
 ## Algorithm Fact Metadata
 

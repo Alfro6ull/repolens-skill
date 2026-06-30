@@ -24,7 +24,7 @@ flowchart LR
 
 | 组件 | 作用 |
 |---|---|
-| `repolens-graph` | 索引仓库，生成 `code_graph.json`，追踪 route/file/API/component 目标，并写出 context pack。 |
+| `repolens-graph` | 索引仓库，生成 `code_graph.json`，追踪 route/file/API/component 目标，并写出有界上下文子图。 |
 | `repolens-algo` | 生成 Block Profile，匹配本地算法卡，并写出算法机会报告。 |
 | `examples/generated` | 已提交的 `/discover` demo 示例产物。 |
 | `eval` | 基线对比记录。 |
@@ -34,7 +34,7 @@ flowchart LR
 
 **代码知识图谱**：一个普通 JSON 图，记录文件、import、route、component、API endpoint、数据实体、用户动作、排序信号、算法机会和辅助性能信号。
 
-**K-hop trace**：从目标节点出发，沿图关系向外走 K 层得到的有界上下文。例如 `/discover` 可以连到页面组件、API client、后端 route、数据实体、排序信号和支撑证据。
+**K-hop context graph**：从目标节点出发，沿图关系向外走 K 层得到的有界上下文子图。例如 `/discover` 可以连到页面组件、API client、后端 route、数据实体、排序信号和支撑证据。
 
 **Block Profile**：从目标子图归纳出的算法画像，包含实体、动作、数据形态、当前逻辑、约束、目标和图谱证据。
 
@@ -89,6 +89,7 @@ RepoLens 会在被分析仓库中写出 `.project-memory/`：
   graph/code_graph.json
 
 .project-memory/traces/
+  <target>-context-graph.json
   <target>-trace.md
 
 .project-memory/context-packs/
@@ -130,6 +131,7 @@ npm test
 
 ```text
 examples/generated/discover-context-pack.md
+examples/generated/discover-context-graph.json
 examples/generated/discover-trace.md
 examples/generated/discover-block-profile.json
 examples/generated/discover-algorithm-matches.json

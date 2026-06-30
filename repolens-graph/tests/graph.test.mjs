@@ -16,6 +16,40 @@ const boundedProjectRoot = path.join(tempRoot, "bounded-project");
 
 fs.cpSync(fixtureRoot, projectRoot, { recursive: true });
 fs.cpSync(boundedFixtureRoot, boundedProjectRoot, { recursive: true });
+fs.mkdirSync(path.join(projectRoot, "tests", "fixtures", "src", "pages"), { recursive: true });
+fs.writeFileSync(
+  path.join(projectRoot, "tests", "fixtures", "src", "pages", "FixtureOnlyPage.tsx"),
+  [
+    "export function FixtureOnlyPage() {",
+    "  const works = [{ id: 'fixture', coverUrl: '/fixture.png' }];",
+    "  return <div>{works.map((work) => <img key={work.id} src={work.coverUrl} />)}</div>;",
+    "}",
+    "",
+  ].join("\n"),
+);
+fs.writeFileSync(
+  path.join(projectRoot, "src", "api", "activityMutation.ts"),
+  [
+    "export async function createActivityWork(id: string) {",
+    "  const response = await fetch(`/api/activities/${id}/works`, {",
+    '    method: "POST",',
+    "    body: JSON.stringify({ title: 'New work' }),",
+    "  });",
+    "  return response.json();",
+    "}",
+    "",
+  ].join("\n"),
+);
+fs.appendFileSync(
+  path.join(projectRoot, "backend", "main.py"),
+  [
+    "",
+    '@app.post("/api/activities/{activity_id}/works")',
+    "def create_activity_work(activity_id: str):",
+    '    return {"ok": True}',
+    "",
+  ].join("\n"),
+);
 
 function run(args) {
   return execFileSync(process.execPath, args, {
@@ -39,11 +73,20 @@ assertRunFails(["repolens-graph/scripts/index_project.mjs", projectRoot, "--out"
 assertRunFails(["repolens-graph/scripts/index_project.mjs", projectRoot, "--out", ""], /Missing value for --out/);
 assertRunFails(["repolens-graph/scripts/index_project.mjs", projectRoot, "--out", "."], /Refuse to remove unsafe outDir/);
 assertRunFails(["repolens-graph/scripts/index_project.mjs", projectRoot, "--out", ".."], /Refuse to remove unsafe outDir/);
+assertRunFails(["repolens-graph/scripts/index_project.mjs", projectRoot, "--out", "src"], /Refuse to remove existing non-generated outDir/);
 
 run(["repolens-graph/scripts/index_project.mjs", projectRoot]);
 
 const graphPath = path.join(projectRoot, ".project-memory", "graph", "code_graph.json");
 const graph = JSON.parse(fs.readFileSync(graphPath, "utf8"));
+assert.ok(
+  !graph.nodes.some((node) => node.type !== "File" && (node.id.includes("FixtureOnlyPage") || node.meta?.file?.includes("tests/fixtures"))),
+  "test fixtures should not produce runtime graph fact nodes",
+);
+assert.ok(
+  !graph.edges.some((edge) => edge.source.includes("tests/fixtures") || edge.target.includes("tests/fixtures")),
+  "test fixtures should not produce runtime graph edges",
+);
 const endpointId = "APIEndpoint:GET:/api/activities/:param/works";
 const endpoint = graph.nodes.find((node) => node.id === endpointId);
 assert.ok(endpoint, "frontend template and backend path should share one canonical API endpoint");
@@ -55,10 +98,38 @@ const endpointEdges = graph.edges.filter((edge) => edge.target === endpointId);
 assert.ok(endpointEdges.some((edge) => edge.type === "requests"), "canonical endpoint should retain frontend request edge");
 assert.ok(endpointEdges.some((edge) => edge.type === "defines"), "canonical endpoint should retain backend define edge");
 
+const postEndpointId = "APIEndpoint:POST:/api/activities/:param/works";
+const postEndpoint = graph.nodes.find((node) => node.id === postEndpointId);
+assert.ok(postEndpoint, "fetch method options should preserve non-GET API endpoints");
+assert.deepEqual(new Set(postEndpoint.meta.sources), new Set(["fetch", "fastapi"]));
+
 const metricsPath = path.join(projectRoot, ".project-memory", "graph_metrics.json");
 assert.ok(fs.existsSync(metricsPath), "index should write graph metrics");
+const files = JSON.parse(fs.readFileSync(path.join(projectRoot, ".project-memory", "files.json"), "utf8"));
+assert.equal(files.find((file) => file.path.endsWith("FixtureOnlyPage.tsx"))?.kind, "test");
+const signals = JSON.parse(fs.readFileSync(path.join(projectRoot, ".project-memory", "performance_signals.json"), "utf8"));
+assert.ok(
+  !signals.some((signal) => signal.file.includes("tests/fixtures")),
+  "test fixtures should not produce performance signals",
+);
+
+assertRunFails(
+  ["repolens-graph/scripts/trace_module.mjs", projectRoot, "/activity/:id", "--out", "../trace.md"],
+  /Refuse to write unsafe outFile outside project root/,
+);
+assertRunFails(
+  ["repolens-graph/scripts/build_context_pack.mjs", projectRoot, "/activity/:id", "--out", "../context.md"],
+  /Refuse to write unsafe outFile outside project root/,
+);
 
 run(["repolens-graph/scripts/build_context_pack.mjs", projectRoot, "/activity/:id"]);
+const contextGraphPath = path.join(projectRoot, ".project-memory", "traces", "activity-id-context-graph.json");
+const contextGraph = JSON.parse(fs.readFileSync(contextGraphPath, "utf8"));
+assert.equal(contextGraph.target, "/activity/:id");
+assert.equal(contextGraph.hops, 4);
+assert.ok(contextGraph.nodes.some((node) => node.id === endpointId), "context graph should include the canonical API endpoint");
+assert.ok(contextGraph.edges.some((edge) => edge.type === "requests" && edge.target === endpointId), "context graph should preserve evidence edges");
+assert.ok(contextGraph.visits[endpointId]?.depth >= 0, "context graph should record node visit depth");
 const contextPack = fs.readFileSync(path.join(projectRoot, ".project-memory", "context-packs", "activity-id.md"), "utf8");
 assert.match(contextPack, /\| Score \| Distance \| Type \| Node \| Why Included \|/);
 assert.match(contextPack, /GET \/api\/activities\/:param\/works/);

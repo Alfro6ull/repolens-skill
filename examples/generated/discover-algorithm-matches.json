@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-06-25T08:32:07.594Z",
+  "generated_at": "2026-06-30T05:23:09.839Z",
   "target": "/discover",
   "algorithm_index": "repolens-algo/knowledge/algorithm_index.json",
   "matches": [
     {
       "block_id": "discover",
       "target": "/discover",
-      "top_algorithm": "hybrid_search_rag",
+      "top_algorithm": "content_based_recommendation",
       "matches": [
         {
           "algorithm_id": "hybrid_search_rag",
@@ -23,6 +23,7 @@
             "matched fit condition: needs_explainability"
           ],
           "warnings": [],
+          "readiness_score": 100,
           "matched": {
             "tasks": [
               "search",
@@ -69,6 +70,7 @@
             "matched fit condition: needs_explainability"
           ],
           "warnings": [],
+          "readiness_score": 100,
           "matched": {
             "tasks": [
               "recommendation",
@@ -115,6 +117,7 @@
             "matched fit condition: needs_explainability"
           ],
           "warnings": [],
+          "readiness_score": 100,
           "matched": {
             "tasks": [
               "explainable_scoring"
@@ -162,6 +165,7 @@
           "warnings": [
             "missing card signal: semantic retrieval signal"
           ],
+          "readiness_score": 80,
           "matched": {
             "tasks": [
               "search",
@@ -206,6 +210,7 @@
             "matched fit condition: score_sorting"
           ],
           "warnings": [],
+          "readiness_score": 100,
           "matched": {
             "tasks": [
               "bounded_top_k"
@@ -239,17 +244,17 @@
         {
           "algorithm_id": "indexed_lookup",
           "algorithm_name": "Indexed Lookup",
-          "score": 20,
+          "score": 18,
           "fit": "strong",
           "reasons": [
             "matched task: indexed_lookup",
             "matched data: item list",
             "matched data: lookup key or membership set",
             "matched objective: reduce_lookup_cost",
-            "matched fit condition: membership_lookup",
-            "matched fit condition: list_loading"
+            "matched fit condition: membership_lookup"
           ],
           "warnings": [],
+          "readiness_score": 100,
           "matched": {
             "tasks": [
               "indexed_lookup"
@@ -262,8 +267,7 @@
               "reduce_lookup_cost"
             ],
             "constraints": [
-              "membership_lookup",
-              "list_loading"
+              "membership_lookup"
             ],
             "anti_patterns": []
           },
@@ -299,6 +303,7 @@
             "missing card signal: exposure logs",
             "missing card signal: click or feedback logs"
           ],
+          "readiness_score": 0,
           "matched": {
             "tasks": [
               "ranking",
@@ -330,21 +335,21 @@
           "complexity": "high",
           "explainability": "medium",
           "card": "algorithm_cards/learning_to_rank.md",
-          "status": "candidate_later"
+          "status": "blocked_now"
         },
         {
           "algorithm_id": "batch_loading",
           "algorithm_name": "Batch Loading",
-          "score": 11,
-          "fit": "medium",
+          "score": 9,
+          "fit": "weak",
           "reasons": [
             "matched data: item list",
-            "matched fit condition: api_fetch",
-            "matched fit condition: list_loading"
+            "matched fit condition: api_fetch"
           ],
           "warnings": [
             "missing card signal: n_plus_one lookup"
           ],
+          "readiness_score": 80,
           "matched": {
             "tasks": [],
             "data_shapes": [
@@ -352,8 +357,7 @@
             ],
             "objectives": [],
             "constraints": [
-              "api_fetch",
-              "list_loading"
+              "api_fetch"
             ],
             "anti_patterns": []
           },
@@ -382,6 +386,7 @@
             "missing required data: rule inputs",
             "missing required data: rule outcome"
           ],
+          "readiness_score": 40,
           "matched": {
             "tasks": [],
             "data_shapes": [],
@@ -423,6 +428,7 @@
             "missing required data: user-item interaction",
             "missing required data: implicit feedback"
           ],
+          "readiness_score": 0,
           "matched": {
             "tasks": [
               "recommendation",
@@ -472,6 +478,7 @@
             "missing card signal: exposure logs",
             "missing card signal: click or feedback logs"
           ],
+          "readiness_score": 0,
           "matched": {
             "tasks": [
               "ranking",

@@ -24,7 +24,7 @@ flowchart LR
 
 | Component | Role |
 |---|---|
-| `repolens-graph` | Indexes a repository, builds `code_graph.json`, traces route/file/API/component targets, and writes context packs. |
+| `repolens-graph` | Indexes a repository, builds `code_graph.json`, traces route/file/API/component targets, and writes bounded context graphs. |
 | `repolens-algo` | Builds Block Profiles, matches local algorithm cards, and writes algorithm opportunity reports. |
 | `examples/generated` | Committed sample outputs for the `/discover` demo. |
 | `eval` | Baseline comparison notes. |
@@ -34,7 +34,7 @@ flowchart LR
 
 **Code knowledge graph**: a plain JSON graph of files, imports, routes, components, API endpoints, data entities, user actions, ranking signals, algorithm opportunities, and supporting performance signals.
 
-**K-hop trace**: a bounded graph neighborhood around a target. For example, `/discover` can connect to its page component, API client, backend route, data entities, ranking signals, and supporting evidence.
+**K-hop context graph**: a bounded graph neighborhood around a target. For example, `/discover` can connect to its page component, API client, backend route, data entities, ranking signals, and supporting evidence.
 
 **Block Profile**: a compact algorithm-facing profile derived from the traced subgraph. It records entities, actions, data shapes, current logic, constraints, objectives, and graph evidence.
 
@@ -89,6 +89,7 @@ RepoLens writes generated project memory into the analyzed repository:
   graph/code_graph.json
 
 .project-memory/traces/
+  <target>-context-graph.json
   <target>-trace.md
 
 .project-memory/context-packs/
@@ -130,6 +131,7 @@ Open the committed sample outputs:
 
 ```text
 examples/generated/discover-context-pack.md
+examples/generated/discover-context-graph.json
 examples/generated/discover-trace.md
 examples/generated/discover-block-profile.json
 examples/generated/discover-algorithm-matches.json

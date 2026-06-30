@@ -1,7 +1,8 @@
 {
-  "generated_at": "2026-06-25T08:32:07.498Z",
+  "generated_at": "2026-06-30T05:23:09.811Z",
   "target": "/discover",
   "source_graph": ".project-memory/graph/code_graph.json",
+  "source_context_graph": ".project-memory/traces/discover-context-graph.json",
   "profiles": [
     {
       "block_id": "discover",
@@ -158,6 +159,46 @@
             "file": "backend/main.py",
             "line": 27,
             "text": "\"coverUrl\": work[\"cover_url\"],"
+          },
+          {
+            "file": "backend/main.py",
+            "line": 29,
+            "text": "for work in ranked[:limit]"
+          },
+          {
+            "file": "backend/main.py",
+            "line": 32,
+            "text": "\"items\": items,"
+          },
+          {
+            "file": "backend/main.py",
+            "line": 34,
+            "text": "\"rankingSignals\": [\"tag_overlap\", \"score\"],"
+          },
+          {
+            "file": "backend/main.py",
+            "line": 38,
+            "text": "def matches_text(query, work):"
+          },
+          {
+            "file": "backend/main.py",
+            "line": 40,
+            "text": "return normalized in work[\"title\"].lower() or normalized in \" \".join(work[\"tags\"])"
+          },
+          {
+            "file": "backend/main.py",
+            "line": 43,
+            "text": "def tag_overlap(selected_tags, work):"
+          },
+          {
+            "file": "backend/main.py",
+            "line": 44,
+            "text": "return len(selected_tags.intersection(work[\"tags\"]))"
+          },
+          {
+            "file": "backend/main.py",
+            "line": 50,
+            "text": "\"id\": \"work-1\","
           }
         ]
       },
@@ -188,7 +229,6 @@
         "bounded_result_set",
         "hardcoded_scoring",
         "keyword_search",
-        "list_loading",
         "membership_lookup",
         "score_sorting"
       ],

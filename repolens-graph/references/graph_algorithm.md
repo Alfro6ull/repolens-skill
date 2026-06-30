@@ -54,16 +54,15 @@ The matched nodes become start nodes for retrieval.
 
 ## 4. K-Hop Graph Retrieval
 
-RepoLens expands from the start nodes with bounded breadth-first search. The default depths are:
-
-- 3 hops for route-to-component tracing
-- 4 hops for route performance reports that should include API client calls
+RepoLens expands from the start nodes with bounded breadth-first search. The default depth is 4 hops for route-to-API tracing. Use a smaller value only for intentionally narrow file or leaf-component analysis.
 
 The graph is traversed as an undirected evidence graph during retrieval so callers, callees, imports, routes, and adjacent risks can all be included without scanning the entire repository.
 
+The retrieval result is materialized as `.project-memory/traces/<target>-context-graph.json`. This context graph is the shared context boundary for trace output, context packs, Block Profiles, and optional reports.
+
 ## 5. Context Ranking
 
-Context packs rank included nodes by a simple deterministic score:
+Context packs are readable views over the context graph. They rank included nodes by a simple deterministic score:
 
 ```text
 context_score = target_match
@@ -73,7 +72,7 @@ context_score = target_match
               + centrality_weight
 ```
 
-Current implementation materializes this score in the `Graph Neighborhood` table of each context pack, then sorts higher-scoring nodes first so route, API, component, file, and risk evidence stays close to the AI prompt.
+Current implementation materializes this score in the `Graph Neighborhood` table of each context pack, then sorts higher-scoring nodes first so route, API, component, file, and risk evidence stays close to the AI prompt. Downstream tools should prefer the JSON context graph when they need structure.
 
 ## 6. Risk Scoring
 
@@ -91,7 +90,7 @@ risk_score = priority_weight
 
 ## 7. AI Evidence Constraints
 
-The AI should receive only the ranked graph neighborhood, project profile, relevant rule references, and report template. Every performance claim must cite at least one concrete evidence source:
+The AI should receive the bounded context graph and only the readable summaries needed for the task. Every performance claim must cite at least one concrete evidence source:
 
 - route
 - file
@@ -105,7 +104,7 @@ Static findings remain leads until confirmed with profiling, browser traces, API
 
 ## 8. Algorithm Evidence
 
-AlgoGraph builds Block Profiles from the same graph. Prefer graph facts over raw source text when identifying:
+AlgoGraph builds Block Profiles from the same context graph. Prefer graph facts over raw source text when identifying:
 
 - entities such as item, user, tag, query, content, or document
 - actions such as search, exposure, click, or feedback

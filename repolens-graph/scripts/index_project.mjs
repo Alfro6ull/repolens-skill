@@ -88,6 +88,9 @@ const RANKING_SIGNAL_DETECTORS = [
   { id: "semantic_similarity", label: "semantic similarity", confidence: 0.78, patterns: [/\b(embedding|vector|semantic|ann|nearest)\b/i] },
 ];
 
+const NON_RUNTIME_KINDS = new Set(["docs", "style", "test", "generated"]);
+const ALGORITHM_FACT_KINDS = new Set(["route-or-page", "component", "api-client", "backend", "state"]);
+
 function parseArgs(argv) {
   const args = [...argv];
   const rootArg = args[0] && !args[0].startsWith("--") ? args.shift() : ".";
@@ -249,7 +252,7 @@ function opportunityEvidence(content, facts) {
 }
 
 function analyzeAlgorithmFacts(file, kind, content) {
-  if (["docs", "style", "test"].includes(kind)) {
+  if (NON_RUNTIME_KINDS.has(kind) || !ALGORITHM_FACT_KINDS.has(kind)) {
     return { dataEntities: [], userActions: [], rankingSignals: [], algorithmOpportunities: [] };
   }
 
@@ -306,7 +309,7 @@ function addMatch(regex, content, mapper) {
   let match;
   regex.lastIndex = 0;
   while ((match = regex.exec(content))) {
-    matches.push(mapper(match, lineNumberFor(content, match.index)));
+    matches.push(mapper(match, lineNumberFor(content, match.index), match.index));
   }
   return matches;
 }
@@ -420,6 +423,14 @@ function cleanUrl(raw) {
   return raw.replace(/^`|`$/g, "").replace(/^["']|["']$/g, "");
 }
 
+function isLikelyApiTarget(rawUrl) {
+  const cleaned = cleanUrl(rawUrl).trim();
+  if (!cleaned || cleaned.length < 2) return false;
+  if (!/^([a-z][a-z0-9+.-]*:\/\/|\/|\$\{)/i.test(cleaned)) return false;
+  if (/^[,;.\s]+$/.test(cleaned)) return false;
+  return /[a-z0-9}/]$/i.test(cleaned);
+}
+
 function canonicalApiPath(raw) {
   const cleaned = cleanUrl(raw).trim();
   if (!cleaned) return cleaned;
@@ -439,6 +450,7 @@ function canonicalApiPath(raw) {
 
 function apiFact(file, method, rawUrl, line, source) {
   const cleaned = cleanUrl(rawUrl);
+  if (!isLikelyApiTarget(cleaned)) return null;
   return {
     file,
     method,
@@ -449,31 +461,39 @@ function apiFact(file, method, rawUrl, line, source) {
   };
 }
 
+function inferFetchMethod(content, startIndex) {
+  const snippet = content.slice(startIndex, startIndex + 800);
+  const methodMatch = snippet.match(/,\s*\{[\s\S]*?\bmethod\s*:\s*["'`]([A-Za-z]+)["'`]/);
+  return methodMatch ? methodMatch[1].toUpperCase() : "GET";
+}
+
 function analyzeApis(file, content) {
   const apis = [];
   apis.push(
-    ...addMatch(/fetch\(\s*(`[^`]+`|"[^"]+"|'[^']+')/g, content, (match, line) =>
-      apiFact(file, "GET", match[1], line, "fetch"),
-    ),
+    ...addMatch(/fetch\(\s*(`[^`]+`|"[^"]+"|'[^']+')/g, content, (match, line, index) =>
+      apiFact(file, inferFetchMethod(content, index), match[1], line, "fetch"),
+    ).filter(Boolean),
   );
   apis.push(
     ...addMatch(
       /\b(?:axios|client|http|request)\.(get|post|put|patch|delete)\(\s*(`[^`]+`|"[^"]+"|'[^']+')/g,
       content,
       (match, line) => apiFact(file, match[1].toUpperCase(), match[2], line, "http-client"),
-    ),
+    ).filter(Boolean),
   );
   apis.push(
     ...addMatch(
       /@\w+\.(get|post|put|patch|delete)\(\s*["']([^"']+)["']/g,
       content,
       (match, line) => apiFact(file, match[1].toUpperCase(), match[2], line, "fastapi"),
-    ),
+    ).filter(Boolean),
   );
   return apis;
 }
 
 function analyzeSignals(file, kind, content) {
+  if (NON_RUNTIME_KINDS.has(kind)) return [];
+
   const signals = [];
   const isUiFile = [".tsx", ".jsx", ".ts", ".js"].includes(path.extname(file));
   const hasComponentShape = /<[A-Za-z][^>]*>|function\s+[A-Z]|const\s+[A-Z][A-Za-z0-9_]*\s*=/.test(content);
@@ -515,7 +535,7 @@ function analyzeSignals(file, kind, content) {
     });
   }
 
-  if (/\b(lodash|moment|antd|echarts|monaco-editor)\b/.test(content)) {
+  if (/(^|\n)\s*(import\s+[\s\S]{0,120}\b(lodash|moment|antd|echarts|monaco-editor)\b|(?:const|let|var)\s+[\s\S]{0,80}require\(\s*["'](lodash|moment|antd|echarts|monaco-editor)["']\s*\))/.test(content)) {
     push("heavy_dependency_import", ["lodash", "moment", "antd", "echarts", "monaco-editor"]);
   }
 
@@ -764,9 +784,11 @@ async function main() {
       lines: content.split(/\r?\n/).length,
     });
     imports.push(...analyzeImports(options.root, file, content));
-    routes.push(...analyzeRoutes(file, content));
-    components.push(...analyzeComponents(file, content));
-    apis.push(...analyzeApis(file, content));
+    if (!NON_RUNTIME_KINDS.has(kind)) {
+      routes.push(...analyzeRoutes(file, content));
+      components.push(...analyzeComponents(file, content));
+      apis.push(...analyzeApis(file, content));
+    }
     signals.push(...analyzeSignals(file, kind, content));
     const fileAlgorithmFacts = analyzeAlgorithmFacts(file, kind, content);
     algorithmFacts.dataEntities.push(...fileAlgorithmFacts.dataEntities);

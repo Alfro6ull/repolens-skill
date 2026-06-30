@@ -2,6 +2,12 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
+import { buildContextGraph, contextGraphToTrace, writeContextGraph } from "../../repolens-graph/scripts/lib/context_graph.mjs";
+import { resolveSafeOutFile } from "./lib/path_utils.mjs";
+
+const SOURCE_LINE_BUDGET = 24;
+const SOURCE_TEXT_BUDGET = 12000;
+
 function parseArgs(argv) {
   const args = [...argv];
   const root = path.resolve(args[0] && !args[0].startsWith("--") ? args.shift() : ".");
@@ -34,14 +40,6 @@ function safeSlug(value) {
     .toLowerCase() || "target";
 }
 
-function includesTarget(value, target) {
-  return String(value || "").toLowerCase().includes(String(target || "").toLowerCase());
-}
-
-function canMatchByLocation(node) {
-  return !["DataEntity", "UserAction", "RankingSignal", "AlgorithmOpportunity", "PerformanceRisk"].includes(node.type);
-}
-
 async function readJson(file) {
   return JSON.parse(await fs.readFile(file, "utf8"));
 }
@@ -51,168 +49,12 @@ async function writeJson(file, data) {
   await fs.writeFile(file, `${JSON.stringify(data, null, 2)}\n`, "utf8");
 }
 
-function findStartNodes(graph, target) {
-  return graph.nodes.filter((node) => {
-    if (!canMatchByLocation(node)) {
-      return includesTarget(node.label, target) || includesTarget(node.meta?.id, target) || includesTarget(node.meta?.rule, target);
-    }
-
-    return (
-      includesTarget(node.id, target) ||
-      includesTarget(node.label, target) ||
-      (canMatchByLocation(node) && (
-        includesTarget(node.meta?.file, target) ||
-        includesTarget(node.meta?.path, target) ||
-        includesTarget(node.meta?.url, target) ||
-        includesTarget(node.meta?.rawUrl, target) ||
-        (Array.isArray(node.meta?.rawUrls) && node.meta.rawUrls.some((url) => includesTarget(url, target)))
-      ))
-    );
-  });
-}
-
-function buildAdjacency(edges) {
-  const adjacency = new Map();
-  function add(source, edge) {
-    if (!adjacency.has(source)) adjacency.set(source, []);
-    adjacency.get(source).push(edge);
-  }
-  for (const edge of edges) {
-    add(edge.source, { ...edge, next: edge.target });
-    add(edge.target, { ...edge, next: edge.source });
-  }
-  return adjacency;
-}
-
-function traceGraph(graph, starts, hops) {
-  const adjacency = buildAdjacency(graph.edges);
-  const visited = new Set(starts.map((node) => node.id));
-  const depths = new Map(starts.map((node) => [node.id, 0]));
-  const queue = starts.map((node) => ({ id: node.id, depth: 0 }));
-
-  for (let index = 0; index < queue.length; index += 1) {
-    const item = queue[index];
-    if (item.depth >= hops) continue;
-    for (const edge of adjacency.get(item.id) || []) {
-      if (!visited.has(edge.next)) {
-        visited.add(edge.next);
-        depths.set(edge.next, item.depth + 1);
-        queue.push({ id: edge.next, depth: item.depth + 1 });
-      }
-    }
-  }
-
-  const apiIds = new Set([...visited].filter((id) => id.startsWith("APIEndpoint:")));
-  for (const edge of graph.edges) {
-    if (edge.type !== "defines" || !apiIds.has(edge.target)) continue;
-    if (!visited.has(edge.source)) {
-      visited.add(edge.source);
-      depths.set(edge.source, (depths.get(edge.target) ?? hops) + 1);
-    }
-  }
-
-  for (const edge of graph.edges) {
-    if (edge.type !== "mayCause" || !visited.has(edge.source)) continue;
-    if (!visited.has(edge.target)) {
-      visited.add(edge.target);
-      depths.set(edge.target, (depths.get(edge.source) ?? hops) + 1);
-    }
-  }
-
-  return materializeTrace(graph, visited, depths);
-}
-
-function materializeTrace(graph, nodeIds, depths) {
-  return {
-    nodeIds,
-    depths,
-    nodes: graph.nodes.filter((node) => nodeIds.has(node.id)),
-    edges: graph.edges.filter((edge) => nodeIds.has(edge.source) && nodeIds.has(edge.target)),
-  };
-}
-
-function targetTokens(target) {
-  return String(target || "")
-    .toLowerCase()
-    .split(/[^a-z0-9]+/)
-    .filter((token) => token.length >= 3 && token !== "api" && token !== "get");
-}
-
-function nodeSearchText(node) {
-  return [
-    node.id,
-    node.label,
-    node.type,
-    node.meta?.file,
-    node.meta?.path,
-    node.meta?.url,
-    node.meta?.rawUrl,
-    node.meta?.id,
-    node.meta?.reason,
-    ...(Array.isArray(node.meta?.rawUrls) ? node.meta.rawUrls : []),
-  ]
-    .join(" ")
-    .toLowerCase();
-}
-
-function relevanceScore(node, tokens) {
-  const text = nodeSearchText(node);
-  return tokens.filter((token) => text.includes(token)).length;
-}
-
-function focusTrace(graph, trace, target) {
-  const tokens = targetTokens(target);
-  if (tokens.length === 0) return trace;
-
-  const nodeById = new Map(trace.nodes.map((node) => [node.id, node]));
-  const keep = new Set();
-
-  for (const node of trace.nodes) {
-    const depth = trace.depths.get(node.id) ?? 99;
-    if (depth <= 1 || relevanceScore(node, tokens) > 0) {
-      keep.add(node.id);
-    }
-  }
-
-  for (const node of trace.nodes) {
-    if (node.type !== "PerformanceRisk") continue;
-    const sourceKept = trace.edges.some((edge) => edge.type === "mayCause" && edge.target === node.id && keep.has(edge.source));
-    if (sourceKept) keep.add(node.id);
-  }
-
-  for (const edge of trace.edges) {
-    if (edge.type === "defines" && keep.has(edge.target)) keep.add(edge.source);
-    if (edge.type === "requests" && keep.has(edge.source)) keep.add(edge.target);
-    if (edge.type === "imports" && keep.has(edge.source)) keep.add(edge.target);
-  }
-
-  const graphFactTypes = new Set(["DataEntity", "UserAction", "RankingSignal", "AlgorithmOpportunity"]);
-  for (const node of trace.nodes) {
-    if (!graphFactTypes.has(node.type)) continue;
-    const connectedToKeptNode = trace.edges.some((edge) => {
-      return (edge.source === node.id && keep.has(edge.target)) || (edge.target === node.id && keep.has(edge.source));
-    });
-    if (connectedToKeptNode || relevanceScore(node, tokens) > 0) keep.add(node.id);
-  }
-
-  for (const edge of trace.edges) {
-    if (edge.type !== "supports") continue;
-    if (keep.has(edge.source)) keep.add(edge.target);
-    if (keep.has(edge.target)) keep.add(edge.source);
-  }
-
-  for (const id of [...keep]) {
-    if (!nodeById.has(id)) keep.delete(id);
-  }
-
-  return materializeTrace(graph, keep, trace.depths);
-}
-
 async function readSourceFiles(root, files) {
   const sources = [];
   for (const file of files) {
     try {
-      sources.push({ file, text: await fs.readFile(path.join(root, file), "utf8") });
+      const text = await fs.readFile(path.join(root, file), "utf8");
+      sources.push({ file, text: compactSourceText(text) });
     } catch {
       // Ignore missing files; graph evidence is still useful.
     }
@@ -226,6 +68,11 @@ function unique(values) {
 
 function detectTerms(haystack, detectors) {
   return detectors.filter((item) => item.patterns.some((pattern) => pattern.test(haystack))).map((item) => item.id);
+}
+
+function compactSourceText(text) {
+  if (text.length <= SOURCE_TEXT_BUDGET) return text;
+  return text.slice(0, SOURCE_TEXT_BUDGET);
 }
 
 function collectEvidenceLines(sources) {
@@ -258,7 +105,7 @@ function collectEvidenceLines(sources) {
       }
     });
   }
-  return lines.slice(0, 16);
+  return lines.slice(0, SOURCE_LINE_BUDGET);
 }
 
 function inferProfile({ target, trace, starts, sources }) {
@@ -271,8 +118,10 @@ function inferProfile({ target, trace, starts, sources }) {
   const graphActions = unique(trace.nodes.filter((node) => node.type === "UserAction").map((node) => node.meta?.id || node.label));
   const graphRankingSignals = unique(trace.nodes.filter((node) => node.type === "RankingSignal").map((node) => node.meta?.id || node.label));
   const graphOpportunities = unique(trace.nodes.filter((node) => node.type === "AlgorithmOpportunity").map((node) => node.meta?.id || node.label));
-  const sourceText = sources.map((source) => source.text).join("\n");
-  const haystack = [target, ...routes, ...components, ...apis, ...files, ...riskSignals, ...graphEntities, ...graphActions, ...graphRankingSignals, ...graphOpportunities, sourceText].join("\n");
+  const codeLines = collectEvidenceLines(sources);
+  const evidenceText = codeLines.map((line) => `${line.file}:${line.line} ${line.text}`).join("\n");
+  const graphText = [target, ...routes, ...components, ...apis, ...files, ...riskSignals, ...graphEntities, ...graphActions, ...graphRankingSignals, ...graphOpportunities].join("\n");
+  const haystack = [graphText, evidenceText].join("\n");
   const branchCount = (haystack.match(/\bif\b|\belif\b|\belse\b|switch\s*\(|\bcase\b/gi) || []).length;
   const hasBranchingRules = branchCount >= 3 || /\belif\b|\belse\b|switch\s*\(|\bcase\b/i.test(haystack);
 
@@ -344,7 +193,6 @@ function inferProfile({ target, trace, starts, sources }) {
   if (taskSignals.includes("bounded_top_k")) objectives.push("bound_result_work");
   if (taskSignals.includes("explainable_scoring")) objectives.push("explainable_ranking");
 
-  const codeLines = collectEvidenceLines(sources);
   const graphFactCount = graphEntities.length + graphActions.length + graphRankingSignals.length + graphOpportunities.length;
   const confidence = Math.min(0.95, 0.4 + Math.min(0.25, graphFactCount * 0.04) + Math.min(0.2, codeLines.length * 0.02) + Math.min(0.2, taskSignals.length * 0.04));
   const finalTaskSignals = unique(taskSignals);
@@ -400,25 +248,22 @@ async function main() {
   const options = parseArgs(process.argv.slice(2));
   const graphPath = path.join(options.root, ".project-memory", "graph", "code_graph.json");
   const graph = await readJson(graphPath);
-  const starts = findStartNodes(graph, options.target);
-
-  if (starts.length === 0) {
-    throw new Error(`No graph nodes matched "${options.target}". Run index_project.mjs first or use a more specific target.`);
-  }
-
-  const trace = focusTrace(graph, traceGraph(graph, starts, options.hops), options.target);
+  const contextGraph = buildContextGraph(graph, options.target, options.hops);
+  await writeContextGraph(options.root, contextGraph);
+  const trace = contextGraphToTrace(contextGraph);
   const files = unique(trace.nodes.filter((node) => node.type === "File").map((node) => node.meta?.path || node.label));
   const sources = await readSourceFiles(options.root, files);
-  const profile = inferProfile({ target: options.target, trace, starts, sources });
+  const profile = inferProfile({ target: options.target, trace, starts: contextGraph.start_nodes, sources });
   const output = {
     generated_at: new Date().toISOString(),
     target: options.target,
     source_graph: ".project-memory/graph/code_graph.json",
+    source_context_graph: `.project-memory/traces/${safeSlug(options.target)}-context-graph.json`,
     profiles: [profile],
   };
 
   const outPath = options.out
-    ? path.resolve(options.root, options.out)
+    ? resolveSafeOutFile(options.root, options.out)
     : path.join(options.root, ".project-memory", "algo", "block_profiles.json");
   await writeJson(outPath, output);
   console.log(`Block profiles written to ${outPath}`);

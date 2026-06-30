@@ -70,7 +70,6 @@ This is not a generic code review. The report translates code evidence into an a
   - bounded_result_set
   - hardcoded_scoring
   - keyword_search
-  - list_loading
   - membership_lookup
   - score_sorting
 - Task signals:
@@ -94,9 +93,9 @@ This is not a generic code review. The report translates code evidence into an a
 | 21 | recommended_now | strong | `explainable_scoring` | Explainable Scoring | matched task: explainable_scoring; matched data: ranked item list; matched objective: e... | none |
 | 21 | candidate_later | strong | `semantic_retrieval` | Semantic Retrieval | matched task: search; matched task: recommendation; matched data: content metadata | missing card signal: semantic retrieval signal |
 | 20 | recommended_now | strong | `bounded_top_k` | Bounded Top-K | matched task: bounded_top_k; matched data: ranked item list; matched data: bounded resu... | none |
-| 20 | recommended_now | strong | `indexed_lookup` | Indexed Lookup | matched task: indexed_lookup; matched data: item list; matched data: lookup key or memb... | none |
-| 14 | candidate_later | medium | `learning_to_rank` | Learning to Rank | matched task: ranking; matched task: search; matched data: ranked item list | profile has constraint: behavior_log_missing; missing required data: exposure logs |
-| 11 | blocked_now | medium | `batch_loading` | Batch Loading | matched data: item list; matched fit condition: api_fetch; matched fit condition: list_... | missing card signal: n_plus_one lookup |
+| 18 | recommended_now | strong | `indexed_lookup` | Indexed Lookup | matched task: indexed_lookup; matched data: item list; matched data: lookup key or memb... | none |
+| 14 | blocked_now | medium | `learning_to_rank` | Learning to Rank | matched task: ranking; matched task: search; matched data: ranked item list | profile has constraint: behavior_log_missing; missing required data: exposure logs |
+| 9 | blocked_now | weak | `batch_loading` | Batch Loading | matched data: item list; matched fit condition: api_fetch | missing card signal: n_plus_one lookup |
 | 6 | blocked_now | weak | `rule_table` | Rule Table | matched fit condition: needs_explainability | missing required data: rule inputs; missing required data: rule outcome |
 | 4 | blocked_now | weak | `collaborative_filtering` | Collaborative Filtering | matched task: recommendation; matched task: ranking; matched objective: improve_discovery | profile has constraint: cold_start; profile has constraint: behavior_log_missing |
 | 4 | blocked_now | weak | `contextual_bandit` | Contextual Bandit Exploration | matched task: ranking; matched task: recommendation; matched objective: optimize_ranking | profile has constraint: behavior_log_missing; profile has constraint: needs_explainability |
@@ -104,13 +103,13 @@ This is not a generic code review. The report translates code evidence into an a
 ## What Data Blocks Heavier Algorithms
 
 - candidate_later: Semantic Retrieval - missing card signal: semantic retrieval signal
-- candidate_later: Learning to Rank needs exposure logs
-- candidate_later: Learning to Rank needs click feedback
-- candidate_later: Learning to Rank - profile has constraint: behavior_log_missing
-- candidate_later: Learning to Rank - missing required data: exposure logs
-- candidate_later: Learning to Rank - missing required data: click feedback
-- candidate_later: Learning to Rank - missing card signal: exposure logs
-- candidate_later: Learning to Rank - missing card signal: click or feedback logs
+- blocked_now: Learning to Rank needs exposure logs
+- blocked_now: Learning to Rank needs click feedback
+- blocked_now: Learning to Rank - profile has constraint: behavior_log_missing
+- blocked_now: Learning to Rank - missing required data: exposure logs
+- blocked_now: Learning to Rank - missing required data: click feedback
+- blocked_now: Learning to Rank - missing card signal: exposure logs
+- blocked_now: Learning to Rank - missing card signal: click or feedback logs
 - blocked_now: Batch Loading - missing card signal: n_plus_one lookup
 - blocked_now: Rule Table needs rule inputs
 

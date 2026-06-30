@@ -20,7 +20,7 @@ This creates `.project-memory/` with project profile, route map, component map, 
 2. Trace a target route, file, component, API, or keyword:
 
 ```bash
-node repolens-graph/scripts/trace_module.mjs /path/to/repo "/discover" --hops 3
+node repolens-graph/scripts/trace_module.mjs /path/to/repo "/discover" --hops 4
 ```
 
 3. Build a context pack for the target graph neighborhood:
@@ -60,7 +60,7 @@ Run `index_project.mjs`. If the project is large, ask the user before indexing g
 
 ### Analyze A Route Or Module
 
-Run `trace_module.mjs` with a specific target. Use `--hops 3` for route-to-component tracing. Build a context pack with `build_context_pack.mjs` when the user needs a compact graph handoff artifact for another AI agent. Use `perf_report.mjs` only when supporting performance signals matter for the requested module.
+Run `trace_module.mjs` with a specific target. Use `--hops 4` as the default route-to-API context boundary, and lower it only for narrow leaf components. The primary trace artifact is `.project-memory/traces/<target>-context-graph.json`; Markdown context packs are readable views over that graph. Use `perf_report.mjs` only when supporting performance signals matter for the requested module.
 
 ### Produce A Coding-Agent Prompt
 

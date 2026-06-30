@@ -41,11 +41,12 @@ const EXCLUDED_FILES = new Set([
 
 export function classifyFile(relativePath) {
   const ext = path.extname(relativePath);
+  if (/\b(tests?|specs?|__tests__|fixtures?)\b/i.test(relativePath)) return "test";
+  if (/\b(generated|snapshots?)\b/i.test(relativePath)) return "generated";
   if (/\b(pages?|routes?)\b/i.test(relativePath)) return "route-or-page";
   if (/\bcomponents?\b/i.test(relativePath)) return "component";
   if (/\b(api|services?|clients?)\b/i.test(relativePath)) return "api-client";
   if (/\b(stores?|state|redux|zustand)\b/i.test(relativePath)) return "state";
-  if (/\btests?|specs?|__tests__\b/i.test(relativePath)) return "test";
   if ([".css", ".scss", ".sass", ".less"].includes(ext)) return "style";
   if ([".py"].includes(ext)) return "backend";
   if ([".md", ".mdx"].includes(ext)) return "docs";

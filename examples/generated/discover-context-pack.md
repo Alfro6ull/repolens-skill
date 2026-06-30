@@ -7,6 +7,7 @@
 - Start nodes: 6
 - Included nodes: 31
 - Included edges: 86
+- Source graph: .project-memory/traces/discover-context-graph.json
 
 ## Start Nodes
 
@@ -55,94 +56,57 @@
 
 ## Evidence Edges
 
+Showing 47 of 68 deduplicated edge(s). The full machine-readable graph is in the JSON context graph.
+
 | Source | Edge | Target | Evidence |
 |---|---|---|---|
+| GET /api/discover/works | routesTo | backend/main.py | line 6 |
+| GET /discover | renders | DiscoverPage | line 5 |
+| GET /discover | routesTo | src/App.tsx | line 5 |
+| backend/main.py | defines | GET /api/discover/works | line 6 |
+| src/api/discovery.ts | requests | GET /api/discover/works | line 7 |
+| src/pages/DiscoverPage.tsx | exports | DiscoverPage | line 4 |
+| src/App.tsx | imports | src/pages/DiscoverPage.tsx | line 2 |
+| src/pages/DiscoverPage.tsx | imports | src/api/discovery.ts | line 2 |
 | GET /api/discover/works | exposes | content metadata | line 23: "title": work["title"], |
+| GET /api/discover/works | exposes | explicit score | line 19: ranked = sorted(filtered, key=lambda work: (tag_overlap(selected_tags, work), work["score"]), reverse=True) |
 | GET /api/discover/works | exposes | item | line 6: @app.get("/api/discover/works") |
 | GET /api/discover/works | exposes | item | line 7: const response = await fetch(`/api/discover/works?${params.toString()}`); |
 | GET /api/discover/works | exposes | query | line 8: q: str = "", |
 | GET /api/discover/works | exposes | query | line 1: export async function searchWorks(query: string, tags: string[] = []) { |
-| GET /api/discover/works | exposes | tag | line 9: tags: str = "", |
-| GET /api/discover/works | exposes | tag | line 1: export async function searchWorks(query: string, tags: string[] = []) { |
-| GET /api/discover/works | exposes | explicit score | line 19: ranked = sorted(filtered, key=lambda work: (tag_overlap(selected_tags, work), work["score"]), reverse=True) |
-| GET /api/discover/works | exposes | text similarity | line 19: ranked = sorted(filtered, key=lambda work: (tag_overlap(selected_tags, work), work["score"]), reverse=True) |
 | GET /api/discover/works | exposes | search | line 8: q: str = "", |
 | GET /api/discover/works | exposes | search | line 1: export async function searchWorks(query: string, tags: string[] = []) { |
-| content metadata | supports | ranking | - |
-| content metadata | supports | recommendation | - |
-| content metadata | supports | search | - |
-| content metadata | supports | ranking | - |
-| content metadata | supports | recommendation | - |
-| item | supports | ranking | - |
-| item | supports | recommendation | - |
-| item | supports | search | - |
-| item | supports | recommendation | - |
-| item | supports | search | - |
-| item | supports | ranking | - |
-| item | supports | recommendation | - |
-| query | supports | ranking | - |
-| query | supports | recommendation | - |
-| query | supports | search | - |
-| query | supports | recommendation | - |
-| query | supports | search | - |
-| tag | supports | ranking | - |
-| tag | supports | recommendation | - |
-| tag | supports | search | - |
-| tag | supports | recommendation | - |
-| tag | supports | search | - |
-| tag | supports | ranking | - |
-| tag | supports | recommendation | - |
-| backend/main.py | captures | search | line 8: q: str = "", |
-| backend/main.py | defines | GET /api/discover/works | line 6 |
-| backend/main.py | mentions | content metadata | line 23: "title": work["title"], |
-| backend/main.py | mentions | item | line 6: @app.get("/api/discover/works") |
-| backend/main.py | mentions | query | line 8: q: str = "", |
-| backend/main.py | mentions | tag | line 9: tags: str = "", |
-| backend/main.py | suggests | ranking | line 6: @app.get("/api/discover/works") |
-| backend/main.py | suggests | recommendation | line 6: @app.get("/api/discover/works") |
-| backend/main.py | suggests | search | line 6: @app.get("/api/discover/works") |
-| backend/main.py | usesSignal | explicit score | line 19: ranked = sorted(filtered, key=lambda work: (tag_overlap(selected_tags, work), work["score"]), reverse=True) |
-| backend/main.py | usesSignal | text similarity | line 19: ranked = sorted(filtered, key=lambda work: (tag_overlap(selected_tags, work), work["score"]), reverse=True) |
-| src/api/discovery.ts | captures | search | line 1: export async function searchWorks(query: string, tags: string[] = []) { |
-| src/api/discovery.ts | mentions | item | line 7: const response = await fetch(`/api/discover/works?${params.toString()}`); |
-| src/api/discovery.ts | mentions | query | line 1: export async function searchWorks(query: string, tags: string[] = []) { |
-| src/api/discovery.ts | mentions | tag | line 1: export async function searchWorks(query: string, tags: string[] = []) { |
-| src/api/discovery.ts | requests | GET /api/discover/works | line 7 |
-| src/api/discovery.ts | suggests | recommendation | line 7: const response = await fetch(`/api/discover/works?${params.toString()}`); |
-| src/api/discovery.ts | suggests | search | line 7: const response = await fetch(`/api/discover/works?${params.toString()}`); |
-| src/App.tsx | imports | src/pages/DiscoverPage.tsx | line 2 |
-| src/pages/DiscoverPage.tsx | exports | DiscoverPage | line 4 |
-| src/pages/DiscoverPage.tsx | imports | src/api/discovery.ts | line 2 |
-| src/pages/DiscoverPage.tsx | mentions | content metadata | line 19: <img src={featuredWork.coverUrl} alt="" loading="lazy" /> |
-| src/pages/DiscoverPage.tsx | mentions | item | line 6: const [works, setWorks] = useState([]); |
-| src/pages/DiscoverPage.tsx | mentions | tag | line 21: <p>{featuredWork.tags.join(", ")}</p> |
-| src/pages/DiscoverPage.tsx | suggests | ranking | line 6: const [works, setWorks] = useState([]); |
-| src/pages/DiscoverPage.tsx | suggests | recommendation | line 6: const [works, setWorks] = useState([]); |
-| src/pages/DiscoverPage.tsx | usesSignal | explicit score | line 22: <strong>{featuredWork.score}</strong> |
-| src/pages/DiscoverPage.tsx | usesSignal | text similarity | line 20: <h2>{featuredWork.title}</h2> |
-| explicit score | supports | ranking | - |
-| explicit score | supports | recommendation | - |
-| explicit score | supports | search | - |
-| explicit score | supports | ranking | - |
-| explicit score | supports | recommendation | - |
-| text similarity | supports | ranking | - |
-| text similarity | supports | recommendation | - |
-| text similarity | supports | search | - |
-| text similarity | supports | ranking | - |
-| text similarity | supports | recommendation | - |
+| GET /api/discover/works | exposes | tag | line 9: tags: str = "", |
+| GET /api/discover/works | exposes | tag | line 1: export async function searchWorks(query: string, tags: string[] = []) { |
+| GET /api/discover/works | exposes | text similarity | line 19: ranked = sorted(filtered, key=lambda work: (tag_overlap(selected_tags, work), work["score"]), reverse=True) |
 | DiscoverPage | mentions | content metadata | line 19: <img src={featuredWork.coverUrl} alt="" loading="lazy" /> |
 | DiscoverPage | mentions | item | line 6: const [works, setWorks] = useState([]); |
 | DiscoverPage | mentions | tag | line 21: <p>{featuredWork.tags.join(", ")}</p> |
 | DiscoverPage | usesSignal | explicit score | line 22: <strong>{featuredWork.score}</strong> |
 | DiscoverPage | usesSignal | text similarity | line 20: <h2>{featuredWork.title}</h2> |
-| GET /api/discover/works | routesTo | backend/main.py | line 6 |
-| GET /discover | renders | DiscoverPage | line 5 |
-| GET /discover | routesTo | src/App.tsx | line 5 |
-| search | supports | ranking | - |
-| search | supports | recommendation | - |
-| search | supports | search | - |
-| search | supports | recommendation | - |
-| search | supports | search | - |
+| src/api/discovery.ts | captures | search | line 1: export async function searchWorks(query: string, tags: string[] = []) { |
+| src/api/discovery.ts | mentions | item | line 7: const response = await fetch(`/api/discover/works?${params.toString()}`); |
+| src/api/discovery.ts | mentions | query | line 1: export async function searchWorks(query: string, tags: string[] = []) { |
+| src/api/discovery.ts | mentions | tag | line 1: export async function searchWorks(query: string, tags: string[] = []) { |
+| src/pages/DiscoverPage.tsx | mentions | content metadata | line 19: <img src={featuredWork.coverUrl} alt="" loading="lazy" /> |
+| src/pages/DiscoverPage.tsx | mentions | item | line 6: const [works, setWorks] = useState([]); |
+| src/pages/DiscoverPage.tsx | mentions | tag | line 21: <p>{featuredWork.tags.join(", ")}</p> |
+| src/pages/DiscoverPage.tsx | usesSignal | explicit score | line 22: <strong>{featuredWork.score}</strong> |
+| src/pages/DiscoverPage.tsx | usesSignal | text similarity | line 20: <h2>{featuredWork.title}</h2> |
+| backend/main.py | captures | search | line 8: q: str = "", |
+| backend/main.py | mentions | content metadata | line 23: "title": work["title"], |
+| backend/main.py | mentions | item | line 6: @app.get("/api/discover/works") |
+| backend/main.py | mentions | query | line 8: q: str = "", |
+| backend/main.py | mentions | tag | line 9: tags: str = "", |
+| backend/main.py | usesSignal | explicit score | line 19: ranked = sorted(filtered, key=lambda work: (tag_overlap(selected_tags, work), work["score"]), reverse=True) |
+| backend/main.py | usesSignal | text similarity | line 19: ranked = sorted(filtered, key=lambda work: (tag_overlap(selected_tags, work), work["score"]), reverse=True) |
+| src/api/discovery.ts | suggests | recommendation | line 7: const response = await fetch(`/api/discover/works?${params.toString()}`); |
+| src/api/discovery.ts | suggests | search | line 7: const response = await fetch(`/api/discover/works?${params.toString()}`); |
+| src/pages/DiscoverPage.tsx | suggests | ranking | line 6: const [works, setWorks] = useState([]); |
+| src/pages/DiscoverPage.tsx | suggests | recommendation | line 6: const [works, setWorks] = useState([]); |
+| backend/main.py | suggests | ranking | line 6: @app.get("/api/discover/works") |
+| backend/main.py | suggests | recommendation | line 6: @app.get("/api/discover/works") |
+| backend/main.py | suggests | search | line 6: @app.get("/api/discover/works") |
 
 ## Supporting Performance Signals
 
@@ -152,7 +116,7 @@
 
 ## Recommended Context For AI
 
-Use this pack as the bounded context for the target. Prefer cited graph evidence over repository-wide guesses.
+Use this pack as a readable view of the context graph. Prefer the JSON context graph for downstream analysis.
 
 ### Files To Inspect
 

@@ -2,6 +2,9 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
+import { buildContextGraph, contextGraphToTrace, readJson, writeContextGraph } from "./lib/context_graph.mjs";
+import { resolveSafeOutFile } from "./lib/path_utils.mjs";
+
 const RULE_ORDER = {
   P1: 1,
   P2: 2,
@@ -49,86 +52,6 @@ function parseArgs(argv) {
   }
 
   return options;
-}
-
-function includesTarget(value, target) {
-  return String(value || "").toLowerCase().includes(target.toLowerCase());
-}
-
-function canMatchByLocation(node) {
-  return !["DataEntity", "UserAction", "RankingSignal", "AlgorithmOpportunity", "PerformanceRisk"].includes(node.type);
-}
-
-function findStartNodes(graph, target) {
-  return graph.nodes.filter((node) => {
-    if (!canMatchByLocation(node)) {
-      return includesTarget(node.label, target) || includesTarget(node.meta?.id, target) || includesTarget(node.meta?.rule, target);
-    }
-
-    return (
-      includesTarget(node.id, target) ||
-      includesTarget(node.label, target) ||
-      (canMatchByLocation(node) && (
-        includesTarget(node.meta?.file, target) ||
-        includesTarget(node.meta?.path, target) ||
-        includesTarget(node.meta?.url, target) ||
-        includesTarget(node.meta?.rawUrl, target) ||
-        (Array.isArray(node.meta?.rawUrls) && node.meta.rawUrls.some((url) => includesTarget(url, target)))
-      ))
-    );
-  });
-}
-
-function buildAdjacency(edges) {
-  const adjacency = new Map();
-  function add(source, edge) {
-    if (!adjacency.has(source)) adjacency.set(source, []);
-    adjacency.get(source).push(edge);
-  }
-  for (const edge of edges) {
-    add(edge.source, { ...edge, next: edge.target });
-    add(edge.target, { ...edge, next: edge.source });
-  }
-  return adjacency;
-}
-
-function traceGraph(graph, starts, hops) {
-  const adjacency = buildAdjacency(graph.edges);
-  const visited = new Set(starts.map((node) => node.id));
-  const depths = new Map(starts.map((node) => [node.id, 0]));
-  const queue = starts.map((node) => ({ id: node.id, depth: 0 }));
-
-  for (let index = 0; index < queue.length; index += 1) {
-    const item = queue[index];
-    if (item.depth >= hops) continue;
-    for (const edge of adjacency.get(item.id) || []) {
-      if (!visited.has(edge.next)) {
-        visited.add(edge.next);
-        depths.set(edge.next, item.depth + 1);
-        queue.push({ id: edge.next, depth: item.depth + 1 });
-      }
-    }
-  }
-
-  const apiIds = new Set([...visited].filter((id) => id.startsWith("APIEndpoint:")));
-  for (const edge of graph.edges) {
-    if (edge.type !== "defines" || !apiIds.has(edge.target) || visited.has(edge.source)) continue;
-    visited.add(edge.source);
-    depths.set(edge.source, (depths.get(edge.target) ?? hops) + 1);
-  }
-
-  for (const edge of graph.edges) {
-    if (edge.type !== "mayCause" || !visited.has(edge.source) || visited.has(edge.target)) continue;
-    visited.add(edge.target);
-    depths.set(edge.target, (depths.get(edge.source) ?? hops) + 1);
-  }
-
-  return {
-    nodeIds: visited,
-    depths,
-    nodes: graph.nodes.filter((node) => visited.has(node.id)),
-    edges: graph.edges.filter((edge) => visited.has(edge.source) && visited.has(edge.target)),
-  };
 }
 
 function collectModuleFacts(trace, starts) {
@@ -393,17 +316,13 @@ function safeTarget(target) {
 async function main() {
   const options = parseArgs(process.argv.slice(2));
   const graphPath = path.join(options.root, ".project-memory", "graph", "code_graph.json");
-  const graph = JSON.parse(await fs.readFile(graphPath, "utf8"));
-  const starts = findStartNodes(graph, options.target);
-
-  if (starts.length === 0) {
-    throw new Error(`No graph nodes matched "${options.target}". Run index_project.mjs first or use a more specific target.`);
-  }
-
-  const trace = traceGraph(graph, starts, options.hops);
-  const markdown = formatReport(options.target, starts, trace);
+  const graph = await readJson(graphPath);
+  const contextGraph = buildContextGraph(graph, options.target, options.hops);
+  await writeContextGraph(options.root, contextGraph);
+  const trace = contextGraphToTrace(contextGraph);
+  const markdown = formatReport(options.target, contextGraph.start_nodes, trace);
   const outPath = options.out
-    ? path.resolve(options.root, options.out)
+    ? resolveSafeOutFile(options.root, options.out)
     : path.join(options.root, ".project-memory", "reports", `${safeTarget(options.target)}-perf-report.md`);
 
   await fs.mkdir(path.dirname(outPath), { recursive: true });
